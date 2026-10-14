@@ -1,0 +1,40 @@
+# Project-local toolchain and caches
+.devtools/
+.devcache/
+
+# Local secrets and private research
+.env
+.env.*
+!.env.example
+private/
+**/private/
+*.keystore
+*.jks
+**/key.properties
+**/local.properties
+
+# Flutter / Dart
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.pub/
+**/build/
+**/coverage/
+**/.gradle/
+**/.kotlin/
+**/android/captures/
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/ephemeral/
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/macos/Flutter/ephemeral/
+**/windows/flutter/ephemeral/
+**/linux/flutter/ephemeral/
+
+# Editors and OS
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
