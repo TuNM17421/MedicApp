@@ -1,5 +1,7 @@
 # Prompt log
 
+**Prompt bàn giao có thể sao chép:** [Prototype tương tác vòng 1](prototype-agent-brief.md).
+
 ## AI-001 — Khởi tạo cấu trúc bàn giao
 
 - Yêu cầu: “Check và dựng lại structure project cho tôi xem”, dựa trên bảng cấu trúc bàn giao người dùng cung cấp.
@@ -27,7 +29,15 @@
 - Điều chỉnh cần duyệt: Dùng ngôn ngữ gợi ý có giới hạn thay cho cam kết đúng khoa/giờ vắng nhất; các ước tính và giao dịch chỉ mô phỏng khi chưa có dữ liệu vận hành. Quy tắc BHYT và luồng khẩn cần đơn vị chuyên môn xác nhận trước triển khai thật.
 - Kiểm chứng: Mở nguồn chính thức, phân biệt thông tin công bố với suy luận thiết kế; kiểm tra liên kết Markdown nội bộ. Chưa kiểm thử app tham chiếu, hiệu quả với người dùng hoặc tính phù hợp lâm sàng.
 
-## Mẫu cho lần sử dụng tiếp theo
+## AI-004 — Bàn giao tài liệu và prompt prototype vòng 1
+
+- Ngày: 2026-10-14.
+- Yêu cầu: Đẩy tài liệu cơ bản lên Git trước, sau đó viết prompt cho agent khác dựng prototype tương tác theo PRD; ưu tiên luồng đặt lịch cơ bản và giao diện tối giản; chưa sửa code Flutter.
+- Đầu ra: Bản tài liệu đầu tiên trên nhánh `main`; prompt tại `prototype-agent-brief.md` và liên kết từ README.
+- Phạm vi prompt: P0, các kịch bản T01–T06; nhánh Smart Scheduling T07–T10 hoãn sang vòng sau. Chỉ sử dụng dữ liệu và thanh toán giả lập.
+- Kiểm tra: Giới hạn file trong commit tài liệu, kiểm tra liên kết nội bộ và tính nhất quán của prompt với phạm vi vòng 1. Chưa dựng hoặc thử nghiệm prototype.
+
+## Mẫu ghi nhận lần sử dụng tiếp theo
 
 - Mã, ngày, người sử dụng, công cụ/model nếu biết.
 - Prompt nguyên văn đã loại bỏ dữ liệu nhạy cảm và đầu vào tham chiếu.

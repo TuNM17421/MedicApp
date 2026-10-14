@@ -3,6 +3,7 @@
 **Trạng thái:** Đã khởi tạo Flutter Android app mẫu bằng Flutter 3.47.7 / Dart 3.13.5. Chưa triển khai luồng nghiên cứu MyVinmec.
 
 - [prd-smart-scheduling.md](prd-smart-scheduling.md): PRD đặt khám cơ bản và Smart Scheduling, chờ duyệt prototype; không sửa code Flutter ở bước này.
+- [Prompt dựng prototype vòng 1](prompts/prototype-agent-brief.md): Có thể sao chép sang agent khác; ưu tiên luồng cơ bản P0, hoãn nhánh AI, giữ nguyên Flutter.
 - [flutter_app/](flutter_app/): Tài liệu app mẫu; source Android và test sinh bởi `flutter create` đang có cục bộ, chưa được đẩy cùng bản tài liệu.
 - [prompts/](prompts/): Prompt và thông tin kiểm tra đầu ra AI.
 - [test-logs/](test-logs/): Log thử với 2–3 người, đã ẩn danh.
