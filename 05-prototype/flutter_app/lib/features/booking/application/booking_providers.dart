@@ -395,15 +395,20 @@ class BookingController extends Notifier<BookingSession> {
     if (stage == BookingStage.dateTime) loadSlots();
   }
 
+  /// Whether Back leaves the booking route instead of moving between steps.
+  bool get closesOnBack =>
+      state.stage == BookingStage.result ||
+      (state.stage == BookingStage.type && !state.editing);
+
   void back() {
-    if (_locked ||
-        state.stage == BookingStage.type ||
-        state.stage == BookingStage.result) {
-      return;
-    }
+    if (_locked || closesOnBack) return;
     _loadVersion++;
+    // While editing, the type step has no earlier step: return to the first
+    // incomplete choice, or to the review page, instead of closing the flow.
     final stage = state.editing && state.draft.firstMissing == null
         ? BookingStage.review
+        : state.stage == BookingStage.type
+        ? state.draft.firstMissing!
         : BookingStage.values[state.stage.index - 1];
     state = state.copyWith(
       stage: stage,
