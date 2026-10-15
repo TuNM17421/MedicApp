@@ -586,6 +586,8 @@ class BookingController extends Notifier<BookingSession> {
       contactName: draft.contactName,
       contactPhone: draft.contactPhone,
       note: draft.note,
+      patientId: draft.patientId,
+      departmentId: draft.departmentId,
     );
   }
 

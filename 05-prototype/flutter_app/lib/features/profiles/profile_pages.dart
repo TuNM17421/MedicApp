@@ -6,6 +6,7 @@ import '../../app/router/app_routes.dart';
 import '../../app/state/app_state.dart';
 import '../../app/theme/app_theme.dart';
 import '../../core/widgets/app_widgets.dart';
+import '../visit_prep/visit_prep_widgets.dart';
 import 'cccd_qr.dart';
 
 class ProfilesPage extends ConsumerWidget {
@@ -90,6 +91,14 @@ class ProfileDetailPage extends ConsumerWidget {
               if (matches.first.address case final address?)
                 (label: 'Địa chỉ', value: address),
             ],
+          ),
+        if (matches.isNotEmpty)
+          ProfileConditionsEditor(
+            key: const Key('profile-conditions'),
+            selected: matches.first.conditions,
+            onChanged: (value) => ref
+                .read(profileCatalogProvider.notifier)
+                .setConditions(id, value),
           ),
       ],
     );

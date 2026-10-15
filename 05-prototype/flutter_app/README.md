@@ -2,6 +2,8 @@
 
 **Bước 4:** Đã thêm chuyển động nhẹ, loading skeleton, giảm chuyển động và cải thiện cỡ chữ lớn cho luồng đặt lịch. Xem [chi tiết UI/UX](UI-UX.md).
 
+**Bước 7:** Có lưu ý cá nhân hóa trước khi khám cho 5 bệnh, đọc từ hồ sơ và lịch hẹn. Xem [bước 7](LUU-Y-TRUOC-KHAM.md).
+
 **Bước 6:** Có đăng ký, đăng nhập (giả lập trong máy) và tạo hồ sơ nhanh bằng quét mã QR trên CCCD. Xem [bước 6](AUTH-CCCD.md).
 
 App `medic_app` mở màn **Chào mừng** khi chưa đăng nhập, sau đó vào **Trang chủ**, có shell bốn tab, nút Đặt lịch ở giữa và trạng thái hồ sơ/thông báo bằng Riverpod. Đã có luồng đặt lịch cơ bản và thanh toán giả lập, xem [bước 3](BOOKING.md). Có Đặt lịch thông minh bằng giọng nói hoặc nhập tay, cần chạy [backend local](../backend/README.md); xem [bước 5](SMART-SCHEDULING.md). Xem [khung điều hướng bước 2](NAVIGATION.md) và [nền giao diện bước 1](DESIGN-SYSTEM.md).
@@ -11,7 +13,7 @@ App `medic_app` mở màn **Chào mừng** khi chưa đăng nhập, sau đó và
 - Java: Eclipse Temurin 21.0.12.1+1.
 - Application ID tạm: `com.example.medic_app`; cần đổi trước khi phát hành.
 - Entry point cục bộ: `lib/main.dart`.
-- Tests: giao diện, điều hướng, trạng thái và luồng đặt lịch trong `test/`; ảnh chuẩn trong `test/goldens/`. Bộ kiểm tra hiện gồm 94 test (85 pass, 1 bỏ qua); 8 test ảnh chuẩn cần cập nhật trên Windows (xem bước 5).
+- Tests: giao diện, điều hướng, trạng thái và luồng đặt lịch trong `test/`; ảnh chuẩn trong `test/goldens/`. Bộ kiểm tra hiện gồm 102 test (93 pass, 1 bỏ qua); 8 test ảnh chuẩn cần cập nhật trên Windows (xem bước 5).
 
 Source Flutter, font, tests và script môi trường đã được đưa vào bản bàn giao này. Trên máy Windows mới cần Git và chạy `scripts/setup.ps1` từ gốc repo để tải bộ công cụ trước khi kích hoạt; SDK/cache không nằm trong Git.
 

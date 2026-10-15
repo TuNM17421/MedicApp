@@ -7,6 +7,7 @@ import '../../../core/widgets/app_widgets.dart';
 import '../application/booking_providers.dart';
 import '../domain/booking_models.dart';
 import 'booking_format.dart';
+import '../../visit_prep/visit_prep_widgets.dart';
 
 class AppointmentsPage extends ConsumerWidget {
   const AppointmentsPage({super.key});
@@ -138,6 +139,8 @@ class AppointmentRecordView extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 16),
+        if (receipt.status != PaymentStatus.failed)
+          VisitPrepSection(visitId: visit.id),
         if (visit.type == VisitType.insurance)
           const AppStatusBanner(
             message: 'Quyền lợi BHYT và khoản cần thanh toán sẽ được cơ sở xác nhận. Phí đặt lịch 0đ không có nghĩa là miễn toàn bộ chi phí khám.',

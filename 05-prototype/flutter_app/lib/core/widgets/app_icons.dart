@@ -36,6 +36,7 @@ abstract final class AppIcons {
   static const flashlight = LucideIcons.flashlight;
   static const signOut = LucideIcons.logOut;
   static const edit = LucideIcons.pencil;
+  static const prep = LucideIcons.clipboardList;
 }
 
 class AppIcon extends StatelessWidget {

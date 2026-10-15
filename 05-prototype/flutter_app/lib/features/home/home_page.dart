@@ -9,6 +9,7 @@ import '../../core/widgets/app_widgets.dart';
 import '../booking/application/booking_providers.dart';
 import '../booking/presentation/booking_format.dart';
 import '../booking/domain/booking_models.dart';
+import '../visit_prep/visit_prep_widgets.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -89,6 +90,7 @@ class HomePage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const HomePrepBanner(),
                 Semantics(
                   header: true,
                   child: Text(
