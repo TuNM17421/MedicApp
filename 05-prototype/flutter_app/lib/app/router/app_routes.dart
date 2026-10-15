@@ -14,6 +14,7 @@ abstract final class AppRoutes {
   static String appointment(String id) =>
       '$appointments/${Uri.encodeComponent(id)}';
   static const help = '/help';
+  static const healthConsent = '/health-consent';
   static const designPreview = '/design-preview';
 
   static const welcome = '/welcome';
