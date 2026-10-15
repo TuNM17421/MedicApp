@@ -2,9 +2,9 @@
 
 Kho bài tập nghiên cứu trải nghiệm người dùng và prototype Flutter nhằm cải thiện một khoảnh khắc trong hành trình sử dụng MyVinmec.
 
-**Trạng thái:** Đã dựng khung tài liệu, cài bộ công cụ Android portable và khởi tạo Flutter app mẫu. Đã nghiên cứu nguồn công khai và soạn PRD đặt khám, chờ duyệt prototype. Chưa có log phỏng vấn ẩn danh hoặc kết quả thử nghiệm được đưa vào repo; chưa triển khai luồng nghiệp vụ bằng Flutter.
+**Trạng thái:** Đã triển khai Flutter Android: theme/font, shell điều hướng, luồng đặt lịch cơ bản và hoàn thiện UI/UX. App đã cài trên OPPO A77s; chủ dự án báo đã thử xong luồng đặt lịch. Chưa có log thử chi tiết hoặc phỏng vấn ẩn danh trong repo. Dữ liệu bệnh viện, lịch và thanh toán vẫn giả lập; Smart Scheduling mới có nghiên cứu/thiết kế, chưa triển khai.
 
-**Phạm vi bản bàn giao Git hiện tại:** Tài liệu, `.gitignore` và manifest phiên bản công cụ. Source Flutter và script cài/kích hoạt/gỡ môi trường hiện có trên máy phát triển, chưa thuộc bản đẩy tài liệu này. Các lệnh chạy trong tài liệu môi trường cần các script cục bộ đó.
+**Phạm vi bản bàn giao Git hiện tại:** Source Flutter Android, font có giấy phép, tests/ảnh chuẩn, tài liệu và script cài/kích hoạt/gỡ bộ công cụ portable. Không bao gồm SDK/cache, APK, API key hoặc dữ liệu sức khỏe thật. Xem [hướng dẫn chạy app](05-prototype/flutter_app/README.md).
 
 ## Khoảnh khắc đã chọn
 
@@ -29,7 +29,7 @@ Xem [PRD Smart Scheduling](05-prototype/prd-smart-scheduling.md) và [ba best pr
 
 - AI đã tạo cấu trúc thư mục, README, biểu mẫu nghiên cứu, dàn ý slide và cấu hình bỏ qua file trong Git.
 - Các biểu mẫu là khung để điền, không phải kết quả nghiên cứu hoặc bằng chứng thực tế.
-- AI đã viết script cài/kích hoạt/gỡ môi trường và chạy `flutter create` để sinh app mẫu cùng test từ template chính thức của Flutter. Chưa có luồng nghiệp vụ tùy chỉnh.
+- AI viết script cài/kích hoạt/gỡ môi trường, khởi tạo app và triển khai giao diện/điều hướng/luồng đặt lịch giả lập cùng tests. Xem tài liệu từng bước trong [Flutter app](05-prototype/flutter_app/).
 - AI tổng hợp nguồn công khai trong phần best practice và soạn PRD, bao gồm luồng, đề xuất thị giác, trạng thái lỗi và tiêu chí duyệt. Các đề xuất chưa phải kết quả kiểm thử người dùng hoặc xác nhận chuyên môn.
 - Chưa có log phỏng vấn hoặc kết quả dùng thử thực tế được đưa vào repo. Tóm tắt khó khăn do chủ dự án cung cấp được ghi riêng với nghiên cứu nguồn công khai.
 - Khi bổ sung nội dung, ghi tác giả/người kiểm tra và phần AI hỗ trợ trong từng tài liệu; lưu prompt tại [05-prototype/prompts](05-prototype/prompts/).

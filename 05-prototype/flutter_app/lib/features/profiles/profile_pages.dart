@@ -1,0 +1,74 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../app/router/app_routes.dart';
+import '../../app/state/app_state.dart';
+import '../../app/theme/app_theme.dart';
+import '../../core/widgets/app_widgets.dart';
+
+class ProfilesPage extends ConsumerWidget {
+  const ProfilesPage({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profiles = ref.watch(profileCatalogProvider);
+    final active = ref.watch(activeProfileProvider);
+    return AppPageBody(
+      title: 'Hồ sơ',
+      onHelp: () => context.push(AppRoutes.help),
+      children: [
+        Text('Hồ sơ gia đình', style: Theme.of(context).textTheme.titleLarge),
+        for (final profile in profiles)
+          AppChoiceCard(
+            key: ValueKey('profile-${profile.id}'),
+            title: profile.name,
+            description:
+                '${profile.relationship} · Sinh năm ${profile.birthYear}',
+            icon: AppIcons.person,
+            tone: AppTone.lavender,
+            selected: active.id == profile.id,
+            onTap: () =>
+                ref.read(activeProfileIdProvider.notifier).select(profile.id),
+          ),
+        AppLinkCard(
+          title: 'Xem hồ sơ đang chọn',
+          subtitle: active.name,
+          icon: AppIcons.profile,
+          onTap: () => context.push(AppRoutes.profile(active.id)),
+        ),
+      ],
+    );
+  }
+}
+
+class ProfileDetailPage extends ConsumerWidget {
+  const ProfileDetailPage({super.key, required this.id});
+  final String id;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final matches = ref
+        .watch(profileCatalogProvider)
+        .where((profile) => profile.id == id);
+    return AppPageBody(
+      title: 'Chi tiết hồ sơ',
+      onBack: () => AppRoutes.backOrHome(context),
+      children: [
+        if (matches.isEmpty)
+          const AppEmptyState(
+            title: 'Không tìm thấy hồ sơ',
+            message: 'Vui lòng quay lại danh sách hồ sơ.',
+          )
+        else
+          AppReviewSection(
+            title: matches.first.name,
+            items: [
+              (label: 'Năm sinh', value: '${matches.first.birthYear}'),
+              (label: 'Quan hệ', value: matches.first.relationship),
+            ],
+          ),
+      ],
+    );
+  }
+}

@@ -1,12 +1,12 @@
 # Môi trường Flutter Android riêng cho MedicApp
 
-**Lưu ý bản bàn giao:** Commit tài liệu hiện tại chỉ chứa README, kết quả kiểm tra và manifest. Các file `.ps1` đã có trên máy phát triển nhưng chưa được đẩy; cần bàn giao script trước khi có thể chạy các lệnh này trên máy mới.
+**Bản bàn giao:** Các script `.ps1`, manifest và source Flutter đã có trong repository. SDK và cache tải khi chạy setup, không được đưa vào Git.
 
 Bộ công cụ Windows x64 portable nằm trong `.devtools/`; SDK và cache không được commit. Không sửa PATH hoặc biến môi trường ở cấp User/Machine, không cài Android Studio, emulator hay driver USB. Git hiện có được tái sử dụng; trên máy khác cần Git trong PATH.
 
 Phiên bản và SHA256 gói tải về được khóa trong [toolchain.json](toolchain.json). Bộ hiện tại gồm Flutter 3.47.7, Dart 3.13.5, Temurin Java 21.0.12.1+1, Android SDK 36 / build-tools 36.0.0 / NDK 28.2.13676358 và gh 2.102.0. Android SDK cài bằng `sdkmanager`; `platform-tools` dùng bản máy chủ cung cấp tại thời điểm cài. Các gói bổ sung mà Gradle yêu cầu sẽ được tải trong lần build đầu.
 
-Xem [kết quả kiểm tra](verification.md): analyze, test và build APK debug đều thành công. Chưa chạy app trên thiết bị.
+Xem [kết quả kiểm tra ban đầu](verification.md) và [UI/UX bước 4](../05-prototype/flutter_app/UI-UX.md): analyze, test và build APK debug đều thành công. Bản bước 4 đã cài và mở trên OPPO A77s; chưa kiểm tra TalkBack thực tế.
 
 ## Cài lại trên máy khác
 
@@ -48,7 +48,7 @@ gh auth status
 
 Tự hoàn tất xác thực trên trình duyệt; không gửi token vào chat hoặc lưu token trong source. Cấu hình gh riêng nằm ở `.devcache/gh`; thông tin xác thực có thể được lưu trong Windows Credential Manager. Luôn kích hoạt môi trường trước khi dùng gh để sử dụng cùng cấu hình.
 
-Chưa cấu hình remote hoặc đẩy code; thực hiện sau khi đăng nhập và xác định repository đích. Vì repo này chứa toàn bộ bài nộp, Git repository sẽ nằm ở gốc MedicApp, không nằm riêng trong app Flutter.
+Remote là `https://github.com/TuNM17421/MedicApp.git`. Git repository nằm ở gốc MedicApp, không nằm riêng trong app Flutter. Chỉ đẩy source/tài liệu, không đẩy SDK/cache/key.
 
 ## Chạy trên điện thoại Android
 

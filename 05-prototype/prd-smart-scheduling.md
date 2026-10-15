@@ -4,6 +4,8 @@
 
 **Đầu ra của giai đoạn này:** Prototype tương tác để duyệt trải nghiệm trước khi áp dụng vào Flutter. Không sửa code app, không tích hợp AI, dữ liệu bệnh viện hoặc thanh toán thật ở giai đoạn này.
 
+**Cập nhật sau luồng cơ bản:** Chủ dự án đã yêu cầu nhánh Smart Scheduling dạng [hội thoại streaming v2](smart-scheduling-conversation.md). Với nhánh này, yêu cầu mới thay thế phần 7.1 bên dưới: không duyệt transcript riêng, tự xử lý hết lượt nói, hỏi lại đến khi đủ dữ liệu, duyệt một bản tổng quan khoa/bác sĩ/giờ rồi chuyển sang Thanh toán. Luồng cơ bản giữ nguyên. Các mô tả prototype cũ còn lại là tài liệu của vòng ban đầu.
+
 AI soạn PRD từ yêu cầu chủ dự án và nguồn công khai. Những yêu cầu chưa được bệnh viện xác nhận là giả định thiết kế, được đánh dấu bên dưới.
 
 ## 1. Vấn đề, bằng chứng và mục tiêu
