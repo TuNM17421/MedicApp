@@ -515,6 +515,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
         ];
       case BookingStage.result:
         return [
+          BookingSuccessMark(id: draft.id),
           AppointmentRecordView(id: draft.id, onRetry: actions.retryFailed),
         ];
     }

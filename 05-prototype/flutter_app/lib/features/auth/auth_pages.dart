@@ -79,6 +79,8 @@ class WelcomePage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  const AppIllustration(AppArt.welcome, height: 150),
+                  const SizedBox(height: 16),
                   Text('Chào mừng bạn', style: text.headlineMedium),
                   const SizedBox(height: 8),
                   Text(

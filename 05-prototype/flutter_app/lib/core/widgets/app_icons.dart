@@ -10,6 +10,7 @@ abstract final class AppIcons {
   static const payment = LucideIcons.creditCard;
   static const help = LucideIcons.circleHelp;
   static const back = LucideIcons.chevronLeft;
+  static const forward = LucideIcons.chevronRight;
   static const next = LucideIcons.arrowRight;
   static const check = LucideIcons.check;
   static const unselected = LucideIcons.circle;

@@ -62,6 +62,9 @@ class AccountPage extends ConsumerWidget {
         ],
       ),
     );
-    if (confirmed == true) ref.read(authSessionProvider.notifier).signOut();
+    if (confirmed != true || !context.mounted) return;
+    // Messages for the old session must not cover the welcome buttons.
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ref.read(authSessionProvider.notifier).signOut();
   }
 }
