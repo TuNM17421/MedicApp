@@ -8,6 +8,8 @@ abstract final class AppRoutes {
   static const account = '/account';
   static const appointments = '/home/appointments';
   static const booking = '/booking';
+  static const smart = '/smart';
+  static const smartFromBooking = '/smart?from=booking';
   static const bookingDemo = '/booking-demo';
   static String appointment(String id) =>
       '$appointments/${Uri.encodeComponent(id)}';

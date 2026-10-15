@@ -249,6 +249,12 @@ class _BookingPageState extends ConsumerState<BookingPage> {
             ),
             onChanged: (value) => setState(() => _query = value),
           ),
+          OutlinedButton.icon(
+            key: const Key('booking-smart'),
+            onPressed: () => context.push(AppRoutes.smartFromBooking),
+            icon: const AppIcon(AppIcons.smart),
+            label: const Text('Chưa biết chọn khoa? Nói hoặc nhập nhu cầu'),
+          ),
           if (departments.isEmpty)
             AppEmptyState(
               title: 'Không tìm thấy chuyên khoa',

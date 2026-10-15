@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:medic_app/app/router/app_router.dart';
 import 'package:medic_app/app/state/app_state.dart';
@@ -17,6 +18,7 @@ Future<ProviderContainer> openApp(
   bool disableAnimations = true,
   bool accessibleNavigation = false,
   BookingRepository? bookingRepository,
+  List<Override> overrides = const [],
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -27,6 +29,7 @@ Future<ProviderContainer> openApp(
       bookingTodayProvider.overrideWithValue(DateTime(2026, 10, 14)),
       if (bookingRepository != null)
         bookingRepositoryProvider.overrideWithValue(bookingRepository),
+      ...overrides,
       appRouterProvider.overrideWith((ref) {
         final router = createAppRouter(initialLocation: location);
         ref.onDispose(router.dispose);

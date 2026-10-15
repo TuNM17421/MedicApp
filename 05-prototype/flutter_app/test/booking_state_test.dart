@@ -306,19 +306,22 @@ void main() {
     expect(session.draft.patientId, 'self');
   });
 
-  test('change visit type from the facility step returns to facility', () async {
-    final c = bookingContainer();
-    final actions = c.read(bookingSessionProvider.notifier);
-    actions.chooseType(VisitType.insurance);
-    await actions.next();
-    actions.choosePatient('self');
-    await actions.next();
-    expect(c.read(bookingSessionProvider).stage, BookingStage.facility);
-    actions.edit(BookingStage.type);
-    actions.back();
-    expect(c.read(bookingSessionProvider).stage, BookingStage.facility);
-    expect(c.read(bookingSessionProvider).draft.patientId, 'self');
-  });
+  test(
+    'change visit type from the facility step returns to facility',
+    () async {
+      final c = bookingContainer();
+      final actions = c.read(bookingSessionProvider.notifier);
+      actions.chooseType(VisitType.insurance);
+      await actions.next();
+      actions.choosePatient('self');
+      await actions.next();
+      expect(c.read(bookingSessionProvider).stage, BookingStage.facility);
+      actions.edit(BookingStage.type);
+      actions.back();
+      expect(c.read(bookingSessionProvider).stage, BookingStage.facility);
+      expect(c.read(bookingSessionProvider).draft.patientId, 'self');
+    },
+  );
 }
 
 class ControlledRepository implements BookingRepository {

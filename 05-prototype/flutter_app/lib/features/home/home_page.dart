@@ -71,6 +71,13 @@ class HomePage extends ConsumerWidget {
                         label: 'Bắt đầu',
                         onPressed: () => context.push(AppRoutes.booking),
                       ),
+                      const SizedBox(height: 12),
+                      OutlinedButton.icon(
+                        key: const Key('home-smart'),
+                        onPressed: () => context.push(AppRoutes.smart),
+                        icon: const AppIcon(AppIcons.smart),
+                        label: const Text('Đặt lịch thông minh'),
+                      ),
                     ],
                   ),
                 ),

@@ -145,6 +145,42 @@ class BookingSession {
   );
 }
 
+/// Draft handed to the booking flow by Smart Scheduling. A plain holder,
+/// read once by the next BookingController, so handing off never mutates
+/// provider state during another provider's build.
+class BookingHandoff {
+  const BookingHandoff(this.draft, {this.stage, this.notice = ''});
+  final BookingDraft draft;
+
+  /// Defaults to the first missing choice, or review when complete.
+  final BookingStage? stage;
+  final String notice;
+}
+
+class BookingHandoffBox {
+  BookingHandoff? pending;
+  BookingHandoff? take() {
+    final value = pending;
+    pending = null;
+    return value;
+  }
+}
+
+final bookingHandoffProvider = Provider<BookingHandoffBox>(
+  (ref) => BookingHandoffBox(),
+);
+
+int profileAge(PreviewProfile profile, DateTime today) {
+  var age = today.year - profile.birthYear;
+  final dob = profile.birthDate;
+  if (dob != null &&
+      (today.month < dob.month ||
+          (today.month == dob.month && today.day < dob.day))) {
+    age--;
+  }
+  return age;
+}
+
 final bookingSessionProvider =
     NotifierProvider.autoDispose<BookingController, BookingSession>(
       BookingController.new,
@@ -153,12 +189,40 @@ final bookingSessionProvider =
 class BookingController extends Notifier<BookingSession> {
   int _loadVersion = 0;
   static int _sequence = 0;
+  static String newDraftId() =>
+      'D${DateTime.now().microsecondsSinceEpoch}-${++_sequence}';
+
   @override
-  BookingSession build() => BookingSession(
-    draft: BookingDraft(
-      id: 'D${DateTime.now().microsecondsSinceEpoch}-${++_sequence}',
-    ),
+  BookingSession build() {
+    final handoff = ref.read(bookingHandoffProvider).take();
+    if (handoff != null) {
+      final session = _fromHandoff(handoff);
+      if (session.stage == BookingStage.dateTime) Future.microtask(loadSlots);
+      return session;
+    }
+    return BookingSession(draft: BookingDraft(id: newDraftId()));
+  }
+
+  BookingSession _fromHandoff(BookingHandoff handoff) => BookingSession(
+    draft: handoff.draft,
+    stage:
+        handoff.stage ??
+        handoff.draft.firstMissing ??
+        (handoff.draft.slot == null
+            ? BookingStage.dateTime
+            : BookingStage.review),
+    notice: handoff.notice,
   );
+
+  /// Replaces the draft atomically with one validated elsewhere (Smart
+  /// Scheduling opened from this flow). Ignored once payment has started.
+  void applyHandoff(BookingHandoff handoff) {
+    if (_locked) return;
+    _loadVersion++;
+    state = _fromHandoff(handoff);
+    if (state.stage == BookingStage.dateTime) loadSlots();
+  }
+
   bool get _locked =>
       state.busy ||
       (state.receipt != null && state.receipt!.status != PaymentStatus.failed);
@@ -235,17 +299,8 @@ class BookingController extends Notifier<BookingSession> {
     }
   }
 
-  int age(PreviewProfile profile) {
-    final today = ref.read(bookingTodayProvider);
-    var age = today.year - profile.birthYear;
-    final dob = profile.birthDate;
-    if (dob != null &&
-        (today.month < dob.month ||
-            (today.month == dob.month && today.day < dob.day))) {
-      age--;
-    }
-    return age;
-  }
+  int age(PreviewProfile profile) =>
+      profileAge(profile, ref.read(bookingTodayProvider));
 
   void chooseFacility(String id) {
     final facility = BookingCatalog.facility(id);

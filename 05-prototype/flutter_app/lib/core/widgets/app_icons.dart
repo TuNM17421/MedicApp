@@ -22,6 +22,13 @@ abstract final class AppIcons {
   static const notifications = LucideIcons.bell;
   static const clock = LucideIcons.clock;
   static const search = LucideIcons.search;
+  static const mic = LucideIcons.mic;
+  static const micOff = LucideIcons.micOff;
+  static const send = LucideIcons.sendHorizontal;
+  static const smart = LucideIcons.sparkles;
+  static const undo = LucideIcons.undo2;
+  static const stop = LucideIcons.square;
+  static const phone = LucideIcons.phone;
 }
 
 class AppIcon extends StatelessWidget {

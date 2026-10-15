@@ -7,6 +7,7 @@ import '../../features/booking/presentation/booking_page.dart';
 import '../../features/booking/presentation/appointment_pages.dart';
 import '../../features/booking/presentation/booking_demo_page.dart';
 import '../../features/design_preview/design_preview_page.dart';
+import '../../features/smart/presentation/smart_page.dart';
 import '../../features/home/home_page.dart';
 import '../../features/notifications/notification_pages.dart';
 import '../../features/profiles/profile_pages.dart';
@@ -114,6 +115,12 @@ GoRouter createAppRouter({String initialLocation = AppRoutes.home}) {
         ],
       ),
       _route(path: AppRoutes.booking, builder: (_, _) => const BookingPage()),
+      _route(
+        path: AppRoutes.smart,
+        builder: (_, state) => SmartPage(
+          fromBooking: state.uri.queryParameters['from'] == 'booking',
+        ),
+      ),
       _route(path: AppRoutes.help, builder: (_, _) => const HelpPage()),
       _route(
         path: AppRoutes.bookingDemo,
