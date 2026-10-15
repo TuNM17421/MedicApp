@@ -1,6 +1,6 @@
 # PRD triển khai Smart Scheduling — hội thoại streaming
 
-**Phiên bản:** 1.0 · **Ngày:** 2026-10-15 · **Trạng thái:** Yêu cầu đã thống nhất trong hội thoại, chờ triển khai.
+**Phiên bản:** 1.0 · **Ngày:** 2026-10-15 · **Trạng thái:** Đã triển khai bản đầu trên nhánh `claude/smart-scheduling` ([backend](backend/README.md), [app](flutter_app/SMART-SCHEDULING.md)); chưa thử trên điện thoại và chưa gọi OpenAI bằng key thật.
 
 Tài liệu này là đầu vào hiện hành cho việc implement Smart Scheduling. Thay thế các lựa chọn model và quy trình nhánh Smart trong [PRD ban đầu](prd-smart-scheduling.md), [nghiên cứu v1](smart-scheduling-research.md) và bổ sung tiêu chí thực thi cho [luồng hội thoại v2](smart-scheduling-conversation.md). Luồng đặt lịch cơ bản, footer chỉ icon và thanh toán giả lập hiện tại được giữ nguyên.
 

@@ -2,11 +2,11 @@
 
 - **[PRD triển khai Smart Scheduling](prd-smart-scheduling-implementation.md):** Tài liệu hiện hành để implement hội thoại streaming, hỏi bổ sung, sửa đề xuất và bàn giao thanh toán; model hỏi đáp tiết kiệm `gpt-6-luna`.
 
-- [Nghiên cứu Smart Scheduling + STT](smart-scheduling-research.md): Chọn model, backend giữ key, test qua USB, giới hạn dữ liệu và kế hoạch triển khai. [Mẫu cấu hình backend](backend/.env.example) đã có; server và nhánh AI chưa được triển khai.
+- [Nghiên cứu Smart Scheduling + STT](smart-scheduling-research.md): Chọn model, backend giữ key, test qua USB, giới hạn dữ liệu và kế hoạch triển khai. Đã triển khai theo PRD: [backend local](backend/README.md) và [màn Đặt lịch thông minh](flutter_app/SMART-SCHEDULING.md).
 
-- [Hoàn thiện UI/UX bước 4](flutter_app/UI-UX.md): Animation nhẹ, skeleton khi tải giờ, giảm chuyển động, cỡ chữ lớn và phản hồi dễ thấy. Footer giữ nguyên, chưa Smart Scheduling.
+- [Hoàn thiện UI/UX bước 4](flutter_app/UI-UX.md): Animation nhẹ, skeleton khi tải giờ, giảm chuyển động, cỡ chữ lớn và phản hồi dễ thấy. Footer giữ nguyên.
 
-**Trạng thái:** Bố cục prototype đã được chủ dự án duyệt. Đã có nền giao diện, shell điều hướng và luồng đặt lịch cơ bản bước 3 với thanh toán giả lập; chưa làm Smart Scheduling.
+**Trạng thái:** Bố cục prototype đã được chủ dự án duyệt. Đã có nền giao diện, shell điều hướng và luồng đặt lịch cơ bản bước 3 với thanh toán giả lập, và Smart Scheduling bước 5 (backend Node local, chế độ mô phỏng khi không có key). Smart Scheduling chưa thử trên điện thoại và chưa gọi OpenAI bằng key thật.
 
 - [Thư viện và thứ tự triển khai](dependency-plan.md): Đã cài 9 package UI/UX; tích hợp dần theo từng đợt.
 - [Nền giao diện bước 1](flutter_app/DESIGN-SYSTEM.md): Theme, font offline, icon, widget và kết quả kiểm tra.
