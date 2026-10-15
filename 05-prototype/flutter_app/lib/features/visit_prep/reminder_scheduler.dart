@@ -5,7 +5,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timezone/data/latest.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../../app/router/app_router.dart';
 import '../../app/state/app_state.dart';
+import '../../app/theme/app_theme.dart';
 import '../auth/auth_controller.dart';
 import '../booking/application/booking_providers.dart';
 import '../booking/domain/booking_models.dart';
@@ -45,7 +47,10 @@ abstract interface class ReminderScheduler {
 }
 
 final reminderSchedulerProvider = Provider<ReminderScheduler>(
-  (ref) => LocalReminderScheduler(),
+  (ref) => LocalReminderScheduler(
+    onOpen: (visitId) =>
+        ref.read(appRouterProvider).go('/home/appointments/$visitId'),
+  ),
 );
 
 /// Whether the phone allows our notifications; null until first asked.
@@ -76,25 +81,72 @@ final reminderSyncProvider = Provider<void>((ref) {
 /// leaves the device. Uses inexact alarms, so Android may deliver a reminder
 /// a few minutes late to save battery.
 class LocalReminderScheduler implements ReminderScheduler {
+  LocalReminderScheduler({required this.onOpen});
+
+  /// Opens the appointment when the notification or its button is tapped.
+  final void Function(String visitId) onOpen;
   final _plugin = FlutterLocalNotificationsPlugin();
   Future<void>? _ready;
 
-  static const _channel = AndroidNotificationDetails(
-    'visit_reminders',
-    'Nhắc lịch khám',
-    channelDescription: 'Nhắc chuẩn bị trước khi khám và giờ đi khám',
-    importance: Importance.high,
-    priority: Priority.high,
-  );
+  static const _openAction = 'open';
+  static const _dismissAction = 'dismiss';
+
+  void _respond(NotificationResponse response) {
+    final visitId = response.payload;
+    if (visitId != null && response.actionId != _dismissAction) {
+      onOpen(visitId);
+    }
+  }
 
   Future<void> _init() async {
     tz_data.initializeTimeZones();
     await _plugin.initialize(
       settings: const InitializationSettings(
-        android: AndroidInitializationSettings('@mipmap/ic_launcher'),
+        android: AndroidInitializationSettings('ic_stat_medic'),
       ),
+      onDidReceiveNotificationResponse: _respond,
     );
+    // Opened from a notification while the app was closed.
+    final launch = await _plugin.getNotificationAppLaunchDetails();
+    if (launch?.didNotificationLaunchApp ?? false) {
+      if (launch!.notificationResponse case final response?) {
+        _respond(response);
+      }
+    }
   }
+
+  static AndroidNotificationDetails _details(PlannedReminder reminder) =>
+      AndroidNotificationDetails(
+        'visit_reminders',
+        'Nhắc lịch khám',
+        channelDescription: 'Nhắc chuẩn bị trước khi khám và giờ đi khám',
+        importance: Importance.high,
+        priority: Priority.high,
+        category: AndroidNotificationCategory.reminder,
+        // Health details stay hidden on the lock screen until unlocked.
+        visibility: NotificationVisibility.private,
+        icon: 'ic_stat_medic',
+        color: AppColors.primary,
+        subText: reminder.header,
+        styleInformation: BigTextStyleInformation(
+          reminder.html,
+          htmlFormatBigText: true,
+          contentTitle: reminder.title,
+        ),
+        // Gone from the shade an hour after the visit starts.
+        timeoutAfter: reminder.visitAt
+            .add(const Duration(hours: 1))
+            .difference(reminder.at)
+            .inMilliseconds,
+        actions: const [
+          AndroidNotificationAction(
+            _openAction,
+            'Xem hướng dẫn',
+            showsUserInterface: true,
+          ),
+          AndroidNotificationAction(_dismissAction, 'Đã hiểu'),
+        ],
+      );
 
   @override
   Future<bool> replaceAll(List<PlannedReminder> reminders) async {
@@ -122,19 +174,10 @@ class LocalReminderScheduler implements ReminderScheduler {
             reminder.at.minute,
           ),
           title: reminder.title,
-          body: reminder.body,
+          body: reminder.summary,
           payload: reminder.visitId,
           androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-          notificationDetails: NotificationDetails(
-            android: AndroidNotificationDetails(
-              _channel.channelId,
-              _channel.channelName,
-              channelDescription: _channel.channelDescription,
-              importance: _channel.importance,
-              priority: _channel.priority,
-              styleInformation: BigTextStyleInformation(reminder.body),
-            ),
-          ),
+          notificationDetails: NotificationDetails(android: _details(reminder)),
         );
       }
       return allowed;

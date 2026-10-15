@@ -32,6 +32,26 @@ Ví dụ:
 
 Các ý theo tuổi và giới cũng hiện trong mục “Chuẩn bị trước khi khám” của app.
 
+## Định dạng thông báo
+
+Bố cục theo [hướng dẫn thông báo của Android](https://developer.android.com/design/ui/mobile/guides/home-screen/notifications) và [thông báo mở rộng](https://developer.android.com/training/notify-user/expanded): tiêu đề khoảng 30 ký tự chứa điều quan trọng nhất, dòng nội dung khoảng 40 ký tự không lặp tiêu đề, tối đa 3 nút, không nhắc lại tên app.
+
+| Phần | Nội dung | Ví dụ |
+| --- | --- | --- |
+| Dòng đầu (header) | Lịch của ai và khoa nào | `MedicApp • Mẹ Lan · Cơ Xương Khớp • 09:00` |
+| Tiêu đề | Việc cần làm và từ lúc nào | “Nhịn ăn từ nửa đêm nay”, “Từ chiều mai: kiêng rượu bia”, “Khám lúc 08:00 sáng nay” |
+| Dòng dưới (thu gọn) | Giờ khám, hoặc nơi khám khi sắp đi | “Khám lúc 08:00 sáng mai” |
+| Mở rộng | Mỗi dòng một mốc, nhãn in đậm: các mốc giờ theo thứ tự, giờ khám, “Để chuẩn bị”, tối đa 2 dòng “Lưu ý” theo tuổi/giới; lúc sắp đi là “Nơi khám”, “Mang theo”, “Nhớ” | “**Nửa đêm nay:** Ngừng ăn, chỉ uống nước lọc” |
+| Nút | “Xem hướng dẫn” mở chi tiết lịch hẹn; “Đã hiểu” tắt thông báo. Chạm vào thông báo cũng mở chi tiết lịch hẹn | |
+
+Khác:
+
+- Biểu tượng thanh trạng thái riêng (hình trắng, chữ thập trong khung), màu nhấn xanh của app; trước đây dùng icon app nên hiện thành ô vuông trắng.
+- Giờ trong nội dung tính theo lúc thông báo hiện ra (“sáng mai”, “chiều nay”), không theo lúc đặt lịch.
+- Loại “nhắc nhở” (`reminder`) để Android xếp đúng; tự biến mất 1 tiếng sau giờ khám.
+- Trên màn hình khóa chỉ hiện tên app, nội dung sức khỏe chỉ hiện khi mở khóa.
+- Dùng kiểu chữ dài (BigText) với HTML thay vì kiểu danh sách (Inbox), vì Inbox cắt mỗi dòng còn một hàng, dễ mất giờ hoặc lời dặn.
+
 ## Trong app
 
 Chi tiết lịch hẹn có mục **“Nhắc trên điện thoại”** liệt kê giờ từng thông báo. Nếu người dùng chặn thông báo, mục này báo rằng điện thoại sẽ không nhắc và cần bật lại trong Cài đặt.
@@ -46,10 +66,10 @@ Chi tiết lịch hẹn có mục **“Nhắc trên điện thoại”** liệt 
 
 - `lib/features/visit_prep/reminder_planner.dart`: chọn giờ và soạn nội dung (thuần Dart, dễ test).
 - `lib/features/visit_prep/reminder_scheduler.dart`: danh sách nhắc của tài khoản đang đăng nhập và đồng bộ với lịch thông báo của điện thoại.
-- `test/visit_prep/reminder_planner_test.dart`: 8 test cho các mốc giờ, đặt lịch sát giờ, nội dung theo tuổi/giới và đồng bộ khi đăng nhập/đăng xuất.
+- `test/visit_prep/reminder_planner_test.dart`: 9 test cho các mốc giờ, đặt lịch sát giờ, nội dung theo tuổi/giới, định dạng HTML và đồng bộ khi đăng nhập/đăng xuất.
 
 ## Chưa kiểm tra
 
-- Chưa build APK trong môi trường này, chưa thử thông báo thật trên máy Android. Ảnh khay thông báo trong bản xem trước là mô phỏng.
+- Chưa build APK trong môi trường này, chưa thử thông báo thật trên máy Android. Ảnh khay thông báo trong bản xem trước là mô phỏng; mỗi hãng (Samsung, Xiaomi…) vẽ thông báo hơi khác.
 - Một số hãng (Xiaomi, Oppo…) chặn báo thức nền mạnh; có thể cần hướng dẫn người dùng tắt tối ưu pin cho app.
 - Nội dung là bản mẫu, cần bác sĩ duyệt trước khi dùng thật.

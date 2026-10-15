@@ -15,7 +15,7 @@ App `medic_app` mở màn **Chào mừng** khi chưa đăng nhập, sau đó và
 - Java: Eclipse Temurin 21.0.12.1+1.
 - Application ID tạm: `com.example.medic_app`; cần đổi trước khi phát hành.
 - Entry point cục bộ: `lib/main.dart`.
-- Tests: giao diện, điều hướng, trạng thái và luồng đặt lịch trong `test/`; ảnh chuẩn trong `test/goldens/`. Bộ kiểm tra hiện gồm 110 test (101 pass, 1 bỏ qua); 8 test ảnh chuẩn cần cập nhật trên Windows (xem bước 5).
+- Tests: giao diện, điều hướng, trạng thái và luồng đặt lịch trong `test/`; ảnh chuẩn trong `test/goldens/`. Bộ kiểm tra hiện gồm 111 test (102 pass, 1 bỏ qua); 8 test ảnh chuẩn cần cập nhật trên Windows (xem bước 5).
 
 Source Flutter, font, tests và script môi trường đã được đưa vào bản bàn giao này. Trên máy Windows mới cần Git và chạy `scripts/setup.ps1` từ gốc repo để tải bộ công cụ trước khi kích hoạt; SDK/cache không nằm trong Git.
 

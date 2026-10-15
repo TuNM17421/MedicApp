@@ -49,8 +49,15 @@ void main() {
         ReminderKind.prepare: DateTime(2026, 10, 15, 17),
         ReminderKind.leave: DateTime(2026, 10, 16, 6),
       });
-      expect(r.first.title, 'Chuẩn bị khám: xét nghiệm đường huyết lúc đói');
-      expect(r.first.body, contains('nhịn ăn từ nửa đêm'));
+      final prepare = r.first;
+      expect(prepare.header, 'Lịch của bạn · Nội tiết');
+      expect(prepare.title, 'Nhịn ăn từ nửa đêm nay');
+      expect(prepare.summary, 'Khám lúc 08:00 sáng mai');
+      expect(
+        prepare.lines.first,
+        const ReminderLine('Nửa đêm nay', 'Ngừng ăn, chỉ uống nước lọc'),
+      );
+      expect(r.last.title, 'Khám lúc 08:00 sáng nay');
     },
   );
 
@@ -78,8 +85,11 @@ void main() {
       ReminderKind.prepare: DateTime(2026, 10, 17, 7),
       ReminderKind.leave: DateTime(2026, 10, 17, 12, 30),
     });
-    expect(r.first.body, startsWith('Mẹ Phạm Thị Lan (78 tuổi) có lịch khám'));
-    expect(r.first.body, contains('không uống rượu bia từ 14:30 chiều'));
+    expect(r.first.header, 'Mẹ Lan · Cơ Xương Khớp');
+    expect(r.first.title, 'Từ chiều mai: kiêng rượu bia');
+    expect(r.first.body, contains('14:30 chiều mai: Không uống rượu bia'));
+    expect(r.first.body, contains('Mẹ Phạm Thị Lan (78 tuổi) khám tại'));
+    expect(r[1].lines.first.label, 'Đang kiêng');
     expect(r.last.body, contains('Nên có người nhà đi cùng.'));
   });
 
@@ -107,7 +117,7 @@ void main() {
       self,
       twoDaysBefore,
     );
-    expect(afternoon.first.title, 'Nhắc lịch khám');
+    expect(afternoon.first.title, 'Lịch khám 15:00 chiều nay');
     expect(times(afternoon), {
       ReminderKind.prepare: DateTime(2026, 10, 16, 7),
       ReminderKind.leave: DateTime(2026, 10, 16, 13),
@@ -170,6 +180,17 @@ void main() {
       );
     },
   );
+
+  test('expanded text bolds each label and escapes names', () {
+    final r = plan(
+      visit(facilityName: 'Phòng khám A & B'),
+      self,
+      twoDaysBefore,
+    ).first;
+    expect(r.html, startsWith('<b>Nửa đêm nay:</b> Ngừng ăn'));
+    expect(r.html, contains('Phòng khám A &amp; B'));
+    expect(r.html.split('<br>'), hasLength(r.lines.length));
+  });
 
   testWidgets(
     'booking an appointment schedules phone reminders and lists them',

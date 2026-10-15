@@ -15,11 +15,12 @@ VisitSummary visit({
   DateTime? date,
   String time = '08:00',
   String id = 'V1',
+  String facilityName = 'Phòng khám Đa khoa An Bình',
 }) => VisitSummary(
   id: id,
   patientName: 'Phạm Văn Hòa',
   type: VisitType.service,
-  facilityName: 'Phòng khám Đa khoa An Bình',
+  facilityName: facilityName,
   address: '12 đường Hoa Sữa',
   departmentName: departmentName,
   doctorName: 'BS. Nguyễn Thu Hà',
