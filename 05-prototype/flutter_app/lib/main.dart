@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app/router/app_router.dart';
 import 'app/theme/app_theme.dart';
+import 'features/visit_prep/reminder_scheduler.dart';
 
 void main() {
   LicenseRegistry.addLicense(() async* {
@@ -21,7 +22,12 @@ class MedicApp extends ConsumerWidget {
   final TransitionBuilder? builder;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) => MaterialApp.router(
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(reminderSyncProvider);
+    return _app(ref);
+  }
+
+  Widget _app(WidgetRef ref) => MaterialApp.router(
     title: 'MedicApp',
     debugShowCheckedModeBanner: false,
     theme: AppTheme.light,

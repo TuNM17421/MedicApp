@@ -54,7 +54,7 @@ List<VisitPrepNote> adviseVisit({
         condition,
   ];
   final self = patient.relationship == selfRelationship;
-  final who = self ? 'Bạn' : '${patient.relationship} ${patient.name}';
+  final who = prepWho(patient, now);
   final hasDiabetes = patient.conditions.contains('diabetes');
   return [
     for (final condition in matches)
@@ -79,8 +79,67 @@ List<VisitPrepNote> adviseVisit({
                   : 'Nếu nội soi có gây mê, nên có người nhà đi cùng để đưa về.',
               important: true,
             ),
+          ..._audienceItems(patient, condition, now),
           for (final step in condition.steps) PrepItem(step),
         ],
+      ),
+  ];
+}
+
+int ageOf(PreviewProfile patient, DateTime now) {
+  final birth = patient.birthDate;
+  if (birth == null) return now.year - patient.birthYear;
+  final hadBirthday =
+      now.month > birth.month ||
+      (now.month == birth.month && now.day >= birth.day);
+  return now.year - birth.year - (hadBirthday ? 0 : 1);
+}
+
+bool isChild(PreviewProfile patient, DateTime now) => ageOf(patient, now) < 16;
+
+bool isOlder(PreviewProfile patient, DateTime now) => ageOf(patient, now) >= 60;
+
+/// "Bạn", "Mẹ Phạm Thị Lan (78 tuổi)", "Cháu Phạm Minh An (9 tuổi)".
+String prepWho(PreviewProfile patient, DateTime now) {
+  if (patient.relationship == selfRelationship) return 'Bạn';
+  final age = ageOf(patient, now);
+  final showAge = isChild(patient, now) || isOlder(patient, now);
+  return '${patient.relationship} ${patient.name}${showAge ? ' ($age tuổi)' : ''}';
+}
+
+/// Advice that depends on who the patient is rather than on the condition.
+List<PrepItem> _audienceItems(
+  PreviewProfile patient,
+  PrepCondition condition,
+  DateTime now,
+) {
+  final fasting = condition.fastingHours != null;
+  final age = ageOf(patient, now);
+  return [
+    if (isChild(patient, now) && fasting)
+      const PrepItem(
+        'Trẻ nhỏ khó nhịn lâu: người lớn nhắc và trông bé trong lúc nhịn, '
+        'hỏi bác sĩ thời gian nhịn phù hợp với tuổi của bé.',
+        important: true,
+      ),
+    if (isOlder(patient, now) && !condition.sedation)
+      const PrepItem(
+        'Nên có người nhà đi cùng. Mang theo thuốc đang dùng và kính đọc '
+        'sách nếu có.',
+      ),
+    if (isOlder(patient, now) && fasting)
+      const PrepItem(
+        'Nếu thấy mệt, chóng mặt hay vã mồ hôi trong lúc nhịn, hãy báo ngay '
+        'cho người nhà hoặc nhân viên y tế.',
+        important: true,
+      ),
+    if (patient.gender == 'Nữ' &&
+        age >= 15 &&
+        age <= 49 &&
+        (fasting || condition.sedation))
+      const PrepItem(
+        'Nếu đang mang thai hoặc cho con bú, báo bác sĩ trước khi nhịn ăn '
+        'hay làm thủ thuật.',
       ),
   ];
 }
@@ -103,9 +162,9 @@ String _headline(
   DateTime start,
   DateTime now,
 ) {
-  final when = '${_clock(start)} ${_dayPart(start, now)}';
+  final when = '${prepClock(start)} ${prepDayPart(start, now)}';
   final main = condition.fastingHours != null
-      ? 'vui lòng nhịn ăn từ ${_moment(start.subtract(Duration(hours: condition.fastingHours!)), now)} '
+      ? 'vui lòng nhịn ăn từ ${prepMoment(start.subtract(Duration(hours: condition.fastingHours!)), now)} '
             '(${condition.fastingHours} tiếng trước)'
       : condition.noSmokeCaffeineMinutes != null
       ? 'không hút thuốc, không uống cà phê hay trà trong '
@@ -162,24 +221,24 @@ PrepItem _deadlineItem(
   required String Function(String at) upcoming,
   required String Function(String at) passed,
 }) => PrepItem(
-  at.isAfter(now) ? upcoming(_moment(at, now)) : passed(_moment(at, now)),
+  at.isAfter(now) ? upcoming(prepMoment(at, now)) : passed(prepMoment(at, now)),
   important: true,
 );
 
-String _clock(DateTime time) =>
+String prepClock(DateTime time) =>
     '${time.hour.toString().padLeft(2, '0')}:'
     '${time.minute.toString().padLeft(2, '0')}';
 
 /// "20:00 tối nay", "nửa đêm nay", "08:00 sáng mai".
-String _moment(DateTime time, DateTime now) {
+String prepMoment(DateTime time, DateTime now) {
   if (time.hour == 0 && time.minute == 0) {
     final eve = time.subtract(const Duration(days: 1));
     return 'nửa đêm ${_dayWord(eve, now)}';
   }
-  return '${_clock(time)} ${_dayPart(time, now)}';
+  return '${prepClock(time)} ${prepDayPart(time, now)}';
 }
 
-String _dayPart(DateTime time, DateTime now) {
+String prepDayPart(DateTime time, DateTime now) {
   final part = switch (time.hour) {
     < 5 => 'rạng sáng',
     < 11 => 'sáng',

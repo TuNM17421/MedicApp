@@ -2,6 +2,8 @@
 
 **Bước 4:** Đã thêm chuyển động nhẹ, loading skeleton, giảm chuyển động và cải thiện cỡ chữ lớn cho luồng đặt lịch. Xem [chi tiết UI/UX](UI-UX.md).
 
+**Bước 8:** App đặt thông báo nhắc khám trên điện thoại, chọn giờ theo thời gian phải kiêng và nội dung theo tuổi, giới của người khám. Xem [bước 8](THONG-BAO-NHAC-KHAM.md).
+
 **Bước 7:** Có lưu ý cá nhân hóa trước khi khám cho 5 bệnh, đọc từ hồ sơ và lịch hẹn. Xem [bước 7](LUU-Y-TRUOC-KHAM.md).
 
 **Bước 6:** Có đăng ký, đăng nhập (giả lập trong máy) và tạo hồ sơ nhanh bằng quét mã QR trên CCCD. Xem [bước 6](AUTH-CCCD.md).
@@ -13,7 +15,7 @@ App `medic_app` mở màn **Chào mừng** khi chưa đăng nhập, sau đó và
 - Java: Eclipse Temurin 21.0.12.1+1.
 - Application ID tạm: `com.example.medic_app`; cần đổi trước khi phát hành.
 - Entry point cục bộ: `lib/main.dart`.
-- Tests: giao diện, điều hướng, trạng thái và luồng đặt lịch trong `test/`; ảnh chuẩn trong `test/goldens/`. Bộ kiểm tra hiện gồm 102 test (93 pass, 1 bỏ qua); 8 test ảnh chuẩn cần cập nhật trên Windows (xem bước 5).
+- Tests: giao diện, điều hướng, trạng thái và luồng đặt lịch trong `test/`; ảnh chuẩn trong `test/goldens/`. Bộ kiểm tra hiện gồm 110 test (101 pass, 1 bỏ qua); 8 test ảnh chuẩn cần cập nhật trên Windows (xem bước 5).
 
 Source Flutter, font, tests và script môi trường đã được đưa vào bản bàn giao này. Trên máy Windows mới cần Git và chạy `scripts/setup.ps1` từ gốc repo để tải bộ công cụ trước khi kích hoạt; SDK/cache không nằm trong Git.
 

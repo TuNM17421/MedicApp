@@ -85,7 +85,7 @@ void main() {
       now: evening,
     );
     final note = notes.single;
-    expect(note.headline, startsWith('Mẹ Phạm Thị Lan có lịch khám'));
+    expect(note.headline, startsWith('Mẹ Phạm Thị Lan (78 tuổi) có lịch khám'));
     expect(note.headline, contains('14:30 chiều Thứ Bảy 17/10'));
     expect(
       note.items.map((i) => i.text),
