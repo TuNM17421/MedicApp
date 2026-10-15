@@ -2,6 +2,8 @@
 
 Kho bài tập nghiên cứu trải nghiệm người dùng và prototype Flutter nhằm cải thiện một khoảnh khắc trong hành trình sử dụng MyVinmec.
 
+**Bước tiếp theo:** [PRD triển khai Smart Scheduling](05-prototype/prd-smart-scheduling-implementation.md) — hội thoại streaming, model tiết kiệm, duyệt đề xuất rồi chuyển thanh toán. Đây là yêu cầu triển khai, chưa phải tính năng đang chạy trong APK.
+
 **Trạng thái:** Đã triển khai Flutter Android: theme/font, shell điều hướng, luồng đặt lịch cơ bản và hoàn thiện UI/UX. App đã cài trên OPPO A77s; chủ dự án báo đã thử xong luồng đặt lịch. Chưa có log thử chi tiết hoặc phỏng vấn ẩn danh trong repo. Dữ liệu bệnh viện, lịch và thanh toán vẫn giả lập; Smart Scheduling mới có nghiên cứu/thiết kế, chưa triển khai.
 
 **Phạm vi bản bàn giao Git hiện tại:** Source Flutter Android, font có giấy phép, tests/ảnh chuẩn, tài liệu và script cài/kích hoạt/gỡ bộ công cụ portable. Không bao gồm SDK/cache, APK, API key hoặc dữ liệu sức khỏe thật. Xem [hướng dẫn chạy app](05-prototype/flutter_app/README.md).

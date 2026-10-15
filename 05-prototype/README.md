@@ -1,5 +1,7 @@
 # 05 — Prototype Flutter
 
+- **[PRD triển khai Smart Scheduling](prd-smart-scheduling-implementation.md):** Tài liệu hiện hành để implement hội thoại streaming, hỏi bổ sung, sửa đề xuất và bàn giao thanh toán; model hỏi đáp tiết kiệm `gpt-6-luna`.
+
 - [Nghiên cứu Smart Scheduling + STT](smart-scheduling-research.md): Chọn model, backend giữ key, test qua USB, giới hạn dữ liệu và kế hoạch triển khai. [Mẫu cấu hình backend](backend/.env.example) đã có; server và nhánh AI chưa được triển khai.
 
 - [Hoàn thiện UI/UX bước 4](flutter_app/UI-UX.md): Animation nhẹ, skeleton khi tải giờ, giảm chuyển động, cỡ chữ lớn và phản hồi dễ thấy. Footer giữ nguyên, chưa Smart Scheduling.

@@ -1,5 +1,7 @@
 # Smart Scheduling — hội thoại streaming, bản thiết kế v2
 
+**Cập nhật 2026-10-15:** [PRD triển khai](prd-smart-scheduling-implementation.md) là yêu cầu hiện hành. Model hỏi đáp đổi từ Sol sang `gpt-6-luna`, reasoning `low`, theo ngân sách test của chủ dự án. Phần chọn Sol bên dưới là lịch sử thiết kế; luồng streaming và STT giữ nguyên.
+
 Ngày 2026-10-14. Điều chỉnh theo phản hồi chủ dự án: bỏ bước duyệt transcript riêng và bỏ thao tác gửi phân tích sau mỗi lượt. Đây là đặc tả để triển khai, chưa có dịch vụ hay màn Flutter tương ứng.
 
 ## Luồng chính

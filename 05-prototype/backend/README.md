@@ -1,5 +1,7 @@
 # Backend Smart Scheduling — chuẩn bị cấu hình
 
+**PRD triển khai hiện hành:** [Smart Scheduling](../prd-smart-scheduling-implementation.md), ngày 2026-10-15. Hỏi đáp mặc định `gpt-6-luna` / reasoning `low` để tiết kiệm khi test; STT giữ `gpt-live-transcribe`. Không tự fallback sang model đắt.
+
 **Cập nhật v2:** [Luồng hội thoại streaming](../smart-scheduling-conversation.md) thay thế luồng chép file. Mẫu cấu hình dùng `gpt-live-transcribe`; backend cần thêm WebSocket relay và điều phối nhiều lượt. Chưa có các thành phần này chạy được.
 
 Thư mục này hiện **chỉ có mẫu cấu hình**, chưa có server, dependency, endpoint hoặc kết nối OpenAI hoạt động. App trên điện thoại vẫn là bản đặt lịch cơ bản, chưa đọc cấu hình này. Xem [nghiên cứu và thiết kế tích hợp](../smart-scheduling-research.md).

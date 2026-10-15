@@ -101,3 +101,11 @@
 - Nguồn kiểm tra: Realtime transcription, VAD và trang model chính thức OpenAI. Model live cần VAD tại ứng dụng, không cấu hình server_vad/semantic_vad cho model này.
 - Quy tắc: Không duyệt transcript riêng, không giới hạn cứng hai câu nếu còn thiếu thông tin, có một xác nhận proposal trước thanh toán, chỉ dùng bác sĩ/slot trong catalog, loại phản hồi cũ và không tự ghi đè sửa tay.
 - Giới hạn: Tài liệu và mẫu cấu hình; chưa code dịch vụ/Flutter, chưa gọi API hoặc cài package; chưa có đo VAD/audio/người dùng thật. Không commit/push.
+
+## AI-012 — Bàn giao code và PRD triển khai Smart Scheduling
+
+- Ngày: 2026-10-15.
+- Yêu cầu: Tạm thời đẩy code hiện tại lên remote với nhánh riêng, rồi viết PRD triển khai Smart Scheduling và đẩy PRD lên remote. Yêu cầu trước đó chọn model hỏi đáp rẻ để test được giữ lại.
+- Bàn giao code: Nhánh `codex/booking-ui-smart-scheduling-prd`, commit `a6e0e9a`; Flutter bước 1–4, tests, font và script môi trường portable. Analyze sạch và 52 test pass trước push. Không đưa SDK/cache/APK/.env vào Git.
+- Bàn giao tài liệu: `prd-smart-scheduling-implementation.md`, liên kết từ README/PRD cũ; mẫu backend đổi sang `gpt-6-luna` / reasoning `low`, STT giữ `gpt-live-transcribe`. Tài liệu nêu rõ luồng hỏi-sửa-đề xuất-xác nhận-thanh toán, contract, version, giới hạn chi phí, fallback và tiêu chí nghiệm thu.
+- Giới hạn: Chưa triển khai Smart Scheduling hoặc gọi OpenAI; không nâng model đắt tự động. Mới có mẫu cấu hình backend, chưa có server chạy được. Không tạo log thử hoặc số liệu lâm sàng giả.
