@@ -29,6 +29,13 @@ abstract final class AppIcons {
   static const undo = LucideIcons.undo2;
   static const stop = LucideIcons.square;
   static const phone = LucideIcons.phone;
+  static const qr = LucideIcons.qrCode;
+  static const family = LucideIcons.usersRound;
+  static const lock = LucideIcons.lockKeyhole;
+  static const image = LucideIcons.image;
+  static const flashlight = LucideIcons.flashlight;
+  static const signOut = LucideIcons.logOut;
+  static const edit = LucideIcons.pencil;
 }
 
 class AppIcon extends StatelessWidget {

@@ -53,11 +53,12 @@ void main() {
     await icons.load();
   });
 
-  testWidgets('app opens the home shell', (tester) async {
+  testWidgets('app opens the welcome page when signed out', (tester) async {
     await tester.pumpWidget(const ProviderScope(child: MedicApp()));
     await tester.pumpAndSettle();
     expect(find.text('MedicApp'), findsOneWidget);
     expect(find.text('Đặt khám dễ dàng cho cả nhà'), findsOneWidget);
+    expect(find.text('Tạo tài khoản mới'), findsOneWidget);
     expect(find.text('Flutter Demo'), findsNothing);
     expect(tester.takeException(), isNull);
   });

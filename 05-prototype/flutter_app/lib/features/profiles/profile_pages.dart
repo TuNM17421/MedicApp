@@ -6,6 +6,7 @@ import '../../app/router/app_routes.dart';
 import '../../app/state/app_state.dart';
 import '../../app/theme/app_theme.dart';
 import '../../core/widgets/app_widgets.dart';
+import 'cccd_qr.dart';
 
 class ProfilesPage extends ConsumerWidget {
   const ProfilesPage({super.key});
@@ -31,6 +32,14 @@ class ProfilesPage extends ConsumerWidget {
             onTap: () =>
                 ref.read(activeProfileIdProvider.notifier).select(profile.id),
           ),
+        AppLinkCard(
+          key: const Key('profiles-add'),
+          title: 'Thêm hồ sơ người thân',
+          subtitle: 'Quét mã QR trên CCCD để điền nhanh',
+          icon: AppIcons.qr,
+          tone: AppTone.peach,
+          onTap: () => context.push(AppRoutes.addProfile(self: false)),
+        ),
         AppLinkCard(
           title: 'Xem hồ sơ đang chọn',
           subtitle: active.name,
@@ -64,8 +73,22 @@ class ProfileDetailPage extends ConsumerWidget {
           AppReviewSection(
             title: matches.first.name,
             items: [
-              (label: 'Năm sinh', value: '${matches.first.birthYear}'),
+              if (matches.first.birthDate case final date?)
+                (
+                  label: 'Ngày sinh',
+                  value:
+                      '${date.day.toString().padLeft(2, '0')}/'
+                      '${date.month.toString().padLeft(2, '0')}/${date.year}',
+                )
+              else
+                (label: 'Năm sinh', value: '${matches.first.birthYear}'),
+              if (matches.first.gender case final gender?)
+                (label: 'Giới tính', value: gender),
               (label: 'Quan hệ', value: matches.first.relationship),
+              if (matches.first.idNumber case final id?)
+                (label: 'Số CCCD', value: maskIdNumber(id)),
+              if (matches.first.address case final address?)
+                (label: 'Địa chỉ', value: address),
             ],
           ),
       ],

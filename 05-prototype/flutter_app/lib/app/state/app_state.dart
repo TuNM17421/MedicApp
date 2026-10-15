@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Local demonstration data. No medical records, authentication or disk storage.
+import '../../features/auth/auth_controller.dart';
+
+/// Local demonstration data. No medical records or disk storage; sign-in is a
+/// prototype kept in memory (see `auth_controller.dart`).
 class PreviewProfile {
   const PreviewProfile({
     required this.id,
@@ -8,13 +11,42 @@ class PreviewProfile {
     required this.birthYear,
     required this.relationship,
     this.birthDate,
+    this.gender,
+    this.idNumber,
+    this.address,
   });
   final String id;
   final String name;
   final int birthYear;
   final String relationship;
   final DateTime? birthDate;
+  final String? gender;
+
+  /// CCCD number, only when the profile was created from a scanned card.
+  final String? idNumber;
+  final String? address;
 }
+
+const demoProfiles = [
+  PreviewProfile(
+    id: 'self',
+    name: 'Phạm Văn Hòa',
+    birthYear: 1966,
+    relationship: 'Bản thân',
+  ),
+  PreviewProfile(
+    id: 'mother',
+    name: 'Phạm Thị Lan',
+    birthYear: 1948,
+    relationship: 'Mẹ',
+  ),
+  PreviewProfile(
+    id: 'child',
+    name: 'Phạm Minh An',
+    birthYear: 2017,
+    relationship: 'Cháu',
+  ),
+];
 
 final profileCatalogProvider =
     NotifierProvider<ProfileCatalogController, List<PreviewProfile>>(
@@ -22,33 +54,31 @@ final profileCatalogProvider =
     );
 
 class ProfileCatalogController extends Notifier<List<PreviewProfile>> {
+  /// The signed-in account's profiles. Signed out (only reachable in tests and
+  /// the design preview, since the router sends users to sign-in) shows the
+  /// demo family.
   @override
-  List<PreviewProfile> build() => const [
-    PreviewProfile(
-      id: 'self',
-      name: 'Phạm Văn Hòa',
-      birthYear: 1966,
-      relationship: 'Bản thân',
-    ),
-    PreviewProfile(
-      id: 'mother',
-      name: 'Phạm Thị Lan',
-      birthYear: 1948,
-      relationship: 'Mẹ',
-    ),
-    PreviewProfile(
-      id: 'child',
-      name: 'Phạm Minh An',
-      birthYear: 2017,
-      relationship: 'Cháu',
-    ),
-  ];
+  List<PreviewProfile> build() {
+    final phone = ref.watch(authSessionProvider);
+    if (phone == null) return demoProfiles;
+    return List.unmodifiable(
+      ref.read(mockAccountStoreProvider)[phone]?.profiles ?? const [],
+    );
+  }
 
+  /// The account holder's own profile always stays first.
   void add(PreviewProfile profile) {
     if (state.any((value) => value.id == profile.id)) return;
-    state = List.unmodifiable([...state, profile]);
+    state = List.unmodifiable(
+      profile.relationship == selfRelationship
+          ? [profile, ...state]
+          : [...state, profile],
+    );
+    ref.read(authSessionProvider.notifier).saveProfiles(state);
   }
 }
+
+const selfRelationship = 'Bản thân';
 
 final activeProfileIdProvider =
     NotifierProvider<ActiveProfileController, String>(
@@ -57,7 +87,11 @@ final activeProfileIdProvider =
 
 class ActiveProfileController extends Notifier<String> {
   @override
-  String build() => ref.read(profileCatalogProvider).first.id;
+  String build() {
+    ref.watch(authSessionProvider);
+    final profiles = ref.read(profileCatalogProvider);
+    return profiles.isEmpty ? '' : profiles.first.id;
+  }
 
   void select(String id) {
     if (!ref.read(profileCatalogProvider).any((profile) => profile.id == id)) {
@@ -69,9 +103,11 @@ class ActiveProfileController extends Notifier<String> {
 
 final activeProfileProvider = Provider<PreviewProfile>((ref) {
   final id = ref.watch(activeProfileIdProvider);
-  return ref
-      .watch(profileCatalogProvider)
-      .firstWhere((profile) => profile.id == id);
+  final profiles = ref.watch(profileCatalogProvider);
+  return profiles.firstWhere(
+    (profile) => profile.id == id,
+    orElse: () => profiles.first,
+  );
 });
 
 class AppNotice {
