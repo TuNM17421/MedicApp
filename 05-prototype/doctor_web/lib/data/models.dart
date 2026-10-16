@@ -21,13 +21,26 @@ List<Json> _list(Object? value) =>
 
 @immutable
 class Staff {
-  const Staff({required this.id, required this.name, required this.role});
+  const Staff({
+    required this.id,
+    required this.name,
+    required this.role,
+    this.mustChangePassword = false,
+  });
   final String id, name, role;
+
+  /// Signed in with a one-time password: the web shows only the change
+  /// password screen until a new one is set (bước 18).
+  final bool mustChangePassword;
+
+  /// The clinic admin manages accounts and sees the pilot numbers; no charts.
+  bool get isAdmin => role == 'admin';
 
   factory Staff.fromJson(Json j) => Staff(
     id: j['id']! as String,
     name: j['name']! as String,
     role: j['role'] as String? ?? 'doctor',
+    mustChangePassword: j['mustChangePassword'] as bool? ?? false,
   );
 }
 

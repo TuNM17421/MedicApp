@@ -41,6 +41,14 @@ function int(env, name, fallback, { min = 1, max = Number.MAX_SAFE_INTEGER } = {
   return value;
 }
 
+function bool(env, name, fallback) {
+  const raw = (env[name] ?? '').trim().toLowerCase();
+  if (!raw) return fallback;
+  if (['1', 'true', 'yes'].includes(raw)) return true;
+  if (['0', 'false', 'no'].includes(raw)) return false;
+  throw new Error(`${name} chỉ nhận 1 hoặc 0.`);
+}
+
 /**
  * Builds the validated configuration. The API key is kept in a closure-free
  * field that is never serialised: `describe()` is the only view that leaves
@@ -115,6 +123,11 @@ export function readConfig(env = process.env) {
     // burst of uploads makes one summary.
     summaryMode,
     summaryDebounceMs: int(env, 'SUMMARY_DEBOUNCE_MS', 3000, { min: 0, max: 600_000 }),
+    // Bước 18: daily backup in the server process (npm run backup by hand).
+    backupEnabled: bool(env, 'BACKUP_ENABLED', true),
+    backupDir: path(env, 'BACKUP_DIR', 'data/backups'),
+    backupKeep: int(env, 'BACKUP_KEEP', 14, { max: 365 }),
+    backupHour: int(env, 'BACKUP_HOUR', 2, { min: 0, max: 23 }),
   };
   Object.defineProperty(config, 'apiKey', { value: apiKey, enumerable: false });
   // Server secret mixed into code hashes; the default is for dev only.

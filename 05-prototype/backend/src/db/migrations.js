@@ -198,4 +198,15 @@ export const migrations = [
   ALTER TABLE visit_summary ADD COLUMN input_hash TEXT;
   CREATE INDEX visit_summary_appointment ON visit_summary (appointment_id, created_at);
   `,
+  // Bước 18: accounts managed by the clinic's admin. A new or reset account
+  // has a one-time password and must choose its own before anything else;
+  // a deactivated account cannot sign in and its sessions end at once.
+  `
+  ALTER TABLE practitioner ADD COLUMN active INTEGER NOT NULL DEFAULT 1;
+  ALTER TABLE practitioner ADD COLUMN must_change_password INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE practitioner ADD COLUMN password_changed_at TEXT;
+  ALTER TABLE practitioner ADD COLUMN last_login_at TEXT;
+  CREATE INDEX audit_appointment ON audit_event (appointment_id, at);
+  CREATE INDEX audit_action ON audit_event (action, at);
+  `,
 ];

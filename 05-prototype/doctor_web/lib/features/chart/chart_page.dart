@@ -11,6 +11,7 @@ import '../../data/api.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../worklist/worklist_page.dart' show AdherenceMeter;
+import 'access_log.dart';
 import 'history_tab.dart';
 import 'result_tab.dart';
 import 'summary_tab.dart';
@@ -411,7 +412,17 @@ class _PatientBannerState extends ConsumerState<PatientBanner> {
                   ),
                 ),
             ]),
-          section('Chia sẻ dữ liệu', [_ConsentNote(d)]),
+          section('Chia sẻ dữ liệu', [
+            _ConsentNote(d),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => showAccessLogDialog(context, p.brief.id),
+                icon: const Icon(LucideIcons.scrollText, size: 16),
+                label: const Text('Nhật ký truy cập'),
+              ),
+            ),
+          ]),
           const SizedBox(height: 18),
           action,
         ],

@@ -111,7 +111,7 @@ test('đăng nhập: cookie HttpOnly SameSite=Strict, me, đăng xuất', async 
   assert.doesNotMatch(set, /Secure/);
   assert.match(sessionCookie('x', { secure: true }), /; Secure$/);
   const body = await res.json();
-  assert.deepEqual(body.staff, { id: 'pr-ha', name: 'BS. Nguyễn Thu Hà', role: 'doctor' });
+  assert.deepEqual(body.staff, { id: 'pr-ha', name: 'BS. Nguyễn Thu Hà', role: 'doctor', mustChangePassword: false });
   assert.deepEqual(body.clinic, { id: 'c-anbinh', name: 'Phòng khám Đa khoa An Bình', phone: '0900 000 000' });
 
   const mine = set.split(';')[0];
