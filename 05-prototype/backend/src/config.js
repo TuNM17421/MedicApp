@@ -1,7 +1,30 @@
 import { existsSync } from 'node:fs';
+import { isAbsolute, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+/** The backend folder; relative paths in `.env` are resolved against it. */
+export const backendDir = fileURLToPath(new URL('..', import.meta.url));
 const envFile = fileURLToPath(new URL('../.env', import.meta.url));
+
+function path(env, name, fallback) {
+  const raw = (env[name] ?? '').trim() || fallback;
+  return isAbsolute(raw) ? resolve(raw) : resolve(backendDir, raw);
+}
+
+function origin(env, name) {
+  const raw = (env[name] ?? '').trim();
+  if (!raw) return null;
+  let parsed;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    parsed = null;
+  }
+  if (!parsed || !['http:', 'https:'].includes(parsed.protocol) || parsed.origin !== raw.replace(/\/$/, '')) {
+    throw new Error(`${name} phải là một origin, ví dụ http://localhost:5000.`);
+  }
+  return parsed.origin;
+}
 
 /** Reads `.env` (if present) without overriding variables already set. */
 export function loadEnvFile(path = envFile) {
@@ -61,6 +84,12 @@ export function readConfig(env = process.env) {
     modelTimeoutMs: int(env, 'MODEL_TIMEOUT_MS', 20_000, { min: 1000 }),
     sessionIdleMs: int(env, 'SESSION_IDLE_MINUTES', 30, { max: 240 }) * 60_000,
     maxSessions: int(env, 'MAX_SESSIONS', 20, { max: 500 }),
+    // Clinic database and doctor web (bước 14).
+    clinicDb: path(env, 'CLINIC_DB', 'data/clinic.db'),
+    doctorWebDir: path(env, 'DOCTOR_WEB_DIR', '../doctor_web/build/web'),
+    doctorWebDevOrigin: origin(env, 'DOCTOR_WEB_DEV_ORIGIN'),
+    // Set when the server sits behind HTTPS: the staff cookie gets `Secure`.
+    https: env.HTTPS === '1',
   };
   Object.defineProperty(config, 'apiKey', { value: apiKey, enumerable: false });
   return Object.freeze(config);

@@ -9,7 +9,8 @@
   },
   "scripts": {
     "start": "node src/server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "seed": "node src/clinic/seed.js"
   },
   "dependencies": {
     "openai": "7.34.0",

@@ -61,6 +61,24 @@ Từ bước 13 (web bác sĩ), backend có cơ sở dữ liệu cho lịch khá
 - `src/db/index.js`: `openDatabase(path)` tạo file và chạy migration theo `PRAGMA user_version`; `transaction(db, fn)`.
 - Kết quả khám đã gửi không bị sửa: sửa là thêm phiên bản mới kèm lý do. Tóm tắt cũng không ghi đè.
 
+## Web bác sĩ
+
+Từ bước 14, backend phục vụ web bác sĩ và API phòng khám ([CLINIC-API.md](CLINIC-API.md)), mã nằm ở `src/clinic/`.
+
+```powershell
+# Chạy từ backend; tạo lại data/clinic.db với dữ liệu mẫu theo ngày hôm nay
+npm run seed
+# Build web (từ doctor_web): flutter build web --base-href /doctor/ --no-web-resources-cdn
+npm start
+```
+
+Mở `http://localhost:8080/doctor/`, đăng nhập `bs.ha@anbinh.test`, mật khẩu `medicapp-demo` (đổi bằng `DEMO_PASSWORD` trước khi seed). Hàng chờ có 6 người bệnh của bản bấm thử, lịch vào ngày chạy seed; seed lại mỗi ngày demo, hoặc đặt `SEED_TODAY=yyyy-MM-dd`.
+
+- `CLINIC_DB` (mặc định `data/clinic.db`), `DOCTOR_WEB_DIR` (mặc định `../doctor_web/build/web`). Thư mục `data/` không vào git.
+- Phiên bác sĩ trong cookie `mc_staff` (HttpOnly, SameSite=Strict), chỉ ở bộ nhớ: 30 phút không thao tác hoặc 12 giờ thì hết; khởi động lại server phải đăng nhập lại. Sai mật khẩu 5 lần khóa 15 phút.
+- Mỗi lần mở hồ sơ, đánh giá tóm tắt, đổi trạng thái lượt khám ghi một dòng `audit_event`. Log chỉ có tên sự kiện, không có tên người bệnh, triệu chứng, mật khẩu hay token.
+- Chạy `flutter run -d web-server --web-port 5000` thì đặt `DOCTOR_WEB_DEV_ORIGIN=http://localhost:5000` trong `.env` để bật CORS cho đúng origin đó.
+
 ## Giới hạn và dữ liệu
 
 Cấu hình trong `.env` (xem `.env.example`): 60 giây/lượt nói, 5 phút micro/phiên, 12 lượt gọi model/phút/phiên, timeout model 20 giây, phiên rảnh 30 phút, tối đa 20 phiên, một kết nối micro mỗi phiên, dừng khi bộ đệm gửi lên nhà cung cấp vượt 1 MiB.
@@ -73,6 +91,6 @@ Phiên chỉ ở bộ nhớ, mất khi đóng hoặc khởi động lại server
 npm test
 ```
 
-33 test (`node --test`) với provider giả: điều phối hội thoại theo AC01–AC17, máy chủ HTTP, relay audio và giới hạn, xử lý lỗi Responses API. Test Flutter `test/smart/backend_contract_test.dart` chạy server thật ở chế độ mock nếu đã `npm ci`.
+47 test (`node --test`) với provider giả: điều phối hội thoại theo AC01–AC17, máy chủ HTTP, relay audio và giới hạn, xử lý lỗi Responses API, cơ sở dữ liệu, và API phòng khám (đăng nhập, khóa tài khoản, hàng chờ, đồng ý chia sẻ, hồ sơ, audit, phạm vi phòng khám, phục vụ web, CORS). Test Flutter `test/smart/backend_contract_test.dart` chạy server thật ở chế độ mock nếu đã `npm ci`.
 
-**Chưa kiểm chứng:** chưa gọi OpenAI bằng key thật, chưa đo chất lượng nhận tiếng Việt, độ trễ hay chi phí, chưa thử trên OPPO. Đây là prototype dùng dữ liệu minh họa, không phải công cụ phân luồng y khoa và không phải kiến trúc production (chưa có xác thực người dùng, quota theo người dùng, HTTPS).
+**Chưa kiểm chứng:** chưa gọi OpenAI bằng key thật, chưa đo chất lượng nhận tiếng Việt, độ trễ hay chi phí, chưa thử trên OPPO. Đây là prototype dùng dữ liệu minh họa, không phải công cụ phân luồng y khoa và không phải kiến trúc production (phía app chưa có xác thực người dùng, quota theo người dùng; chưa có HTTPS).

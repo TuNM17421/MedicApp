@@ -1,0 +1,115 @@
+# API phòng khám (web bác sĩ)
+
+Hợp đồng giữa backend và `doctor_web`. Bước 14 có phần xem; bước 15 thêm kê đơn và gửi kết quả, bước 16 thêm phía người bệnh.
+
+Mọi phản hồi là JSON UTF-8, `cache-control: no-store`. Lỗi có dạng `{ "error": { "code", "message" } }`, message tiếng Việt, không có stack trace. Ngày có dạng `yyyy-MM-dd`, thời điểm là ISO-8601 có múi giờ, luôn theo giờ phòng khám `+07:00` (ví dụ `2026-10-16T08:30:00+07:00`). Phía Dart cần `DateTime.parse(...).toLocal()` trước khi đưa vào `medic_core` (máy bác sĩ ở múi giờ Việt Nam), nếu không `dayOf` sẽ lấy ngày theo UTC.
+
+Khi backend chạy mà không mở được cơ sở dữ liệu, mọi giao diện dưới đây trả `503 clinic_unavailable`.
+
+## Đăng nhập
+
+Phiên bác sĩ nằm trong cookie `mc_staff` (`HttpOnly; SameSite=Strict; Path=/`, thêm `Secure` khi chạy HTTPS). Phiên hết hạn sau 30 phút không thao tác (trượt) và tối đa 12 giờ. Phiên chỉ giữ trong bộ nhớ: khởi động lại server thì phải đăng nhập lại.
+
+Web bác sĩ bản build được backend phục vụ ở `/doctor/` (cùng origin, nên cookie đi kèm mà không cần CORS). Khi chạy `flutter run -d web-server` ở cổng khác, đặt `DOCTOR_WEB_DEV_ORIGIN=http://localhost:<cổng>` để backend trả CORS có `credentials` cho đúng origin đó (không bao giờ `*`; preflight `OPTIONS` trả `204`). Cookie vẫn `SameSite=Strict`: `localhost:8080` và `localhost:<cổng khác>` là cùng site (cổng không làm khác site), nên trình duyệt vẫn gửi cookie khi web gọi `fetch` với `credentials: include`. Mở web bằng `localhost`, đừng trộn `localhost` với `127.0.0.1` (hai host khác site).
+
+Bản build phục vụ ở `GET /doctor/*` từ `DOCTOR_WEB_DIR` (mặc định `../doctor_web/build/web`, cần `flutter build web --base-href /doctor/ --no-web-resources-cdn`). Đường dẫn không có tệp và không có phần mở rộng trả `index.html` (SPA); thiếu bản build: `404 doctor_web_missing`. `/` và `/doctor` chuyển về `/doctor/`.
+
+| Giao diện | Thân | Trả về |
+| --- | --- | --- |
+| `POST /v1/staff/login` | `{ email, password }` | `200 { staff, clinic }` và đặt cookie. Sai: `401 bad_credentials`. Lần sai thứ 5 liên tiếp khóa 15 phút và trả `423 locked`; trong thời gian khóa, cả mật khẩu đúng cũng nhận `423`. |
+| `POST /v1/staff/logout` | | `204`, xóa cookie |
+| `GET /v1/staff/me` | | `200 { staff, clinic }`, hoặc `401 unauthenticated` |
+
+`staff = { id, name: "BS. Nguyễn Thu Hà", role }`, `clinic = { id, name, phone }`.
+
+Mọi giao diện dưới đây cần phiên hợp lệ (`401 unauthenticated`) và chỉ trả dữ liệu thuộc phòng khám của bác sĩ (khác phòng khám: `404 not_found`).
+
+## Hàng chờ
+
+`GET /v1/clinic/worklist?date=yyyy-MM-dd` (mặc định hôm nay theo giờ Việt Nam)
+
+```json
+{
+  "date": "2026-10-16",
+  "now": "2026-10-16T08:40:00+07:00",
+  "items": [
+    {
+      "appointmentId": "a-...",
+      "time": "08:30",
+      "status": "arrived",
+      "kind": "Khám dịch vụ",
+      "specialty": "Nội tổng hợp",
+      "patient": { "id": "p2", "code": "000482", "name": "Phạm Thị Lan", "age": 78, "gender": "Nữ" },
+      "consent": "shared",
+      "hasSummary": true,
+      "chiefComplaint": "Đau khớp gối phải khoảng 1 tuần, sưng về đêm.",
+      "flagged": false,
+      "resultStatus": "none",
+      "courses": [ ... ],
+      "doseLog": [ ... ]
+    }
+  ]
+}
+```
+
+- `status`: `booked` (chưa đến), `arrived`, `in_progress`, `done`, `cancelled`.
+- `consent`: `shared` (đang chia sẻ), `declined` (đã từ chối hoặc đã rút lại), `none` (chưa trả lời).
+- `resultStatus`: `none`, `draft`, `sent`.
+- `chiefComplaint`: nội dung mục `chief` của tóm tắt mới nhất khi `consent` là `shared` và có tóm tắt, nếu không thì `null` (cột "Lý do khám").
+- `flagged`: tóm tắt có ít nhất một cờ.
+- `courses`, `doseLog`: như ở hồ sơ bên dưới, chỉ có khi `consent` là `shared`, để web tự tính tỷ lệ tuân thủ bằng `medic_core` (backend không tính).
+
+## Hồ sơ một lượt khám
+
+`GET /v1/appointments/:id/chart`. Mỗi lần gọi ghi một `audit_event` (`chart.view`).
+
+```json
+{
+  "appointment": { "id", "time": "08:30", "startsAt", "status", "kind", "specialty", "resultStatus" },
+  "patient": {
+    "id", "code", "name", "age", "gender", "birthDate",
+    "address", "weightKg", "insuranceCode": "•••• 3921", "allergy",
+    "conditions": ["Gút (M10)", "Rối loạn lipid máu (E78)"]
+  },
+  "consent": { "state": "shared", "grantedAt", "expiresAt", "scope": ["intake", "dose_log", "self_meds"] },
+  "period": { "from": "2026-09-16", "days": 30, "now": "2026-10-16T08:40:00+07:00" },
+  "summary": {
+    "id", "mode": "mock", "createdAt",
+    "sections": [ { "key": "chief", "text", "sources": ["i-1"] }, { "key": "course", ... }, { "key": "questions", ... } ],
+    "flags": [ { "text", "sources": ["i-4"] } ],
+    "feedback": null
+  },
+  "intake": [ { "id": "i-1", "channel": "booking", "question", "answer", "answeredAt" } ],
+  "courses": [ { "id": "v-...#1", "visitId", "prescribedAt", "item": { PrescriptionItem } } ],
+  "doseLog": [ { DoseLogEntry: "courseId", "day", "slot", "mark", "at", "reason" } ],
+  "selfMeds": [ { "name", "how" } ],
+  "lastVisit": { HistoryEntry hoặc null },
+  "result": { HistoryEntry hoặc null }
+}
+```
+
+- `consent.state` là `shared`, `declined` hoặc `none`. Lấy bản ghi `consent` mới nhất của lượt khám: không có là `none`; đã rút (`revoked_at`), hết hạn hoặc phạm vi rỗng là `declined` (khi đó `grantedAt`, `expiresAt` là `null`, `scope` rỗng). Từng phần theo phạm vi: `intake` mở `summary` và `intake`, `dose_log` mở `courses` và `doseLog`, `self_meds` mở `selfMeds`. Khi không phải `shared`: `summary`, `intake`, `courses`, `doseLog`, `selfMeds` là `null`/`[]`. Cột người bệnh và lịch sử khám tại phòng khám vẫn trả về.
+- `PrescriptionItem`, `DoseLogEntry` đúng dạng JSON của `medic_core` (`toJson`).
+- `summary.feedback`: `null` hoặc `{ "value": "up" | "down", "by": "BS. Nguyễn Thu Hà", "at" }` (`by` là tên hiển thị).
+- `patient.insuranceCode`: chỉ 4 số cuối (`"•••• 3921"`), `null` khi không dùng BHYT. `patient.weightKg` có thể `null`.
+- `intake[].answer` là lời người bệnh, không kèm dấu ngoặc kép; `question` rỗng khi câu trả lời không gắn với câu hỏi cụ thể (ví dụ lúc đặt lịch). `channel`: `booking` hoặc `pre_visit`.
+- `period`: 30 ngày ngay trước ngày khám (`from` = ngày khám − 30). `courses` là các đợt thuốc có ngày dùng nằm trong kỳ; `doseLog` là các liều đã ghi của những đợt đó trong kỳ. `courses[].visitId` là phần trước `#` của `id`.
+- `lastVisit`: kết quả đã gửi gần nhất tại phòng khám trước lượt này. `result`: kết quả đã gửi của chính lượt này (dạng `HistoryEntry`), hoặc `null`.
+
+`POST /v1/summaries/:id/feedback` thân `{ "value": "up" | "down" }`: `200 { feedback }`. Ghi `audit_event` (`summary.feedback`).
+
+`POST /v1/appointments/:id/arrive` (từ `booked`) và `POST /v1/appointments/:id/start` (từ `booked` hoặc `arrived`): `200 { appointment }`. Sai trạng thái: `409 bad_state`. `start` gán bác sĩ đang đăng nhập nếu lượt khám chưa có bác sĩ. Cả hai ghi `audit_event` (`appointment.arrive`, `appointment.start`).
+
+## Lịch sử khám
+
+`GET /v1/patients/:id/history`: các kết quả đã gửi tại phòng khám, mới nhất trước (mỗi lượt khám lấy phiên bản cao nhất). Ghi `audit_event` (`history.view`).
+
+```json
+[ { "appointmentId", "date": "2026-09-16", "clinicName", "doctorName",
+    "diagnosis": [["M10", "Gút"]], "items": [ PrescriptionItem ], "advice": "...",
+    "followUpDate": "2026-10-16", "version": 1 } ]
+```
+
+## Dữ liệu mẫu
+
+`npm run seed` tạo `data/clinic.db` với phòng khám An Bình, bác sĩ `bs.ha@anbinh.test` (mật khẩu lấy từ `DEMO_PASSWORD`, mặc định `medicapp-demo`) và 6 người bệnh giống bản bấm thử, lịch khám vào ngày chạy seed (giờ Việt Nam, đổi bằng `SEED_TODAY=yyyy-MM-dd`). Lượt khám trước của Trần Văn Minh và Phạm Thị Lan là 30 ngày trước, lúc 06:30, để liều sáng của ngày đầu được tính; với quy tắc `medic_core`, Phạm Thị Lan ra Atorvastatin 18/30 và Allopurinol 27/30. Mã lượt khám có dạng `a-<người bệnh>-<yyyyMMdd>` (ví dụ `a-p2-20261016`). Chỉ dùng cho dev; seed xóa và tạo lại file, chỉ chấp nhận đường dẫn trong `backend/data` hoặc thư mục tạm.
