@@ -10,6 +10,8 @@
 
 **Bước 12:** Nhắc uống thuốc theo đơn: thông báo đúng giờ có nút "Đã uống" và "Nhắc lại sau 10 phút", nhắc lại sau 30 phút nếu chưa ghi, báo sắp hết thuốc. Màn "Thuốc hôm nay" ghi đã uống hoặc bỏ liều kèm lý do, xem lịch sử 4 tuần cho từng người. Xem [bước 12](NHAC-THUOC.md).
 
+**Bước 13:** Bắt đầu web bác sĩ: tách đơn thuốc, nhật ký thuốc và cách tính tuân thủ ra package dùng chung `medic_core`; backend có cơ sở dữ liệu phòng khám. Xem [bước 13](WEB-BAC-SI-NEN.md).
+
 **Bước 8:** App đặt thông báo nhắc khám trên điện thoại, chọn giờ theo thời gian phải kiêng và nội dung theo tuổi, giới của người khám. Xem [bước 8](THONG-BAO-NHAC-KHAM.md).
 
 **Bước 7:** Có lưu ý cá nhân hóa trước khi khám cho 5 bệnh, đọc từ hồ sơ và lịch hẹn. Xem [bước 7](LUU-Y-TRUOC-KHAM.md).

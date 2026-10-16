@@ -9,11 +9,12 @@ import '../../../app/router/app_routes.dart';
 import '../../../app/state/app_state.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../core/widgets/app_widgets.dart';
-import '../../records/domain/visit_result.dart';
+
+import 'package:medic_core/medic_core.dart';
+
 import '../../visit_prep/visit_prep.dart';
 import '../application/meds_providers.dart';
 import '../domain/med_reminder_planner.dart';
-import '../domain/medication.dart';
 
 final _time = DateFormat('HH:mm');
 

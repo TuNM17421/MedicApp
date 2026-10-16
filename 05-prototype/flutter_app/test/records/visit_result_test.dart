@@ -13,7 +13,7 @@ import 'package:medic_app/features/booking/domain/booking_models.dart';
 import 'package:medic_app/features/consent/health_consent.dart';
 import 'package:medic_app/features/records/application/records_providers.dart';
 import 'package:medic_app/features/records/data/doctor_portal.dart';
-import 'package:medic_app/features/records/domain/visit_result.dart';
+import 'package:medic_core/medic_core.dart';
 import 'package:medic_app/features/visit_prep/reminder_scheduler.dart';
 import 'package:medic_app/features/visit_prep/visit_prep.dart';
 import 'package:medic_app/main.dart';

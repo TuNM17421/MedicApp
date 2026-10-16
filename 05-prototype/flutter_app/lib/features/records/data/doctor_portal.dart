@@ -3,7 +3,8 @@ import 'package:intl/intl.dart';
 import '../../../app/state/app_state.dart';
 import '../../booking/application/booking_providers.dart';
 import '../../booking/domain/booking_models.dart';
-import '../domain/visit_result.dart';
+
+import 'package:medic_core/medic_core.dart';
 
 /// The doctor-side web system that returns a visit's diagnosis and
 /// prescription. Only a mock exists for now.

@@ -1,9 +1,10 @@
 import 'package:intl/intl.dart';
 
 import '../../../app/state/app_state.dart';
-import '../../records/domain/visit_result.dart';
+
+import 'package:medic_core/medic_core.dart';
+
 import '../../visit_prep/reminder_planner.dart' show ReminderLine;
-import 'medication.dart';
 
 enum MedReminderKind {
   /// At the dose time.

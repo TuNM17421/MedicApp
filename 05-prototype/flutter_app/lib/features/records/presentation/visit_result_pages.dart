@@ -8,7 +8,8 @@ import '../../../app/theme/app_theme.dart';
 import '../../../core/widgets/app_widgets.dart';
 import '../../auth/auth_controller.dart';
 import '../application/records_providers.dart';
-import '../domain/visit_result.dart';
+
+import 'package:medic_core/medic_core.dart';
 
 final _date = DateFormat('dd/MM/yyyy');
 

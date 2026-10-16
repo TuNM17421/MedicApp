@@ -5,12 +5,13 @@ import '../../../app/notifications.dart';
 import '../../../app/state/app_state.dart';
 import '../../auth/auth_controller.dart';
 import '../../records/application/records_providers.dart';
-import '../../records/domain/visit_result.dart';
+
+import 'package:medic_core/medic_core.dart';
+
 import '../../visit_prep/reminder_scheduler.dart';
 import '../../visit_prep/visit_prep.dart';
 import '../data/med_reminder_scheduler.dart';
 import '../domain/med_reminder_planner.dart';
-import '../domain/medication.dart';
 
 /// Every medicine from the signed-in account's prescriptions.
 final medicationCoursesProvider = Provider<List<MedicationCourse>>(

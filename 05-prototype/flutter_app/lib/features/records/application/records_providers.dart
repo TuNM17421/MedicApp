@@ -4,7 +4,8 @@ import '../../../app/state/app_state.dart';
 import '../../auth/auth_controller.dart';
 import '../../booking/application/booking_providers.dart';
 import '../data/doctor_portal.dart';
-import '../domain/visit_result.dart';
+
+import 'package:medic_core/medic_core.dart';
 
 final doctorPortalProvider = Provider<DoctorPortal>(
   (ref) => const MockDoctorPortal(),

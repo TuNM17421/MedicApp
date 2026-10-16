@@ -53,6 +53,14 @@ Quy tắc điều phối nằm trong `src/orchestrator.js`:
 
 Giờ khám, slot và phí vẫn do `BookingRepository` mô phỏng trong app kiểm tra (đóng vai hệ thống lịch bệnh viện). Catalog dùng chung được test Flutter đối chiếu với `BookingCatalog` để phát hiện lệch.
 
+## Cơ sở dữ liệu phòng khám
+
+Từ bước 13 (web bác sĩ), backend có cơ sở dữ liệu cho lịch khám, đồng ý chia sẻ, nhật ký thuốc, tóm tắt và kết quả khám. Bản dev dùng SQLite qua `node:sqlite` có sẵn trong Node 22 (không cần cài thêm, Node in cảnh báo "experimental" khi mở). Bản chạy thử với phòng khám sẽ dùng PostgreSQL.
+
+- `src/db/migrations.js`: schema. Tên bảng theo tài nguyên FHIR tương ứng (`appointment`, `consent`, `visit_result`, `audit_event`…). Chỉ thêm migration mới, không sửa migration đã phát hành.
+- `src/db/index.js`: `openDatabase(path)` tạo file và chạy migration theo `PRAGMA user_version`; `transaction(db, fn)`.
+- Kết quả khám đã gửi không bị sửa: sửa là thêm phiên bản mới kèm lý do. Tóm tắt cũng không ghi đè.
+
 ## Giới hạn và dữ liệu
 
 Cấu hình trong `.env` (xem `.env.example`): 60 giây/lượt nói, 5 phút micro/phiên, 12 lượt gọi model/phút/phiên, timeout model 20 giây, phiên rảnh 30 phút, tối đa 20 phiên, một kết nối micro mỗi phiên, dừng khi bộ đệm gửi lên nhà cung cấp vượt 1 MiB.
@@ -65,6 +73,6 @@ Phiên chỉ ở bộ nhớ, mất khi đóng hoặc khởi động lại server
 npm test
 ```
 
-28 test (`node --test`) với provider giả: điều phối hội thoại theo AC01–AC17, máy chủ HTTP, relay audio và giới hạn, xử lý lỗi Responses API. Test Flutter `test/smart/backend_contract_test.dart` chạy server thật ở chế độ mock nếu đã `npm ci`.
+33 test (`node --test`) với provider giả: điều phối hội thoại theo AC01–AC17, máy chủ HTTP, relay audio và giới hạn, xử lý lỗi Responses API. Test Flutter `test/smart/backend_contract_test.dart` chạy server thật ở chế độ mock nếu đã `npm ci`.
 
 **Chưa kiểm chứng:** chưa gọi OpenAI bằng key thật, chưa đo chất lượng nhận tiếng Việt, độ trễ hay chi phí, chưa thử trên OPPO. Đây là prototype dùng dữ liệu minh họa, không phải công cụ phân luồng y khoa và không phải kiến trúc production (chưa có xác thực người dùng, quota theo người dùng, HTTPS).

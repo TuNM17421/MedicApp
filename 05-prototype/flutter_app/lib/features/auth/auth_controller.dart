@@ -4,8 +4,8 @@ import '../../app/state/app_state.dart';
 import '../../core/storage/local_vault.dart';
 import '../booking/domain/booking_models.dart';
 import '../consent/health_consent.dart';
-import '../meds/domain/medication.dart';
-import '../records/domain/visit_result.dart';
+
+import 'package:medic_core/medic_core.dart';
 
 /// Prototype-only accounts. Nothing is sent to a server. An account stays in
 /// memory and disappears when the app closes, unless its holder agreed to

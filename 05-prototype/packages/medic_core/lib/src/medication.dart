@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 
-import '../../records/domain/visit_result.dart';
+import 'visit_result.dart';
 
 DateTime dayOf(DateTime value) => DateTime(value.year, value.month, value.day);
 

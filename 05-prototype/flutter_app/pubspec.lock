@@ -613,6 +613,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.6.0"
+  medic_core:
+    dependency: "direct main"
+    description:
+      path: "../packages/medic_core"
+      relative: true
+    source: path
+    version: "0.1.0"
   meta:
     dependency: transitive
     description:
