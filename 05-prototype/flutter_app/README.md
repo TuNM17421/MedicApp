@@ -4,6 +4,8 @@
 
 **Bước 9:** Có icon và màn mở app riêng, hình minh họa, lịch tháng ở trang Lịch hẹn và chuyển động nhẹ (tắt khi giảm chuyển động). Xem [bước 9](LAM-DEP-UI.md).
 
+**Bước 10:** Hồ sơ gia đình được lưu trên máy (mã hóa AES-256-GCM, khóa giữ trong Android Keystore) sau khi chủ tài khoản đồng ý ở màn hình "Lưu dữ liệu sức khỏe". Không đồng ý thì app chạy như cũ, dữ liệu mất khi đóng app. Rút lại đồng ý ở Tài khoản sẽ xóa dữ liệu khỏi máy. Xem [bước 10](LUU-TRU-DU-LIEU.md).
+
 **Bước 8:** App đặt thông báo nhắc khám trên điện thoại, chọn giờ theo thời gian phải kiêng và nội dung theo tuổi, giới của người khám. Xem [bước 8](THONG-BAO-NHAC-KHAM.md).
 
 **Bước 7:** Có lưu ý cá nhân hóa trước khi khám cho 5 bệnh, đọc từ hồ sơ và lịch hẹn. Xem [bước 7](LUU-Y-TRUOC-KHAM.md).

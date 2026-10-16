@@ -9,6 +9,7 @@ import '../../core/widgets/app_motion.dart';
 import '../../core/widgets/app_widgets.dart';
 import '../booking/application/booking_providers.dart';
 import '../booking/presentation/booking_format.dart';
+import '../consent/health_consent_page.dart';
 import '../booking/domain/booking_models.dart';
 import '../visit_prep/visit_prep_widgets.dart';
 
@@ -92,6 +93,7 @@ class HomePage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const HealthConsentPrompt(),
                 const HomePrepBanner(),
                 Semantics(
                   header: true,
