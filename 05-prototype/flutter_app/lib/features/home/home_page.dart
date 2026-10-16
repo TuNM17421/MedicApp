@@ -10,6 +10,7 @@ import '../../core/widgets/app_widgets.dart';
 import '../booking/application/booking_providers.dart';
 import '../booking/presentation/booking_format.dart';
 import '../consent/health_consent_page.dart';
+import '../meds/presentation/today_meds_page.dart';
 import '../booking/domain/booking_models.dart';
 import '../visit_prep/visit_prep_widgets.dart';
 
@@ -95,6 +96,7 @@ class HomePage extends ConsumerWidget {
               children: [
                 const HealthConsentPrompt(),
                 const HomePrepBanner(),
+                const HomeMedsCard(),
                 Semantics(
                   header: true,
                   child: Text(

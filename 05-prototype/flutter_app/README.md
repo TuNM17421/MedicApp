@@ -8,6 +8,8 @@
 
 **Bước 11:** Kết quả khám và đơn thuốc theo mẫu Bộ Y tế (Thông tư 18/2018/TT-BYT), do một web bác sĩ giả lập gửi về cho từng lượt khám. Xem dạng dễ đọc hoặc dạng giống tờ đơn giấy. Lịch hẹn và kết quả giờ được lưu theo từng tài khoản. Xem [bước 11](DON-THUOC.md).
 
+**Bước 12:** Nhắc uống thuốc theo đơn: thông báo đúng giờ có nút "Đã uống" và "Nhắc lại sau 10 phút", nhắc lại sau 30 phút nếu chưa ghi, báo sắp hết thuốc. Màn "Thuốc hôm nay" ghi đã uống hoặc bỏ liều kèm lý do, xem lịch sử 4 tuần cho từng người. Xem [bước 12](NHAC-THUOC.md).
+
 **Bước 8:** App đặt thông báo nhắc khám trên điện thoại, chọn giờ theo thời gian phải kiêng và nội dung theo tuổi, giới của người khám. Xem [bước 8](THONG-BAO-NHAC-KHAM.md).
 
 **Bước 7:** Có lưu ý cá nhân hóa trước khi khám cho 5 bệnh, đọc từ hồ sơ và lịch hẹn. Xem [bước 7](LUU-Y-TRUOC-KHAM.md).
@@ -21,7 +23,7 @@ App `medic_app` mở màn **Chào mừng** khi chưa đăng nhập, sau đó và
 - Java: Eclipse Temurin 21.0.12.1+1.
 - Application ID tạm: `com.example.medic_app`; cần đổi trước khi phát hành.
 - Entry point cục bộ: `lib/main.dart`.
-- Tests: giao diện, điều hướng, trạng thái và luồng đặt lịch trong `test/`; ảnh chuẩn trong `test/goldens/`. Bộ kiểm tra hiện gồm 116 test (107 pass, 1 bỏ qua); 8 test ảnh chuẩn cần cập nhật trên Windows (xem bước 5).
+- Tests: giao diện, điều hướng, trạng thái và luồng đặt lịch trong `test/`; ảnh chuẩn trong `test/goldens/`. Bộ kiểm tra hiện gồm 138 test (129 pass, 1 bỏ qua); 8 test ảnh chuẩn cần cập nhật trên Windows (xem bước 5).
 
 Source Flutter, font, tests và script môi trường đã được đưa vào bản bàn giao này. Trên máy Windows mới cần Git và chạy `scripts/setup.ps1` từ gốc repo để tải bộ công cụ trước khi kích hoạt; SDK/cache không nằm trong Git.
 

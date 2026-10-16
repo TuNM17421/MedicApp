@@ -2,11 +2,13 @@
     <!-- Smart Scheduling: requested only when the user taps the microphone. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.INTERNET"/>
-    <!-- Visit reminders: asked when the first reminder is scheduled; boot
-         permission lets scheduled reminders survive a restart. Reminders use
-         inexact alarms, so no exact-alarm permission is needed. -->
+    <!-- Notifications are local only. RECEIVE_BOOT_COMPLETED lets scheduled
+         reminders survive a restart. SCHEDULE_EXACT_ALARM lets medication
+         reminders ring on the minute once the user allows it from Thuốc hôm
+         nay; without it they fall back to inexact alarms. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
     <application
         android:label="medic_app"
         android:allowBackup="false"

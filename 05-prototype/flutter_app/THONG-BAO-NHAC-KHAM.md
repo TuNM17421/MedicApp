@@ -60,7 +60,7 @@ Chi tiết lịch hẹn có mục **“Nhắc trên điện thoại”** liệt 
 
 - Quyền `POST_NOTIFICATIONS` (Android 13+, app hỏi khi có lịch đầu tiên) và `RECEIVE_BOOT_COMPLETED` (đặt lại sau khi khởi động máy).
 - Receiver của plugin trong `AndroidManifest.xml`; bật core library desugaring trong `android/app/build.gradle.kts`.
-- Kênh thông báo “Nhắc lịch khám”, mức ưu tiên cao. Dùng báo thức không chính xác tuyệt đối (`inexactAllowWhileIdle`), nên Android có thể báo trễ vài phút để tiết kiệm pin; không cần quyền báo thức chính xác.
+- Kênh thông báo “Nhắc lịch khám”, mức ưu tiên cao. Từ bước 12, nếu người dùng cho phép báo thức chính xác thì nhắc đúng phút; nếu không thì dùng `inexactAllowWhileIdle`, Android có thể báo trễ vài phút để tiết kiệm pin. Nhắc khám dùng id 0–999 trong bộ thông báo chung, xem [bước 12](NHAC-THUOC.md#thông-báo-dùng-chung).
 
 ## Mã nguồn
 
