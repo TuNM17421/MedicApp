@@ -5,10 +5,13 @@ import 'package:go_router/go_router.dart';
 import '../../app/router/app_routes.dart';
 import '../../app/state/app_state.dart';
 import '../../app/theme/app_theme.dart';
+import '../../core/widgets/app_motion.dart';
 import '../../core/widgets/app_widgets.dart';
 import '../booking/application/booking_providers.dart';
 import '../booking/presentation/booking_format.dart';
+import '../consent/health_consent_page.dart';
 import '../booking/domain/booking_models.dart';
+import '../visit_prep/visit_prep_widgets.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -50,6 +53,7 @@ class HomePage extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
                 child: AppSurface(
+                  key: const Key('home-booking-card'),
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -80,7 +84,7 @@ class HomePage extends ConsumerWidget {
                       ),
                     ],
                   ),
-                ),
+                ).entrance(context),
               ),
             ],
           ),
@@ -89,6 +93,8 @@ class HomePage extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                const HealthConsentPrompt(),
+                const HomePrepBanner(),
                 Semantics(
                   header: true,
                   child: Text(
@@ -98,14 +104,13 @@ class HomePage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 if (records.isEmpty)
-                  const AppSurface(
-                    child: Text(
-                      'Chưa có lịch hẹn',
-                      textAlign: TextAlign.center,
-                    ),
-                  )
+                  const AppEmptyState(
+                    title: 'Chưa có lịch hẹn',
+                    message: 'Bấm “Bắt đầu” ở trên để đặt lịch khám đầu tiên.',
+                    art: AppArt.emptyCalendar,
+                  ).entrance(context, order: 1)
                 else
-                  for (final record in records.take(2))
+                  for (final (index, record) in records.take(2).indexed)
                     AppLinkCard(
                       title: record.visit.patientName,
                       subtitle:
@@ -113,7 +118,7 @@ class HomePage extends ConsumerWidget {
                       icon: AppIcons.calendar,
                       onTap: () =>
                           context.push(AppRoutes.appointment(record.visit.id)),
-                    ),
+                    ).entrance(context, order: 1 + index),
                 const SizedBox(height: 16),
                 AppLinkCard(
                   title: 'Lịch hẹn',

@@ -21,7 +21,7 @@ class NotificationsPage extends ConsumerWidget {
           const AppEmptyState(
             title: 'Chưa có thông báo',
             message: 'Thông báo mới sẽ được hiển thị tại đây.',
-            icon: AppIcons.notifications,
+            art: AppArt.emptyBell,
           )
         else ...[
           Text(

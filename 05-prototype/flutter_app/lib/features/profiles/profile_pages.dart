@@ -6,6 +6,7 @@ import '../../app/router/app_routes.dart';
 import '../../app/state/app_state.dart';
 import '../../app/theme/app_theme.dart';
 import '../../core/widgets/app_widgets.dart';
+import '../visit_prep/visit_prep_widgets.dart';
 import 'cccd_qr.dart';
 
 class ProfilesPage extends ConsumerWidget {
@@ -31,6 +32,21 @@ class ProfilesPage extends ConsumerWidget {
             selected: active.id == profile.id,
             onTap: () =>
                 ref.read(activeProfileIdProvider.notifier).select(profile.id),
+          ),
+        if (profiles.length < 2)
+          const AppSurface(
+            key: Key('profiles-family-hint'),
+            child: Column(
+              children: [
+                AppIllustration(AppArt.family, height: 110),
+                SizedBox(height: 12),
+                Text(
+                  'Thêm bố mẹ, vợ chồng hoặc con để đặt khám và nhận nhắc lịch '
+                  'giúp cả nhà.',
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
           ),
         AppLinkCard(
           key: const Key('profiles-add'),
@@ -90,6 +106,14 @@ class ProfileDetailPage extends ConsumerWidget {
               if (matches.first.address case final address?)
                 (label: 'Địa chỉ', value: address),
             ],
+          ),
+        if (matches.isNotEmpty)
+          ProfileConditionsEditor(
+            key: const Key('profile-conditions'),
+            selected: matches.first.conditions,
+            onChanged: (value) => ref
+                .read(profileCatalogProvider.notifier)
+                .setConditions(id, value),
           ),
       ],
     );

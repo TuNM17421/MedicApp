@@ -2,8 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/auth/auth_controller.dart';
 
-/// Local demonstration data. No medical records or disk storage; sign-in is a
-/// prototype kept in memory (see `auth_controller.dart`).
+/// A person whose visits are managed in the app. Kept in memory, and on this
+/// device only after the account holder agreed (see `health_consent.dart`).
 class PreviewProfile {
   const PreviewProfile({
     required this.id,
@@ -14,6 +14,7 @@ class PreviewProfile {
     this.gender,
     this.idNumber,
     this.address,
+    this.conditions = const [],
   });
   final String id;
   final String name;
@@ -25,6 +26,51 @@ class PreviewProfile {
   /// CCCD number, only when the profile was created from a scanned card.
   final String? idNumber;
   final String? address;
+
+  /// Ids from `visit_prep_catalog.dart` of conditions this person is followed
+  /// for. Used only to personalise visit preparation notes.
+  final List<String> conditions;
+
+  PreviewProfile withConditions(List<String> value) => PreviewProfile(
+    id: id,
+    name: name,
+    birthYear: birthYear,
+    relationship: relationship,
+    birthDate: birthDate,
+    gender: gender,
+    idNumber: idNumber,
+    address: address,
+    conditions: List.unmodifiable(value),
+  );
+
+  Map<String, Object?> toJson() => {
+    'id': id,
+    'name': name,
+    'birthYear': birthYear,
+    'relationship': relationship,
+    'birthDate': birthDate?.toIso8601String(),
+    'gender': gender,
+    'idNumber': idNumber,
+    'address': address,
+    'conditions': conditions,
+  };
+
+  factory PreviewProfile.fromJson(Map<String, Object?> json) => PreviewProfile(
+    id: json['id']! as String,
+    name: json['name']! as String,
+    birthYear: json['birthYear']! as int,
+    relationship: json['relationship']! as String,
+    birthDate: switch (json['birthDate']) {
+      final String value => DateTime.parse(value),
+      _ => null,
+    },
+    gender: json['gender'] as String?,
+    idNumber: json['idNumber'] as String?,
+    address: json['address'] as String?,
+    conditions: List.unmodifiable(
+      (json['conditions'] as List<Object?>? ?? const []).cast<String>(),
+    ),
+  );
 }
 
 const demoProfiles = [
@@ -33,12 +79,16 @@ const demoProfiles = [
     name: 'Phạm Văn Hòa',
     birthYear: 1966,
     relationship: 'Bản thân',
+    gender: 'Nam',
+    conditions: ['diabetes', 'hypertension'],
   ),
   PreviewProfile(
     id: 'mother',
     name: 'Phạm Thị Lan',
     birthYear: 1948,
     relationship: 'Mẹ',
+    gender: 'Nữ',
+    conditions: ['gout', 'dyslipidemia'],
   ),
   PreviewProfile(
     id: 'child',
@@ -64,6 +114,14 @@ class ProfileCatalogController extends Notifier<List<PreviewProfile>> {
     return List.unmodifiable(
       ref.read(mockAccountStoreProvider)[phone]?.profiles ?? const [],
     );
+  }
+
+  void setConditions(String id, List<String> conditions) {
+    state = List.unmodifiable([
+      for (final profile in state)
+        profile.id == id ? profile.withConditions(conditions) : profile,
+    ]);
+    ref.read(authSessionProvider.notifier).saveProfiles(state);
   }
 
   /// The account holder's own profile always stays first.

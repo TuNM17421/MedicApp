@@ -1,21 +1,58 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/state/app_state.dart';
+import '../../core/storage/local_vault.dart';
+import '../consent/health_consent.dart';
 
-/// Prototype-only accounts kept in memory. Nothing is sent to a server or
-/// written to disk, so accounts created here disappear when the app closes.
+/// Prototype-only accounts. Nothing is sent to a server. An account stays in
+/// memory and disappears when the app closes, unless its holder agreed to
+/// keep its health data on this device ([consent]); then it is saved in the
+/// encrypted vault.
 class MockAccount {
   const MockAccount({
     required this.phone,
     required this.password,
     this.profiles = const [],
+    this.consent,
   });
   final String phone;
   final String password;
   final List<PreviewProfile> profiles;
+  final HealthConsent? consent;
 
-  MockAccount withProfiles(List<PreviewProfile> value) =>
-      MockAccount(phone: phone, password: password, profiles: value);
+  MockAccount withProfiles(List<PreviewProfile> value) => MockAccount(
+    phone: phone,
+    password: password,
+    profiles: value,
+    consent: consent,
+  );
+
+  MockAccount withConsent(HealthConsent? value) => MockAccount(
+    phone: phone,
+    password: password,
+    profiles: profiles,
+    consent: value,
+  );
+
+  Map<String, Object?> toJson() => {
+    'phone': phone,
+    'password': password,
+    'profiles': [for (final profile in profiles) profile.toJson()],
+    'consent': consent?.toJson(),
+  };
+
+  factory MockAccount.fromJson(Map<String, Object?> json) => MockAccount(
+    phone: json['phone']! as String,
+    password: json['password']! as String,
+    profiles: List.unmodifiable([
+      for (final profile in json['profiles']! as List<Object?>)
+        PreviewProfile.fromJson(profile! as Map<String, Object?>),
+    ]),
+    consent: switch (json['consent']) {
+      final Map<String, Object?> value => HealthConsent.fromJson(value),
+      _ => null,
+    },
+  );
 }
 
 const demoPhone = '0912345678';
@@ -54,13 +91,17 @@ final mockAccountStoreProvider =
 
 class MockAccountStore extends Notifier<Map<String, MockAccount>> {
   @override
-  Map<String, MockAccount> build() => {
+  Map<String, MockAccount> build() => Map.unmodifiable({
     demoPhone: const MockAccount(
       phone: demoPhone,
       password: demoPassword,
       profiles: demoProfiles,
     ),
-  };
+    for (final account in VaultSnapshot.accounts(
+      ref.read(vaultSnapshotProvider),
+    ))
+      account.phone: account,
+  });
 
   void save(MockAccount account) =>
       state = Map.unmodifiable({...state, account.phone: account});
@@ -88,8 +129,13 @@ final authSessionProvider = NotifierProvider<AuthController, String?>(
 );
 
 class AuthController extends Notifier<String?> {
+  /// Restores the session saved with a consented account, so its holder does
+  /// not have to sign in again after reopening the app.
   @override
-  String? build() => null;
+  String? build() {
+    final phone = VaultSnapshot.session(ref.read(vaultSnapshotProvider));
+    return ref.read(mockAccountStoreProvider).containsKey(phone) ? phone : null;
+  }
 
   MockAccount? get account =>
       state == null ? null : ref.read(mockAccountStoreProvider)[state];
@@ -137,6 +183,14 @@ class AuthController extends Notifier<String?> {
     state = null;
     // Another account must not see this account's notices.
     ref.invalidate(notificationFeedProvider);
+  }
+
+  void setConsent(HealthConsent? consent) {
+    final current = account;
+    if (current == null) return;
+    ref
+        .read(mockAccountStoreProvider.notifier)
+        .save(current.withConsent(consent));
   }
 
   void saveProfiles(List<PreviewProfile> profiles) {
