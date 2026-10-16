@@ -6,6 +6,8 @@
 
 **Bước 10:** Hồ sơ gia đình được lưu trên máy (mã hóa AES-256-GCM, khóa giữ trong Android Keystore) sau khi chủ tài khoản đồng ý ở màn hình "Lưu dữ liệu sức khỏe". Không đồng ý thì app chạy như cũ, dữ liệu mất khi đóng app. Rút lại đồng ý ở Tài khoản sẽ xóa dữ liệu khỏi máy. Xem [bước 10](LUU-TRU-DU-LIEU.md).
 
+**Bước 11:** Kết quả khám và đơn thuốc theo mẫu Bộ Y tế (Thông tư 18/2018/TT-BYT), do một web bác sĩ giả lập gửi về cho từng lượt khám. Xem dạng dễ đọc hoặc dạng giống tờ đơn giấy. Lịch hẹn và kết quả giờ được lưu theo từng tài khoản. Xem [bước 11](DON-THUOC.md).
+
 **Bước 8:** App đặt thông báo nhắc khám trên điện thoại, chọn giờ theo thời gian phải kiêng và nội dung theo tuổi, giới của người khám. Xem [bước 8](THONG-BAO-NHAC-KHAM.md).
 
 **Bước 7:** Có lưu ý cá nhân hóa trước khi khám cho 5 bệnh, đọc từ hồ sơ và lịch hẹn. Xem [bước 7](LUU-Y-TRUOC-KHAM.md).

@@ -13,6 +13,7 @@ abstract final class AppRoutes {
   static const bookingDemo = '/booking-demo';
   static String appointment(String id) =>
       '$appointments/${Uri.encodeComponent(id)}';
+  static String visitResult(String id) => '${appointment(id)}/result';
   static const help = '/help';
   static const healthConsent = '/health-consent';
   static const designPreview = '/design-preview';

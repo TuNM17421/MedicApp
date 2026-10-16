@@ -2,7 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../app/state/app_state.dart';
 import '../../core/storage/local_vault.dart';
+import '../booking/domain/booking_models.dart';
 import '../consent/health_consent.dart';
+import '../records/domain/visit_result.dart';
 
 /// Prototype-only accounts. Nothing is sent to a server. An account stays in
 /// memory and disappears when the app closes, unless its holder agreed to
@@ -14,31 +16,47 @@ class MockAccount {
     required this.password,
     this.profiles = const [],
     this.consent,
+    this.appointments = const [],
+    this.results = const [],
   });
   final String phone;
   final String password;
   final List<PreviewProfile> profiles;
   final HealthConsent? consent;
 
-  MockAccount withProfiles(List<PreviewProfile> value) => MockAccount(
+  /// Newest first, as the appointments list shows them.
+  final List<AppointmentRecord> appointments;
+
+  /// Visit results and prescriptions sent by the doctor's system.
+  final List<VisitResult> results;
+
+  MockAccount copyWith({
+    List<PreviewProfile>? profiles,
+    HealthConsent? Function()? consent,
+    List<AppointmentRecord>? appointments,
+    List<VisitResult>? results,
+  }) => MockAccount(
     phone: phone,
     password: password,
-    profiles: value,
-    consent: consent,
+    profiles: profiles ?? this.profiles,
+    consent: consent == null ? this.consent : consent(),
+    appointments: appointments ?? this.appointments,
+    results: results ?? this.results,
   );
 
-  MockAccount withConsent(HealthConsent? value) => MockAccount(
-    phone: phone,
-    password: password,
-    profiles: profiles,
-    consent: value,
-  );
+  MockAccount withProfiles(List<PreviewProfile> value) =>
+      copyWith(profiles: value);
+
+  MockAccount withConsent(HealthConsent? value) =>
+      copyWith(consent: () => value);
 
   Map<String, Object?> toJson() => {
     'phone': phone,
     'password': password,
     'profiles': [for (final profile in profiles) profile.toJson()],
     'consent': consent?.toJson(),
+    'appointments': [for (final record in appointments) record.toJson()],
+    'results': [for (final result in results) result.toJson()],
   };
 
   factory MockAccount.fromJson(Map<String, Object?> json) => MockAccount(
@@ -52,6 +70,14 @@ class MockAccount {
       final Map<String, Object?> value => HealthConsent.fromJson(value),
       _ => null,
     },
+    appointments: List.unmodifiable([
+      for (final record in json['appointments'] as List<Object?>? ?? const [])
+        AppointmentRecord.fromJson(record! as Map<String, Object?>),
+    ]),
+    results: List.unmodifiable([
+      for (final result in json['results'] as List<Object?>? ?? const [])
+        VisitResult.fromJson(result! as Map<String, Object?>),
+    ]),
   );
 }
 
@@ -191,6 +217,14 @@ class AuthController extends Notifier<String?> {
     ref
         .read(mockAccountStoreProvider.notifier)
         .save(current.withConsent(consent));
+  }
+
+  /// Applies [change] to the signed-in account; does nothing when signed out
+  /// (tests and the design preview), so that state stays in memory only.
+  void updateAccount(MockAccount Function(MockAccount) change) {
+    final current = account;
+    if (current == null) return;
+    ref.read(mockAccountStoreProvider.notifier).save(change(current));
   }
 
   void saveProfiles(List<PreviewProfile> profiles) {

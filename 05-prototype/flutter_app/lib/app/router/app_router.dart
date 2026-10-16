@@ -14,6 +14,7 @@ import '../../features/smart/presentation/smart_page.dart';
 import '../../features/home/home_page.dart';
 import '../../features/notifications/notification_pages.dart';
 import '../../features/profiles/add_profile_pages.dart';
+import '../../features/records/presentation/visit_result_pages.dart';
 import '../../features/profiles/profile_pages.dart';
 import '../../features/support/support_pages.dart';
 import '../app_shell.dart';
@@ -109,6 +110,14 @@ GoRouter createAppRouter({
                         builder: (_, state) => AppointmentDetailPage(
                           id: state.pathParameters['id']!,
                         ),
+                        routes: [
+                          _route(
+                            path: 'result',
+                            builder: (_, state) => VisitResultPage(
+                              visitId: state.pathParameters['id']!,
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

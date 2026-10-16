@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/state/app_state.dart';
+import '../../auth/auth_controller.dart';
 import '../data/booking_catalog.dart';
 import '../data/booking_repository.dart';
 import '../domain/booking_models.dart';
@@ -44,17 +45,31 @@ final appointmentsProvider =
     );
 
 class AppointmentsController extends Notifier<AppointmentLedger> {
+  /// Each account sees only its own appointments; they are kept with the
+  /// account, so they reach the encrypted vault once its holder consented.
   @override
-  AppointmentLedger build() => const AppointmentLedger();
+  AppointmentLedger build() {
+    final phone = ref.watch(authSessionProvider);
+    final saved = phone == null
+        ? const <AppointmentRecord>[]
+        : ref.read(mockAccountStoreProvider)[phone]?.appointments ?? const [];
+    return AppointmentLedger(records: saved);
+  }
 
-  void upsert(AppointmentRecord record) => state = AppointmentLedger(
-    records: List.unmodifiable([
-      record,
-      ...state.records.where((item) => item.visit.id != record.visit.id),
-    ]),
-    checking: state.checking,
-    errors: Map.unmodifiable({...state.errors}..remove(record.visit.id)),
-  );
+  void upsert(AppointmentRecord record) {
+    state = AppointmentLedger(
+      records: List.unmodifiable([
+        record,
+        ...state.records.where((item) => item.visit.id != record.visit.id),
+      ]),
+      checking: state.checking,
+      errors: Map.unmodifiable({...state.errors}..remove(record.visit.id)),
+    );
+    final records = state.records;
+    ref
+        .read(authSessionProvider.notifier)
+        .updateAccount((account) => account.copyWith(appointments: records));
+  }
 
   Future<void> check(String id) async {
     final record = state.records
