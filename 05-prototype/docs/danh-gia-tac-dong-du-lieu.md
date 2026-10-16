@@ -99,7 +99,7 @@ Web bác sĩ <──(cookie mc_staff, cùng origin)─────┘
 | Nhà cung cấp có lưu không? | Request đặt `store: false` (`openai.js`). Chính sách lưu tạm để chống lạm dụng, vùng xử lý và DPA của OpenAI **chưa được xác nhận** (mục 10) |
 | Model, giới hạn | `OPENAI_MODEL` (mặc định `gpt-6-luna`), Structured Outputs `strict`, timeout `MODEL_TIMEOUT_MS`, thử lại tối đa 1 lần, không đổi model khác (`openai.js`, `src/config.js`) |
 | Khi nào gửi? | Sau khi người bệnh gửi câu trả lời, chờ 3 giây gộp; chỉ khi đồng ý mới nhất còn hiệu lực có `intake`; kiểm tra lại sau khi model trả về, đồng ý bị rút thì bỏ kết quả (`src/summary/worker.js`) |
-| Tắt được không? | Có, theo phòng khám (mỗi máy chủ một phòng khám): `CLINIC_AI_SUMMARY=off` (không tóm tắt) hoặc `mock` (quy tắc, không gửi ra ngoài). **Lưu ý:** mặc định `auto` sẽ dùng OpenAI nếu có `OPENAI_API_KEY` (`src/config.js`) — cấu hình chạy thử phải ghi rõ giá trị đã chọn |
+| Tắt được không? | Có, theo phòng khám (mỗi máy chủ một phòng khám): `CLINIC_AI_SUMMARY=off` (không tóm tắt) hoặc `mock` (quy tắc, không gửi ra ngoài). Mặc định `auto` chạy như `mock` kể cả khi có `OPENAI_API_KEY`; câu trả lời chỉ gửi OpenAI khi đặt rõ `openai` (`src/config.js`). Cấu hình chạy thử vẫn phải ghi rõ giá trị đã chọn |
 | Ai kiểm tra kết quả AI? | Code bỏ câu không có nguồn, bỏ cả mục có con số hoặc tên thuốc không có trong câu gốc (`src/summary/guard.js`); cờ dấu hiệu do danh sách cụm từ trong code tìm, không do model (`src/summary/red-flags.js`); web hiện câu gốc cạnh tóm tắt; bác sĩ bấm Đúng/Sai |
 | Log có nội dung không? | Không. Log và `audit_event` chỉ có số đếm, mã lỗi, độ trễ, request id (`openai.js`, `worker.js`) |
 

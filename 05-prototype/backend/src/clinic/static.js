@@ -44,6 +44,14 @@ export function baseHeaders({ https = false } = {}) {
 }
 
 /**
+ * The one inline script the `printing` package (5.15.1) adds to print the
+ * prescription PDF from a hidden blob: frame; allowed by its hash only.
+ * Recheck the hash when that package is upgraded (test/admin.test.js).
+ */
+export const PRINT_SCRIPT = "function __net_nfet_printing___print(){var f=document.getElementById('__net_nfet_printing__');f.focus();f.contentWindow.print();}";
+export const PRINT_SCRIPT_HASH = 'sha256-+M0fGRkOqgYlCQCff9oNQn6k6a7Si4Et8iofLMceadE=';
+
+/**
  * The doctor web (Flutter, CanvasKit bundled by --no-web-resources-cdn):
  * everything from this origin only. 'wasm-unsafe-eval' lets CanvasKit's
  * WebAssembly compile (no JavaScript eval); Flutter sets inline styles;
@@ -51,7 +59,7 @@ export function baseHeaders({ https = false } = {}) {
  */
 export const DOCTOR_WEB_CSP = [
   "default-src 'self'",
-  "script-src 'self' 'wasm-unsafe-eval'",
+  `script-src 'self' 'wasm-unsafe-eval' '${PRINT_SCRIPT_HASH}'`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",

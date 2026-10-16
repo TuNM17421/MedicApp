@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { after, before, test } from 'node:test';
 
 import { ABSOLUTE_MS, IDLE_MS, createSessionStore, passwordProblem, temporaryPassword } from '../src/clinic/auth.js';
 import { ADMIN_EMAIL, DEMO_EMAIL, DEMO_PASSWORD, seedClinic } from '../src/clinic/seed.js';
-import { DOCTOR_WEB_CSP } from '../src/clinic/static.js';
+import { DOCTOR_WEB_CSP, PRINT_SCRIPT, PRINT_SCRIPT_HASH } from '../src/clinic/static.js';
 import { at, localIso, today as clinicToday } from '../src/clinic/time.js';
 import { openDatabase } from '../src/db/index.js';
 import { createApp } from '../src/server.js';
@@ -371,7 +372,8 @@ test('header bảo mật trên mọi phản hồi, no-store cho API, HSTS khi HT
   const logout = await req('/v1/staff/logout', { method: 'POST' });
   assert.equal(logout.headers.get('cache-control'), 'no-store');
   assert.equal(logout.headers.get('x-frame-options'), 'DENY');
-  assert.match(DOCTOR_WEB_CSP, /script-src 'self' 'wasm-unsafe-eval'/);
+  assert.match(DOCTOR_WEB_CSP, /script-src 'self' 'wasm-unsafe-eval' 'sha256-/);
+  assert.equal(`sha256-${createHash('sha256').update(PRINT_SCRIPT).digest('base64')}`, PRINT_SCRIPT_HASH);
   assert.doesNotMatch(DOCTOR_WEB_CSP, /unsafe-eval'(?<!wasm-unsafe-eval')|https?:/);
 
   const secure = createApp({ config: config({ HTTPS: '1' }), extractor: mockExtractor, stt: unavailableStt, log: () => {}, db });

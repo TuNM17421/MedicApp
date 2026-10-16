@@ -233,7 +233,7 @@ void main() {
       expect(seen.single.path, '/v1/patient/appointments/a-p2/consent');
       expect(seen.single.body, {
         'scope': ['intake', 'dose_log'],
-        'wordingVersion': 1,
+        'wordingVersion': 2,
       });
       expect(consent.state, SharingState.shared);
     });

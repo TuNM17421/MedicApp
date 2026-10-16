@@ -36,7 +36,7 @@ Tất cả phải ✓ trước khi người bệnh thật dùng. Mục nào chư
 - [ ] Cơ sở dữ liệu PostgreSQL cho chạy thử (bản dev là SQLite, `backend/README.md`); không dùng dữ liệu seed.
 - [ ] `PATIENT_OTP_PEPPER` là giá trị bí mật mới; không đặt `DEMO_OTP`.
 - [ ] Đăng nhập người bệnh: đã có nhà cung cấp SMS, **hoặc** thống nhất phương án tạm (chỉ dùng mã nhận kết quả in trên đơn). Với `NODE_ENV=production` mà chưa có SMS, `PATIENT_OTP_MODE=off` → không đăng nhập được, không có câu hỏi trước khám và chia sẻ.
-- [ ] Ghi rõ `CLINIC_AI_SUMMARY`: `openai` chỉ khi DPA/vùng xử lý của OpenAI đã chốt; nếu chưa thì `mock` (không gửi ra ngoài) hoặc `off`. Lưu ý mặc định `auto` tự dùng OpenAI khi có key.
+- [ ] Ghi rõ `CLINIC_AI_SUMMARY`: `openai` chỉ khi DPA/vùng xử lý của OpenAI đã chốt; nếu chưa thì `mock` (không gửi ra ngoài) hoặc `off`. Mặc định `auto` chạy như `mock`.
 - [ ] Sao lưu hằng ngày chạy được **và đã thử khôi phục** một bản sao lưu vào máy khác, kiểm tra mở được hồ sơ.
 - [ ] Bản sao lưu được bảo vệ (mã hóa hoặc chỉ người vận hành truy cập).
 - [ ] Test cách ly: tài khoản phòng khám A không đọc được hồ sơ phòng khám B; dữ liệu đã rút đồng ý không trả về.

@@ -81,7 +81,8 @@ export function readConfig(env = process.env) {
   const demoOtp = (env.DEMO_OTP ?? '').trim();
   if (demoOtp && !/^\d{6}$/.test(demoOtp)) throw new Error('DEMO_OTP phải gồm 6 chữ số.');
   const otpPepper = (env.PATIENT_OTP_PEPPER ?? '').trim();
-  // Bước 17: pre-visit summary. auto (default): openai with a key, else mock.
+  // Bước 17: pre-visit summary. auto (default) stays on mock even with a key:
+  // patient answers go to OpenAI only when CLINIC_AI_SUMMARY=openai is set.
   const summaryRequested = ((env.CLINIC_AI_SUMMARY ?? '').trim().toLowerCase()) || 'auto';
   if (!['auto', 'off', 'mock', 'openai'].includes(summaryRequested)) {
     throw new Error('CLINIC_AI_SUMMARY chỉ nhận auto, off, mock hoặc openai.');
@@ -89,7 +90,7 @@ export function readConfig(env = process.env) {
   if (summaryRequested === 'openai' && !apiKey) {
     throw new Error('CLINIC_AI_SUMMARY=openai cần OPENAI_API_KEY trong backend/.env.');
   }
-  const summaryMode = summaryRequested === 'auto' ? (apiKey ? 'openai' : 'mock') : summaryRequested;
+  const summaryMode = summaryRequested === 'auto' ? 'mock' : summaryRequested;
   if (production && !otpPepper) throw new Error('NODE_ENV=production cần PATIENT_OTP_PEPPER.');
   const config = {
     mode,

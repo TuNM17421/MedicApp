@@ -514,7 +514,9 @@ class FakeBackend {
       signedIn = true;
       return _json(_session);
     }
-    if (key == 'GET /v1/staff/session') return _json(signedIn ? _session : null);
+    if (key == 'GET /v1/staff/session') {
+      return _json(signedIn ? _session : null);
+    }
     if (!signedIn) {
       return _json({
         'error': {
