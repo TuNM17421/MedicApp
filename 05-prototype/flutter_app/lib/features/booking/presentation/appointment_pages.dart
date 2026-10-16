@@ -1,27 +1,77 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 import '../../../app/router/app_routes.dart';
+import '../../../app/theme/app_theme.dart';
+import '../../../core/widgets/app_motion.dart';
 import '../../../core/widgets/app_widgets.dart';
 import '../application/booking_providers.dart';
 import '../domain/booking_models.dart';
 import 'booking_format.dart';
+import '../../visit_prep/visit_prep.dart' show visitStart;
 import '../../visit_prep/visit_prep_widgets.dart';
 
-class AppointmentsPage extends ConsumerWidget {
+class AppointmentsPage extends ConsumerStatefulWidget {
   const AppointmentsPage({super.key});
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final records = ref.watch(appointmentsProvider).records;
+  ConsumerState<AppointmentsPage> createState() => _AppointmentsPageState();
+}
+
+class _AppointmentsPageState extends ConsumerState<AppointmentsPage> {
+  /// Only appointments on this day are listed; null lists them all.
+  DateTime? _day;
+
+  @override
+  Widget build(BuildContext context) {
+    final all = ref.watch(appointmentsProvider).records;
+    final records = [
+      for (final record in all)
+        if (_day == null || isSameDay(record.visit.date, _day)) record,
+    ]..sort((a, b) => visitStart(a.visit).compareTo(visitStart(b.visit)));
     return AppPageBody(
       title: 'Lịch hẹn',
       onBack: () => AppRoutes.backOrHome(context),
       children: [
-        if (records.isEmpty)
+        if (all.isNotEmpty)
+          AppointmentsCalendar(
+            today: ref.watch(bookingTodayProvider),
+            selected: _day,
+            visitDays: [
+              for (final record in all)
+                if (record.receipt.status != PaymentStatus.failed)
+                  record.visit.date,
+            ],
+            onSelected: (day) => setState(
+              () => _day = _day != null && isSameDay(_day, day) ? null : day,
+            ),
+          ),
+        if (_day case final day?)
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  records.isEmpty
+                      ? 'Không có lịch hẹn ngày ${bookingDate(day)}'
+                      : 'Lịch hẹn ngày ${bookingDate(day)}',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              TextButton(
+                key: const Key('appointments-show-all'),
+                onPressed: () => setState(() => _day = null),
+                child: const Text('Xem tất cả'),
+              ),
+            ],
+          ),
+        if (all.isEmpty)
           const AppEmptyState(
             title: 'Chưa có lịch hẹn',
             message: 'Các lịch khám của bạn sẽ xuất hiện tại đây.',
+            art: AppArt.emptyCalendar,
           ),
         for (final group in [
           (
@@ -54,6 +104,182 @@ class AppointmentsPage extends ConsumerWidget {
               ),
           ],
       ],
+    );
+  }
+}
+
+/// Month view with a dot under each day that has an appointment.
+class AppointmentsCalendar extends StatefulWidget {
+  const AppointmentsCalendar({
+    super.key,
+    required this.today,
+    required this.visitDays,
+    required this.selected,
+    required this.onSelected,
+  });
+  final DateTime today;
+  final List<DateTime> visitDays;
+  final DateTime? selected;
+  final ValueChanged<DateTime> onSelected;
+
+  @override
+  State<AppointmentsCalendar> createState() => _AppointmentsCalendarState();
+}
+
+class _AppointmentsCalendarState extends State<AppointmentsCalendar> {
+  late DateTime _focused = widget.selected ?? _firstUpcoming();
+
+  DateTime _firstUpcoming() {
+    final upcoming = [
+      for (final day in widget.visitDays)
+        if (!day.isBefore(widget.today)) day,
+    ]..sort();
+    return upcoming.firstOrNull ?? widget.today;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final rowHeight = MediaQuery.textScalerOf(context)
+        .scale(48)
+        .clamp(48.0, 96.0);
+    const weekdays = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+    return AppSurface(
+      key: const Key('appointments-calendar'),
+      padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+      child: TableCalendar<DateTime>(
+        locale: 'vi',
+        firstDay: DateTime(widget.today.year - 1, widget.today.month),
+        lastDay: DateTime(widget.today.year + 1, widget.today.month, 28),
+        focusedDay: _focused,
+        currentDay: widget.today,
+        startingDayOfWeek: StartingDayOfWeek.monday,
+        rowHeight: rowHeight,
+        daysOfWeekHeight: rowHeight * 0.6,
+        availableGestures: AvailableGestures.horizontalSwipe,
+        pageAnimationEnabled: !AppMotion.reduced(context),
+        selectedDayPredicate: (day) => isSameDay(day, widget.selected),
+        eventLoader: (day) => [
+          for (final visit in widget.visitDays)
+            if (isSameDay(visit, day)) visit,
+        ],
+        onDaySelected: (day, focused) {
+          setState(() => _focused = focused);
+          widget.onSelected(DateTime(day.year, day.month, day.day));
+        },
+        onPageChanged: (focused) => _focused = focused,
+        headerStyle: HeaderStyle(
+          formatButtonVisible: false,
+          titleCentered: true,
+          titleTextStyle: text.titleMedium!,
+          titleTextFormatter: (date, _) => 'Tháng ${date.month}, ${date.year}',
+          leftChevronIcon: const AppIcon(AppIcons.back, label: 'Tháng trước'),
+          rightChevronIcon: const AppIcon(AppIcons.forward, label: 'Tháng sau'),
+        ),
+        daysOfWeekStyle: DaysOfWeekStyle(
+          dowTextFormatter: (date, _) => weekdays[date.weekday - 1],
+          weekdayStyle: text.bodySmall!,
+          weekendStyle: text.bodySmall!,
+        ),
+        calendarStyle: CalendarStyle(
+          outsideDaysVisible: false,
+          cellMargin: const EdgeInsets.all(9),
+          defaultTextStyle: text.bodyLarge!,
+          weekendTextStyle: text.bodyLarge!,
+          todayTextStyle: text.bodyLarge!.copyWith(
+            color: AppColors.primary,
+            fontWeight: FontWeight.w700,
+          ),
+          todayDecoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: AppColors.primary, width: 1.5),
+          ),
+          selectedTextStyle: text.bodyLarge!.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w700,
+          ),
+          selectedDecoration: const BoxDecoration(
+            color: AppColors.primary,
+            shape: BoxShape.circle,
+          ),
+          markersMaxCount: 1,
+          markersAutoAligned: false,
+          markersAlignment: Alignment.bottomCenter,
+          markersOffset: const PositionedOffset(bottom: 1),
+          markerSize: 7,
+          markerDecoration: const BoxDecoration(
+            color: Color(0xFFE07A4F),
+            shape: BoxShape.circle,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Celebrates a confirmed booking with a check that pops in once.
+class BookingSuccessMark extends ConsumerWidget {
+  const BookingSuccessMark({super.key, required this.id});
+  final String id;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final confirmed = ref
+        .watch(appointmentsProvider)
+        .records
+        .any(
+          (record) =>
+              record.visit.id == id &&
+              record.receipt.status == PaymentStatus.confirmed,
+        );
+    if (!confirmed) return const SizedBox.shrink();
+    Widget mark = Container(
+      width: 88,
+      height: 88,
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(
+        color: AppColors.selected,
+        shape: BoxShape.circle,
+      ),
+      child: Container(
+        width: 64,
+        height: 64,
+        decoration: const BoxDecoration(
+          color: AppColors.primary,
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(Icons.check_rounded, color: Colors.white, size: 40),
+      ),
+    );
+    if (!AppMotion.reduced(context)) {
+      mark = mark
+          .animate()
+          .scale(
+            begin: const Offset(0.6, 0.6),
+            duration: 420.ms,
+            curve: Curves.easeOutBack,
+          )
+          .fadeIn(duration: 200.ms);
+    }
+    return Padding(
+      key: const Key('booking-success-mark'),
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        children: [
+          ExcludeSemantics(child: mark),
+          const SizedBox(height: 12),
+          Text(
+            'Đã đặt lịch xong',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'MedicApp sẽ nhắc trên điện thoại trước buổi khám.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ],
+      ),
     );
   }
 }

@@ -33,10 +33,6 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
-  # The following adds the Cupertino Icons font to your application.
-  # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.8
-  google_fonts: ^9.0.0
   lucide_icons_flutter: ^3.1.25
   flutter_animate: ^4.5.2
   skeletonizer: ^3.0.0
@@ -52,6 +48,10 @@ dependencies:
   image_picker: ^1.2.4
   flutter_local_notifications: ^22.3.2
   timezone: ^0.11.2
+  animations: ^3.0.0
+  cryptography: ^2.9.0
+  flutter_secure_storage: ^11.2.0
+  path_provider: ^2.1.6
 
 dev_dependencies:
   flutter_test:
@@ -63,6 +63,29 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.8
+
+# App icon: dart run flutter_launcher_icons
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: assets/brand/icon.png
+  adaptive_icon_background: "#0F766E"
+  adaptive_icon_foreground: assets/brand/icon_foreground.png
+  adaptive_icon_monochrome: assets/brand/icon_foreground.png
+  min_sdk_android: 21
+
+# Launch screen: dart run flutter_native_splash:create
+flutter_native_splash:
+  android: true
+  ios: false
+  web: false
+  color: "#0F766E"
+  image: assets/brand/splash.png
+  android_12:
+    color: "#0F766E"
+    image: assets/brand/splash_android12.png
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -76,6 +99,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/fonts/OFL.txt
+    - assets/illustrations/
   fonts:
     - family: BeVietnamPro
       fonts:

@@ -238,9 +238,7 @@ List<PlannedReminder> planReminders({
     _capitalised('${prepClock(start)} ${prepDayPart(start, when)}'),
     '$whoVisits tại ${visit.facilityName}',
   );
-  final why = labels.isEmpty
-      ? null
-      : ReminderLine('Để chuẩn bị', labels);
+  final why = labels.isEmpty ? null : ReminderLine('Để chuẩn bị', labels);
 
   final result = <PlannedReminder>[];
 
