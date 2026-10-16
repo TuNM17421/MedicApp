@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../core/widgets/app_headers.dart';
+import '../core/widgets/app_motion.dart';
 import 'router/app_routes.dart';
 import 'state/app_state.dart';
 
@@ -23,7 +24,10 @@ class AppShell extends ConsumerWidget {
       return false;
     },
     child: Scaffold(
-      body: navigationShell,
+      body: AppTabFade(
+        index: navigationShell.currentIndex,
+        child: navigationShell,
+      ),
       bottomNavigationBar: AppBottomNav(
         key: const Key('app-bottom-nav'),
         selectedIndex: _navPositions[navigationShell.currentIndex],

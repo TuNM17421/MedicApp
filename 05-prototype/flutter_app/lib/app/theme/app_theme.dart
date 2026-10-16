@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/widgets/app_motion.dart';
+
 /// Values from the reviewed HTML prototype, kept independent of screen logic.
 abstract final class AppColors {
   static const primary = Color(0xFF0F766E);
@@ -84,6 +86,12 @@ abstract final class AppTheme {
     final base = ThemeData(
       useMaterial3: true,
       fontFamily: 'BeVietnamPro',
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: AppPageTransitions(),
+          TargetPlatform.iOS: AppPageTransitions(),
+        },
+      ),
       scaffoldBackgroundColor: AppColors.background,
       colorScheme: const ColorScheme.light(
         primary: AppColors.primary,

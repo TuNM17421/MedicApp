@@ -198,7 +198,12 @@ class VisitSummary {
     required this.contactName,
     required this.contactPhone,
     required this.note,
+    this.patientId,
+    this.departmentId,
   });
+
+  /// Lets visit preparation advice read the patient's profile.
+  final String? patientId, departmentId;
   final String id,
       patientName,
       facilityName,
