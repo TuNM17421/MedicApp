@@ -6,14 +6,17 @@ import 'package:medic_core/medic_core.dart';
 
 import '../../../app/router/app_routes.dart';
 import '../../../app/theme/app_theme.dart';
+import '../../../core/widgets/app_motion.dart';
 import '../../../core/widgets/app_widgets.dart';
 import '../../auth/auth_controller.dart';
 import '../application/records_providers.dart';
+import '../data/doctor_portal.dart';
+import '../domain/claim_code.dart';
 
 final _date = DateFormat('dd/MM/yyyy');
 
 /// On a confirmed appointment: a link to the doctor's result, or, before one
-/// arrives, a button that asks the mock doctor system to send it.
+/// arrives, a button to claim it with the code printed on the prescription.
 class VisitResultSection extends ConsumerWidget {
   const VisitResultSection({super.key, required this.visitId});
   final String visitId;
@@ -41,7 +44,7 @@ class VisitResultSection extends ConsumerWidget {
         ),
       );
     }
-    final fetching = state.fetching.contains(visitId);
+    final offline = ref.watch(doctorPortalProvider) is MockDoctorPortal;
     final text = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
@@ -58,38 +61,150 @@ class VisitResultSection extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Sau buổi khám, bác sĩ sẽ gửi chẩn đoán và đơn thuốc vào đây.',
+              'Sau buổi khám, nhập mã in cuối đơn thuốc để xem chẩn đoán '
+              'và đơn thuốc trong app.',
               style: text.bodyLarge,
             ),
             const SizedBox(height: 12),
             OutlinedButton(
-              key: const Key('visit-result-simulate'),
-              onPressed: fetching
-                  ? null
-                  : () async {
-                      final messenger = ScaffoldMessenger.of(context);
-                      final result = await ref
-                          .read(visitResultsProvider.notifier)
-                          .fetch(visitId);
-                      if (result == null) return;
-                      messenger
-                        ..clearSnackBars()
-                        ..showSnackBar(
-                          const SnackBar(
-                            content: Text('Đã nhận kết quả khám.'),
-                          ),
-                        );
-                    },
-              child: Text(
-                fetching
-                    ? 'Đang nhận kết quả…'
-                    : 'Mô phỏng: bác sĩ gửi kết quả',
-              ),
+              key: const Key('visit-result-claim'),
+              onPressed: () => _claim(context),
+              child: const Text('Nhập mã nhận kết quả'),
             ),
+            if (offline) ...[
+              const SizedBox(height: 4),
+              Text(
+                'Bản thử: chưa nối với phòng khám, mã nào đúng dạng cũng '
+                'nhận được kết quả mẫu.',
+                style: text.bodySmall,
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _claim(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final result = await showModalBottomSheet<VisitResult>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      useRootNavigator: true,
+      showDragHandle: true,
+      sheetAnimationStyle: AnimationStyle(
+        duration: AppMotion.duration(context),
+        reverseDuration: AppMotion.duration(context),
+      ),
+      builder: (_) => ClaimCodeSheet(visitId: visitId),
+    );
+    if (result == null || !context.mounted) return;
+    messenger
+      ..clearSnackBars()
+      ..showSnackBar(const SnackBar(content: Text('Đã nhận kết quả khám.')));
+    context.push(AppRoutes.visitResult(visitId));
+  }
+}
+
+/// Asks for the "mã nhận kết quả" and pops with the result once it arrives.
+class ClaimCodeSheet extends ConsumerStatefulWidget {
+  const ClaimCodeSheet({super.key, required this.visitId});
+  final String visitId;
+
+  @override
+  ConsumerState<ClaimCodeSheet> createState() => _ClaimCodeSheetState();
+}
+
+class _ClaimCodeSheetState extends ConsumerState<ClaimCodeSheet> {
+  final _code = TextEditingController();
+  String? _error;
+  bool _sending = false;
+
+  @override
+  void dispose() {
+    _code.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (_sending) return;
+    if (normalizeClaimCode(_code.text) == null) {
+      setState(() => _error = ResultClaimException.invalid.message);
+      return;
+    }
+    setState(() {
+      _sending = true;
+      _error = null;
+    });
+    try {
+      final result = await ref
+          .read(visitResultsProvider.notifier)
+          .claim(widget.visitId, _code.text);
+      if (mounted) Navigator.of(context).pop(result);
+    } on ResultClaimException catch (error) {
+      if (mounted) {
+        setState(() {
+          _sending = false;
+          _error = error.message;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return SafeArea(
+      child: SingleChildScrollView(
+        keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+        padding: EdgeInsets.fromLTRB(
+          20,
+          0,
+          20,
+          MediaQuery.viewInsetsOf(context).bottom + 24,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text('Nhập mã nhận kết quả', style: text.titleLarge),
             const SizedBox(height: 4),
             Text(
-              'Bản thử: chưa nối với web của bác sĩ.',
-              style: text.bodySmall,
+              'Mã gồm 10 chữ và số, in ở cuối đơn thuốc bác sĩ đưa cho bạn.',
+              style: text.bodyLarge,
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              key: const Key('claim-code-field'),
+              controller: _code,
+              autofocus: true,
+              enabled: !_sending,
+              autocorrect: false,
+              enableSuggestions: false,
+              keyboardType: TextInputType.visiblePassword,
+              textCapitalization: TextCapitalization.characters,
+              textInputAction: TextInputAction.done,
+              inputFormatters: const [ClaimCodeInputFormatter()],
+              onChanged: (_) {
+                if (_error != null) setState(() => _error = null);
+              },
+              onSubmitted: (_) => _submit(),
+              style: text.headlineSmall?.copyWith(letterSpacing: 2),
+              decoration: InputDecoration(
+                labelText: 'Mã nhận kết quả',
+                hintText: 'Mã in cuối đơn thuốc',
+                errorText: _error,
+                errorMaxLines: 3,
+                floatingLabelBehavior: FloatingLabelBehavior.always,
+              ),
+            ),
+            const SizedBox(height: 20),
+            AppPrimaryButton(
+              key: const Key('claim-code-submit'),
+              label: 'Nhận kết quả',
+              isLoading: _sending,
+              onPressed: _submit,
             ),
           ],
         ),

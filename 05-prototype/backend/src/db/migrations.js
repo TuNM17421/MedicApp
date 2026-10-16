@@ -159,4 +159,11 @@ export const migrations = [
   );
   CREATE INDEX audit_patient ON audit_event (patient_id, at);
   `,
+  // Bước 15: code the person types in the app to fetch the sent result of
+  // this visit (no patient accounts yet). Stored without dashes.
+  `
+  ALTER TABLE appointment ADD COLUMN claim_code TEXT;
+  ALTER TABLE appointment ADD COLUMN claim_expires_at TEXT;
+  CREATE UNIQUE INDEX appointment_claim_code ON appointment (claim_code);
+  `,
 ];

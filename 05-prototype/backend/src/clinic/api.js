@@ -1,14 +1,25 @@
 // Doctor web API (CLINIC-API.md): staff sign-in, worklist, chart, summary
-// feedback, arrive/start and visit history. Every query is scoped to the
+// feedback, arrive/start, visit history, result drafts and sending (bước 15)
+// and the patient's claim by code. Every query is scoped to the
 // signed-in doctor's clinic; another clinic's ids answer 404. Logs carry
 // event names and codes only, never names, symptoms or tokens.
 import { HttpError, notFound, readJson, sendJson } from '../http.js';
 import {
   LOCK_MS, MAX_FAILED, clearCookie, createSessionStore, readCookie, sessionCookie, verifyPassword,
 } from './auth.js';
+import { readFileSync } from 'node:fs';
+
+import {
+  formatClaimCode, missingForSend, newClaimCode, normalizeClaimCode, parseDraft,
+} from './prescription.js';
 import { addDays, ageOn, localIso, parseDay, today } from './time.js';
 
-export const CLINIC_PREFIXES = ['staff', 'clinic', 'appointments', 'summaries', 'patients'];
+export const CLINIC_PREFIXES = ['staff', 'clinic', 'appointments', 'summaries', 'patients', 'results'];
+export const CLAIM_DAYS = 30;
+export const CLAIM_PER_MINUTE = 10;
+
+/** Sample drug and ICD-10 list (catalog/clinic-catalog.json). */
+export const clinicCatalog = JSON.parse(readFileSync(new URL('../../catalog/clinic-catalog.json', import.meta.url), 'utf8'));
 export const PERIOD_DAYS = 30;
 
 const unauthenticated = () => new HttpError(401, 'unauthenticated', 'Phiên đăng nhập đã hết. Vui lòng đăng nhập lại.');
@@ -52,16 +63,29 @@ export function createClinicApi({ db, config, log }) {
     courses: q('SELECT * FROM med_course WHERE patient_id = ? ORDER BY prescribed_at, id'),
     doses: q(`SELECT * FROM dose_event WHERE patient_id = ? AND day >= ? AND day <= ?
       ORDER BY day, course_id, slot`),
-    resultStatuses: q('SELECT status FROM visit_result WHERE appointment_id = ?'),
+    latestResult: q('SELECT * FROM visit_result WHERE appointment_id = ? ORDER BY version DESC LIMIT 1'),
+    insertResult: q(`INSERT INTO visit_result (id, appointment_id, version, status, diagnosis, items, advice,
+      follow_up_date, internal_note, amend_reason, updated_at) VALUES (?, ?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?)`),
+    updateDraft: q(`UPDATE visit_result SET diagnosis = ?, items = ?, advice = ?, follow_up_date = ?, internal_note = ?,
+      updated_at = ? WHERE id = ? AND status = 'draft'`),
+    markAmended: q("UPDATE visit_result SET status = 'amended' WHERE appointment_id = ? AND status = 'sent'"),
+    markSent: q("UPDATE visit_result SET status = 'sent', signed_by = ?, signed_at = ?, updated_at = ? WHERE id = ? AND status = 'draft'"),
+    claimTaken: q('SELECT 1 FROM appointment WHERE claim_code = ?'),
+    setClaim: q('UPDATE appointment SET claim_code = ?, claim_expires_at = ? WHERE id = ? AND claim_code IS NULL'),
+    setDone: q("UPDATE appointment SET status = 'done', practitioner_id = coalesce(practitioner_id, ?) WHERE id = ?"),
+    byClaim: q(`SELECT a.*, p.full_name, p.birth_date, p.gender, p.address, p.weight_kg, p.insurance_code,
+      c.name AS clinic_name, c.phone AS clinic_phone FROM appointment a
+      JOIN patient p ON p.id = a.patient_id JOIN clinic c ON c.id = a.clinic_id WHERE a.claim_code = ?`),
+    sentResult: q(`SELECT r.*, pr.title, pr.full_name AS doctor_name FROM visit_result r
+      LEFT JOIN practitioner pr ON pr.id = r.signed_by
+      WHERE r.appointment_id = ? AND r.status = 'sent' ORDER BY r.version DESC LIMIT 1`),
     results: q(`SELECT r.*, a.starts_at, a.id AS appt_id, c.name AS clinic_name, pr.title, pr.full_name AS doctor_name
       FROM visit_result r
       JOIN appointment a ON a.id = r.appointment_id
       JOIN clinic c ON c.id = a.clinic_id
       LEFT JOIN practitioner pr ON pr.id = r.signed_by
-      WHERE a.patient_id = ? AND a.clinic_id = ? AND r.status IN ('sent', 'amended')
-        AND r.version = (SELECT max(r2.version) FROM visit_result r2
-          WHERE r2.appointment_id = r.appointment_id AND r2.status IN ('sent', 'amended'))
-      ORDER BY a.starts_at DESC`),
+      WHERE a.patient_id = ? AND a.clinic_id = ? AND r.status = 'sent'
+      ORDER BY a.starts_at DESC, r.version DESC`),
     patient: q('SELECT id FROM patient WHERE id = ? AND clinic_id = ?'),
     setStatus: q('UPDATE appointment SET status = ?, practitioner_id = coalesce(practitioner_id, ?) WHERE id = ? AND clinic_id = ?'),
   };
@@ -90,10 +114,45 @@ export function createClinicApi({ db, config, log }) {
     return { state: 'shared', grantedAt: row.granted_at, expiresAt: row.expires_at, scope };
   }
 
+  /** Status of the newest version: `draft` while an amendment is open. */
   function resultStatusOf(appointmentId) {
-    const statuses = stmt.resultStatuses.all(appointmentId).map((r) => r.status);
-    if (statuses.some((s) => s === 'sent' || s === 'amended')) return 'sent';
-    return statuses.includes('draft') ? 'draft' : 'none';
+    const latest = stmt.latestResult.get(appointmentId);
+    if (!latest) return 'none';
+    return latest.status === 'draft' ? 'draft' : 'sent';
+  }
+
+  function signerName(id) {
+    const p = id ? stmt.staffById.get(id) : null;
+    return p ? staffJson(p).name : null;
+  }
+
+  const resultDraftJson = (r, claimCode) => ({
+    id: r.id,
+    appointmentId: r.appointment_id,
+    version: r.version,
+    status: r.status,
+    diagnosis: json(r.diagnosis, []),
+    items: json(r.items, []),
+    advice: r.advice,
+    followUpDate: r.follow_up_date ?? null,
+    internalNote: r.internal_note,
+    amendReason: r.amend_reason ?? null,
+    signedBy: signerName(r.signed_by),
+    signedAt: r.signed_at ?? null,
+    updatedAt: r.updated_at,
+    claimCode: formatClaimCode(claimCode),
+  });
+
+  function atomically(fn) {
+    db.exec('BEGIN IMMEDIATE');
+    try {
+      const out = fn();
+      db.exec('COMMIT');
+      return out;
+    } catch (error) {
+      db.exec('ROLLBACK');
+      throw error;
+    }
   }
 
   const appointmentJson = (a) => ({
@@ -254,7 +313,7 @@ export function createClinicApi({ db, config, log }) {
     const period = periodOf(a);
     const meds = has('dose_log') ? medsOf(a.patient_id, period) : { courses: [], doseLog: [] };
     const results = stmt.results.all(a.patient_id, staff.clinic_id);
-    const own = results.find((r) => r.appt_id === a.id);
+    const own = stmt.latestResult.get(a.id);
     const last = results.find((r) => r.appt_id !== a.id && r.starts_at < a.starts_at);
     audit(req, staff, 'chart.view', { patientId: a.patient_id, appointmentId: a.id, detail: { consent: consent.state } });
     log('chart_view', { consent: consent.state });
@@ -283,7 +342,7 @@ export function createClinicApi({ db, config, log }) {
       doseLog: meds.doseLog,
       selfMeds: has('self_meds') ? stmt.selfMeds.all(a.id).map((m) => ({ name: m.name, how: m.how })) : [],
       lastVisit: last ? historyJson(last) : null,
-      result: own ? historyJson(own) : null,
+      result: own ? resultDraftJson(own, a.claim_code) : null,
     });
   }
 
@@ -312,6 +371,121 @@ export function createClinicApi({ db, config, log }) {
     audit(req, staff, `appointment.${action}`, { patientId: a.patient_id, appointmentId: a.id, detail: { from: a.status, to } });
     log('appointment_status', { to });
     return sendJson(res, 200, { appointment: appointmentJson(findAppointment(id, staff)) });
+  }
+
+  // ---- results (bước 15) --------------------------------------------------
+
+  function getResult(req, res, staff, id) {
+    const a = findAppointment(id, staff);
+    const r = stmt.latestResult.get(a.id);
+    return sendJson(res, 200, r ? resultDraftJson(r, a.claim_code) : null);
+  }
+
+  async function saveDraft(req, res, staff, id) {
+    const a = findAppointment(id, staff);
+    const draft = parseDraft(await readJson(req));
+    if (a.status === 'cancelled') throw new HttpError(409, 'bad_state', 'Lượt khám đã hủy.');
+    const now = localIso();
+    const latest = stmt.latestResult.get(a.id);
+    if (latest && latest.status !== 'draft') {
+      throw new HttpError(409, 'result_sent', 'Kết quả đã gửi. Mở bản sửa để thay đổi.');
+    }
+    const fields = [JSON.stringify(draft.diagnosis), JSON.stringify(draft.items), draft.advice, draft.followUpDate, draft.internalNote];
+    if (latest) stmt.updateDraft.run(...fields, now, latest.id);
+    else stmt.insertResult.run(`r-${a.id}-v1`, a.id, 1, ...fields, null, now);
+    audit(req, staff, 'result.draft', { patientId: a.patient_id, appointmentId: a.id, detail: { version: latest?.version ?? 1 } });
+    return sendJson(res, 200, resultDraftJson(stmt.latestResult.get(a.id), a.claim_code));
+  }
+
+  function sendResult(req, res, staff, id) {
+    const a = findAppointment(id, staff);
+    const latest = stmt.latestResult.get(a.id);
+    if (!latest) throw new HttpError(409, 'no_draft', 'Chưa có bản nháp kết quả.');
+    if (latest.status !== 'draft') throw new HttpError(409, 'result_sent', 'Kết quả này đã gửi.');
+    const missing = missingForSend({ diagnosis: json(latest.diagnosis, []), items: json(latest.items, []) });
+    if (missing.length) throw new HttpError(422, 'incomplete', 'Kết quả còn thiếu thông tin bắt buộc.', missing);
+    const now = localIso();
+    const code = atomically(() => {
+      stmt.markAmended.run(a.id);
+      stmt.markSent.run(staff.id, now, now, latest.id);
+      stmt.setDone.run(staff.id, a.id);
+      if (a.claim_code) return a.claim_code;
+      let fresh;
+      do fresh = newClaimCode(); while (stmt.claimTaken.get(fresh));
+      stmt.setClaim.run(fresh, localIso(Date.now() + CLAIM_DAYS * 86_400_000), a.id);
+      return fresh;
+    });
+    audit(req, staff, 'result.send', { patientId: a.patient_id, appointmentId: a.id, detail: { version: latest.version } });
+    log('result_sent', { version: latest.version });
+    return sendJson(res, 200, resultDraftJson(stmt.latestResult.get(a.id), code));
+  }
+
+  async function amendResult(req, res, staff, id) {
+    const a = findAppointment(id, staff);
+    const body = await readJson(req);
+    const reason = typeof body.reason === 'string' ? body.reason.trim() : '';
+    if (!reason || reason.length > 500) throw new HttpError(422, 'incomplete', 'Cần ghi lý do sửa kết quả.', ['reason']);
+    const latest = stmt.latestResult.get(a.id);
+    if (!latest || latest.status !== 'sent') throw new HttpError(409, 'not_sent', 'Chỉ sửa được kết quả đã gửi.');
+    const version = latest.version + 1;
+    stmt.insertResult.run(`r-${a.id}-v${version}`, a.id, version, latest.diagnosis, latest.items, latest.advice,
+      latest.follow_up_date, latest.internal_note, reason, localIso());
+    audit(req, staff, 'result.amend', { patientId: a.patient_id, appointmentId: a.id, detail: { version } });
+    return sendJson(res, 201, resultDraftJson(stmt.latestResult.get(a.id), a.claim_code));
+  }
+
+  // ---- claim by code (no sign-in) ----------------------------------------
+
+  const claimHits = new Map();
+  const claimSweep = setInterval(() => {
+    const t = Date.now();
+    for (const [ip, h] of claimHits) if (t - h.start >= 60_000) claimHits.delete(ip);
+  }, 60_000);
+  claimSweep.unref();
+
+  function claim(req, res, rawCode) {
+    const ip = req.socket.remoteAddress ?? '';
+    const t = Date.now();
+    let hits = claimHits.get(ip);
+    if (!hits || t - hits.start >= 60_000) claimHits.set(ip, (hits = { start: t, count: 0 }));
+    if (++hits.count > CLAIM_PER_MINUTE) {
+      log('result_claim', { result: 'rate_limited' });
+      throw new HttpError(429, 'rate_limited', 'Bạn thử quá nhiều lần. Vui lòng đợi một phút.');
+    }
+    const missing = () => new HttpError(404, 'not_found', 'Mã không đúng hoặc đã hết hạn.');
+    const code = normalizeClaimCode(rawCode);
+    const a = code ? stmt.byClaim.get(code) : null;
+    const r = a && a.claim_expires_at > localIso(t) ? stmt.sentResult.get(a.id) : null;
+    if (!r) {
+      log('result_claim', { result: 'not_found' });
+      throw missing();
+    }
+    const day = a.starts_at.slice(0, 10);
+    const advice = r.advice.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+    if (r.follow_up_date) {
+      const [y, m, d] = r.follow_up_date.split('-');
+      advice.push(`Hẹn tái khám ngày ${d}/${m}/${y}.`);
+    }
+    stmt.audit.run(localIso(t), 'patient', 'result.claim', a.patient_id, a.id, JSON.stringify({ version: r.version }), ip);
+    log('result_claim', { result: 'ok' });
+    return sendJson(res, 200, {
+      appointmentId: a.id,
+      version: r.version,
+      issuedAt: r.signed_at,
+      facilityName: a.clinic_name,
+      facilityPhone: a.clinic_phone,
+      doctorName: r.doctor_name ? `${r.title} ${r.doctor_name}`.trim() : '',
+      patientName: a.full_name,
+      patientAge: ageOn(a.birth_date, day),
+      patientGender: a.gender,
+      address: a.address,
+      insuranceCode: maskInsurance(a.insurance_code) ?? '',
+      weightKg: a.weight_kg ?? null,
+      diagnosis: json(r.diagnosis, []).map(([c, n]) => `${n} (${c})`).join('; '),
+      items: json(r.items, []),
+      advice,
+      followUpDate: r.follow_up_date ?? null,
+    });
   }
 
   function history(req, res, staff, patientId) {
@@ -347,16 +521,36 @@ export function createClinicApi({ db, config, log }) {
       }
       throw notFound();
     }
+    if (area === 'results') {
+      if (m === 'GET' && id === 'claim' && parts.length === 4) return claim(req, res, sub);
+      throw notFound();
+    }
     const staff = requireStaff(req);
     if (m === 'GET' && area === 'clinic' && id === 'worklist' && parts.length === 3) return worklist(req, res, staff, url);
+    if (m === 'GET' && area === 'clinic' && id === 'catalog' && parts.length === 3) {
+      return sendJson(res, 200, { drugs: clinicCatalog.drugs, icd10: clinicCatalog.icd10 });
+    }
     if (area === 'appointments' && parts.length === 4) {
       if (m === 'GET' && sub === 'chart') return chart(req, res, staff, id);
       if (m === 'POST' && (sub === 'arrive' || sub === 'start')) return transition(req, res, staff, id, sub);
+      if (m === 'GET' && sub === 'result') return getResult(req, res, staff, id);
+      if (m === 'PUT' && sub === 'result-draft') return saveDraft(req, res, staff, id);
+    }
+    if (area === 'appointments' && parts.length === 5 && parts[3] === 'result' && m === 'POST') {
+      if (parts[4] === 'send') return sendResult(req, res, staff, id);
+      if (parts[4] === 'amend') return amendResult(req, res, staff, id);
     }
     if (m === 'POST' && area === 'summaries' && sub === 'feedback' && parts.length === 4) return feedback(req, res, staff, id);
     if (m === 'GET' && area === 'patients' && sub === 'history' && parts.length === 4) return history(req, res, staff, id);
     throw notFound();
   }
 
-  return { handle, sessions: store, close: () => store.close() };
+  return {
+    handle,
+    sessions: store,
+    close: () => {
+      store.close();
+      clearInterval(claimSweep);
+    },
+  };
 }

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'api.dart';
 import 'http_client.dart';
 import 'models.dart';
+import 'result.dart';
 
 final apiProvider = Provider<ClinicApi>((ref) {
   final client = createHttpClient();
@@ -66,3 +67,13 @@ final historyProvider = FutureProvider.autoDispose
     .family<List<HistoryEntry>, String>(
       (ref, patientId) => guarded(ref, (api) => api.history(patientId)),
     );
+
+/// Drug and ICD-10 lists for the prescription form; loaded once.
+final catalogProvider = FutureProvider<Catalog>(
+  (ref) => guarded(ref, (api) => api.catalog()),
+);
+
+/// Latest result version of a visit, or null before the first draft.
+final resultProvider = FutureProvider.autoDispose.family<ResultDraft?, String>(
+  (ref, id) => guarded(ref, (api) => api.result(id)),
+);

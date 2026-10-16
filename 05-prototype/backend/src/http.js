@@ -3,10 +3,12 @@
 export const MAX_BODY = 16 * 1024;
 
 export class HttpError extends Error {
-  constructor(status, code, message) {
+  constructor(status, code, message, fields = null) {
     super(message);
     this.status = status;
     this.code = code;
+    // Names of invalid or missing fields (no values), for 400/422 answers.
+    this.fields = fields;
   }
 }
 

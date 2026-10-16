@@ -4,6 +4,7 @@
 //
 //   npm run seed                  -> data/clinic.db, today in Asia/Ho_Chi_Minh
 //   SEED_TODAY=2026-11-19 npm run seed
+//   SEED_CLAIM_CODE=K7MQ-4XR2-9D npm run seed   (fixed claim code for p1)
 //
 // Dev only. The file is deleted and recreated.
 import { existsSync, realpathSync, rmSync } from 'node:fs';
@@ -13,6 +14,7 @@ import { fileURLToPath } from 'node:url';
 
 import { transaction } from '../db/index.js';
 import { hashPassword } from './auth.js';
+import { formatClaimCode, newClaimCode, normalizeClaimCode } from './prescription.js';
 import { addDays, at, minusYears, parseDay, today as clinicToday } from './time.js';
 
 export const DEMO_EMAIL = 'bs.ha@anbinh.test';
@@ -138,11 +140,13 @@ const compact = (day) => day.replaceAll('-', '');
  * Writes the demo data into [db] (already migrated, empty). Dates are
  * relative to [today] ("yyyy-MM-dd", clinic time). Returns the ids tests need.
  */
-export async function seedClinic(db, { today = clinicToday(), password = DEMO_PASSWORD } = {}) {
+export async function seedClinic(db, { today = clinicToday(), password = DEMO_PASSWORD, claimCode = null } = {}) {
   if (!parseDay(today)) throw new Error('SEED_TODAY phải có dạng yyyy-MM-dd.');
+  const p1Claim = claimCode ? normalizeClaimCode(claimCode) : newClaimCode();
+  if (!p1Claim) throw new Error('SEED_CLAIM_CODE phải gồm 10 ký tự Crockford base32, ví dụ K7MQ-4XR2-9D.');
   const passwordHash = await hashPassword(password);
   const historyDay = addDays(today, HISTORY_OFFSET);
-  const ids = { clinicId: CLINIC_ID, doctorId: DOCTOR_ID, today, historyDay, appointments: {}, historyAppointments: {}, summaries: {} };
+  const ids = { claimCodes: {}, clinicId: CLINIC_ID, doctorId: DOCTOR_ID, today, historyDay, appointments: {}, historyAppointments: {}, summaries: {} };
 
   transaction(db, () => {
     const run = (sql, ...args) => db.prepare(sql).run(...args);
@@ -235,6 +239,9 @@ export async function seedClinic(db, { today = clinicToday(), password = DEMO_PA
 
       if (p.result) {
         result(aId, 1, at(today, p.result.time), p.result, addDays(today, p.result.followUpOffset));
+        // Claim code of the sent result, valid 30 days from sending.
+        run('UPDATE appointment SET claim_code = ?, claim_expires_at = ? WHERE id = ?', p1Claim, at(addDays(today, 30), p.result.time), aId);
+        ids.claimCodes[p.id] = formatClaimCode(p1Claim);
         run(`INSERT INTO med_course (id, patient_id, item, prescribed_at) VALUES (?, ?, ?, ?)`,
           `${aId}#1`, p.id, JSON.stringify(p.result.items[0]), at(today, p.result.time));
       }
@@ -267,7 +274,8 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const db = openDatabase(path);
   const today = (process.env.SEED_TODAY ?? '').trim() || clinicToday();
   const password = process.env.DEMO_PASSWORD || DEMO_PASSWORD;
-  await seedClinic(db, { today, password });
+  const ids = await seedClinic(db, { today, password, claimCode: (process.env.SEED_CLAIM_CODE ?? '').trim() || null });
   db.close();
-  console.log(JSON.stringify({ event: 'seeded', today, email: DEMO_EMAIL, patients: PATIENTS.length }));
+  // Demo data only: the claim code is printed so the app demo can fetch p1's result.
+  console.log(JSON.stringify({ event: 'seeded', today, email: DEMO_EMAIL, patients: PATIENTS.length, claimCodeP1: ids.claimCodes.p1 }));
 }

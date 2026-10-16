@@ -289,6 +289,22 @@ final chartHoa = {
   'lastVisit': null,
 };
 
+const catalog = {
+  'drugs': [
+    {
+      'name': 'Allopurinol',
+      'strength': '300mg',
+      'form': 'viên',
+      'route': 'Uống',
+    },
+    {'name': 'Colchicin', 'strength': '1mg', 'form': 'viên', 'route': 'Uống'},
+  ],
+  'icd10': [
+    ['M10', 'Gút'],
+    ['M17', 'Thoái hóa khớp gối'],
+  ],
+};
+
 const session = {
   'staff': {'id': 'd1', 'name': 'BS. Nguyễn Thu Hà', 'role': 'doctor'},
   'clinic': {
@@ -304,7 +320,23 @@ class FakeBackend {
   bool signedIn;
   final calls = <String>[];
 
-  http.Response _json(Object body, [int status = 200]) => http.Response.bytes(
+  /// Bà Lan's result as the server holds it; null before the first draft.
+  Map<String, Object?>? result;
+
+  Map<String, Object?> _resultFrom(Map<String, Object?> body) => {
+    'id': 'r-p2-${result?['version'] ?? 1}',
+    'appointmentId': 'a-p2',
+    'version': result?['version'] ?? 1,
+    'status': 'draft',
+    'amendReason': result?['amendReason'],
+    'signedBy': null,
+    'signedAt': null,
+    'updatedAt': '${today}T08:45:00+07:00',
+    'claimCode': result?['claimCode'],
+    ...body,
+  };
+
+  http.Response _json(Object? body, [int status = 200]) => http.Response.bytes(
     utf8.encode(jsonEncode(body)),
     status,
     headers: {'content-type': 'application/json; charset=utf-8'},
@@ -334,7 +366,35 @@ class FakeBackend {
         },
       }, 401);
     }
+    if (key == 'PUT /v1/appointments/a-p2/result-draft') {
+      result = _resultFrom(jsonDecode(req.body) as Map<String, Object?>);
+      return _json(result!);
+    }
+    if (key == 'POST /v1/appointments/a-p2/result/send') {
+      result = {
+        ...result!,
+        'status': 'sent',
+        'signedBy': 'BS. Nguyễn Thu Hà',
+        'signedAt': '${today}T08:50:00+07:00',
+        'claimCode': 'K7MQ-4XR2-9D',
+      };
+      return _json(result!);
+    }
+    if (key == 'POST /v1/appointments/a-p2/result/amend') {
+      final reason = (jsonDecode(req.body) as Map)['reason'];
+      result = {
+        ...result!,
+        'id': 'r-p2-2',
+        'version': 2,
+        'status': 'draft',
+        'amendReason': reason,
+      };
+      return _json(result!, 201);
+    }
     return switch (key) {
+      'GET /v1/clinic/catalog' => _json(catalog),
+      'GET /v1/appointments/a-p2/result' => _json(result),
+
       'GET /v1/staff/me' => _json(session),
       'POST /v1/staff/logout' => http.Response('', 204),
       'GET /v1/clinic/worklist' => _json(worklist),

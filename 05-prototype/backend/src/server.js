@@ -171,6 +171,7 @@ export function createApp({ config, extractor, stt, log = createLogger(), db = n
         error: {
           code: error instanceof HttpError ? error.code : 'internal',
           message: error instanceof HttpError ? error.message : 'Có lỗi máy chủ. Vui lòng thử lại.',
+          ...(error instanceof HttpError && error.fields ? { fields: error.fields } : {}),
         },
       });
     });

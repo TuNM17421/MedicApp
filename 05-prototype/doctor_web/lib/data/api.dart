@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 import 'models.dart';
+import 'result.dart';
 
 /// Base URL of the backend. Empty means the page's own origin, which is how
 /// the backend serves the built web at `/doctor/`. For `flutter run`, pass
@@ -118,4 +119,36 @@ class ClinicApi {
     ) as List<Object?>)
       HistoryEntry.fromJson(h! as Json),
   ];
+
+  Future<Catalog> catalog() async =>
+      Catalog.fromJson(await _send('GET', '/v1/clinic/catalog') as Json);
+
+  Future<ResultDraft?> result(String appointmentId) async {
+    final json = await _send('GET', '/v1/appointments/$appointmentId/result');
+    return json is Json ? ResultDraft.fromJson(json) : null;
+  }
+
+  Future<ResultDraft> saveDraft(String appointmentId, Json body) async =>
+      ResultDraft.fromJson(
+        await _send(
+          'PUT',
+          '/v1/appointments/$appointmentId/result-draft',
+          body: body,
+        ) as Json,
+      );
+
+  Future<ResultDraft> sendResult(String appointmentId) async =>
+      ResultDraft.fromJson(
+        await _send('POST', '/v1/appointments/$appointmentId/result/send')
+            as Json,
+      );
+
+  Future<ResultDraft> amendResult(String appointmentId, String reason) async =>
+      ResultDraft.fromJson(
+        await _send(
+          'POST',
+          '/v1/appointments/$appointmentId/result/amend',
+          body: {'reason': reason},
+        ) as Json,
+      );
 }
