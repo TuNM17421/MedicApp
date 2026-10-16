@@ -73,6 +73,15 @@ export function readConfig(env = process.env) {
   const demoOtp = (env.DEMO_OTP ?? '').trim();
   if (demoOtp && !/^\d{6}$/.test(demoOtp)) throw new Error('DEMO_OTP phải gồm 6 chữ số.');
   const otpPepper = (env.PATIENT_OTP_PEPPER ?? '').trim();
+  // Bước 17: pre-visit summary. auto (default): openai with a key, else mock.
+  const summaryRequested = ((env.CLINIC_AI_SUMMARY ?? '').trim().toLowerCase()) || 'auto';
+  if (!['auto', 'off', 'mock', 'openai'].includes(summaryRequested)) {
+    throw new Error('CLINIC_AI_SUMMARY chỉ nhận auto, off, mock hoặc openai.');
+  }
+  if (summaryRequested === 'openai' && !apiKey) {
+    throw new Error('CLINIC_AI_SUMMARY=openai cần OPENAI_API_KEY trong backend/.env.');
+  }
+  const summaryMode = summaryRequested === 'auto' ? (apiKey ? 'openai' : 'mock') : summaryRequested;
   if (production && !otpPepper) throw new Error('NODE_ENV=production cần PATIENT_OTP_PEPPER.');
   const config = {
     mode,
@@ -102,6 +111,10 @@ export function readConfig(env = process.env) {
     patientOtpMode: otpMode,
     // Fixed code for the seeded demo; only honoured in dev mode.
     demoOtp: otpMode === 'dev' && demoOtp ? demoOtp : null,
+    // Bước 17: off | mock | openai, and the quiet time before a run so a
+    // burst of uploads makes one summary.
+    summaryMode,
+    summaryDebounceMs: int(env, 'SUMMARY_DEBOUNCE_MS', 3000, { min: 0, max: 600_000 }),
   };
   Object.defineProperty(config, 'apiKey', { value: apiKey, enumerable: false });
   // Server secret mixed into code hashes; the default is for dev only.
@@ -117,6 +130,7 @@ export function describe(config) {
     reasoning_effort: config.reasoningEffort,
     stt_model: config.sttModel,
     key_configured: Boolean(config.apiKey),
+    summary_mode: config.summaryMode,
     limits: {
       turn_audio_seconds: config.maxRecordingSeconds,
       session_audio_seconds: config.maxSessionAudioSeconds,

@@ -10,7 +10,8 @@
   "scripts": {
     "start": "node src/server.js",
     "test": "node --test",
-    "seed": "node src/clinic/seed.js"
+    "seed": "node src/clinic/seed.js",
+    "eval:summary": "node eval/run-summary-eval.js"
   },
   "dependencies": {
     "openai": "7.34.0",

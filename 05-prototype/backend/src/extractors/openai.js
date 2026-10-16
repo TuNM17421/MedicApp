@@ -32,7 +32,7 @@ function context({ profiles, today, state }) {
   };
 }
 
-function classify(error) {
+export function classify(error) {
   if (error instanceof OpenAI.APIUserAbortError) return new ExtractorError('aborted');
   if (error instanceof OpenAI.APIConnectionTimeoutError) return new ExtractorError('timeout');
   if (error instanceof OpenAI.APIConnectionError) return new ExtractorError('network');

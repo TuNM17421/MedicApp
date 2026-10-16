@@ -40,9 +40,9 @@ function parseContext(body) {
   };
 }
 
-export function createApp({ config, extractor, stt, log = createLogger(), db = null }) {
+export function createApp({ config, extractor, stt, log = createLogger(), db = null, summary = {} }) {
   const sessions = new Map();
-  const clinic = db ? createClinicApi({ db, config, log }) : null;
+  const clinic = db ? createClinicApi({ db, config, log, summary }) : null;
 
   const sweep = setInterval(() => {
     const now = Date.now();
@@ -223,5 +223,6 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     log('listening', { host: config.host, port: config.port, ...describe(config) });
     log('doctor_web', { url: `http://${config.host}:${config.port}/doctor/` });
     if (config.mode === 'mock') log('mock_mode', { note: 'Mô phỏng AI: chưa gọi OpenAI, chưa nhận giọng.' });
+    log('summary_mode', { mode: config.summaryMode });
   });
 }

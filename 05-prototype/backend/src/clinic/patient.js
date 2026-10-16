@@ -84,7 +84,11 @@ function createLimiter(windowMs, max) {
   };
 }
 
-export function createPatientApi({ db, config, log }) {
+/**
+ * [onIntake](appointmentId) is called after intake answers are stored, or
+ * sharing of them is granted (bước 17 summary); it must not block.
+ */
+export function createPatientApi({ db, config, log, onIntake = () => {} }) {
   const q = (sql) => db.prepare(sql);
   const otpByPhone = createLimiter(OTP_WINDOW_MS, OTP_PER_PHONE);
   const otpByIp = createLimiter(OTP_WINDOW_MS, OTP_PER_IP);
@@ -307,6 +311,7 @@ export function createPatientApi({ db, config, log }) {
     });
     audit(req, 'consent.grant', a, { scope: ordered, wordingVersion: body.wordingVersion });
     log('consent_grant', { scope: ordered.length });
+    if (ordered.includes('intake') && stmt.intakeCount.get(a.id).n) onIntake(a.id);
     return sendJson(res, 200, consentView(a.id));
   }
 
@@ -355,6 +360,7 @@ export function createPatientApi({ db, config, log }) {
     });
     audit(req, 'intake.upload', a, { answers: answers.length });
     log('patient_upload', { kind: 'intake', n: answers.length });
+    if (answers.length) onIntake(a.id);
     return sendJson(res, 200, { count: stmt.intakeCount.get(a.id).n });
   }
 

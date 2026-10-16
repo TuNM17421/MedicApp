@@ -9,6 +9,7 @@ import {
 } from './auth.js';
 import { readFileSync } from 'node:fs';
 
+import { createSummaryWorker } from '../summary/worker.js';
 import { createPatientApi } from './patient.js';
 
 import {
@@ -70,9 +71,14 @@ export function visitResultJson(a, r) {
   };
 }
 
-export function createClinicApi({ db, config, log }) {
+/**
+ * [summary]: options for the bước 17 summary worker (tests pass
+ * `summarise` and `debounceMs`).
+ */
+export function createClinicApi({ db, config, log, summary = {} }) {
   const store = createSessionStore();
-  const patient = createPatientApi({ db, config, log });
+  const summaries = createSummaryWorker({ db, config, log, ...summary });
+  const patient = createPatientApi({ db, config, log, onIntake: (id) => summaries.schedule(id) });
   const q = (sql) => db.prepare(sql);
 
   const stmt = {
@@ -90,7 +96,7 @@ export function createClinicApi({ db, config, log }) {
       p.insurance_code, p.allergy, p.conditions FROM appointment a
       JOIN patient p ON p.id = a.patient_id WHERE a.id = ? AND a.clinic_id = ?`),
     consent: q('SELECT * FROM consent WHERE appointment_id = ? ORDER BY granted_at DESC, rowid DESC LIMIT 1'),
-    summary: q('SELECT * FROM visit_summary WHERE appointment_id = ? ORDER BY created_at DESC, id DESC LIMIT 1'),
+    summary: q('SELECT * FROM visit_summary WHERE appointment_id = ? ORDER BY created_at DESC, rowid DESC LIMIT 1'),
     summaryById: q(`SELECT s.*, a.patient_id, a.clinic_id FROM visit_summary s
       JOIN appointment a ON a.id = s.appointment_id WHERE s.id = ? AND a.clinic_id = ?`),
     feedback: q('UPDATE visit_summary SET feedback = ?, feedback_by = ?, feedback_at = ? WHERE id = ?'),
@@ -590,9 +596,11 @@ export function createClinicApi({ db, config, log }) {
     handle,
     sessions: store,
     patient,
+    summaries,
     close: () => {
       store.close();
       patient.close();
+      summaries.close();
       clearInterval(claimSweep);
     },
   };

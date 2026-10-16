@@ -256,6 +256,7 @@ Cần đồng ý đang hiệu lực (bản mới nhất của lượt khám, ch�
   - Một liều được nhận khi `courseId` là một dòng `med_course` của người bệnh có số điện thoại này **và** người bệnh đó có ít nhất một lượt khám với đồng ý đang hiệu lực có `dose_log`. Các liều khác bị bỏ qua, `courseId` của chúng có trong `ignored` (mỗi mã một lần).
   - Không người bệnh nào của số này có đồng ý `dose_log` đang hiệu lực: `403 consent_required`.
 - Gửi câu trả lời và thuốc tự dùng ghi `audit_event` (`intake.upload`, `self_meds.upload`, actor `patient`).
+- Gửi câu trả lời xong, server hẹn tạo tóm tắt trước khám ở nền (bước 17, xem [Tóm tắt trước khám](#tóm-tắt-trước-khám-bước-17)); phản hồi không chờ tóm tắt.
 
 ### Dữ liệu mẫu
 
@@ -272,3 +273,55 @@ Cần đồng ý đang hiệu lực (bản mới nhất của lượt khám, ch�
 
 Demo: đặt `DEMO_OTP=000000` trong `.env`, chạy server, trong app nhập `0912000482` rồi mã `000000`. Không đặt `DEMO_OTP` thì lấy mã ở `devCode` hoặc trong log server.
 
+
+## Tóm tắt trước khám (bước 17)
+
+Tóm tắt trong `summary` của hồ sơ (`GET /v1/appointments/:id/chart`) và cột "Lý do khám", `flagged` của hàng chờ. **Dạng trả về không đổi** so với bước 14: `{ id, mode, createdAt, sections: [{ key, text, sources }], flags: [{ text, sources }], feedback }`; mỗi cờ có thêm `signs` (nhãn dấu hiệu, ví dụ `["đau ngực"]`), web cũ bỏ qua được.
+
+### Khi nào chạy
+
+- Sau `PUT /v1/patient/appointments/:id/intake` thành công (và khi người bệnh đồng ý lại có phạm vi `intake` mà lượt khám đã có câu trả lời), server hẹn một lần tóm tắt ở nền rồi trả lời ngay; việc tóm tắt **không bao giờ làm chậm** lần gửi.
+- Gộp theo lượt khám: chờ `SUMMARY_DEBOUNCE_MS` (mặc định 3 giây) không có câu mới mới chạy, nên gửi liền nhiều lần chỉ chạy một lần. Câu mới đến khi đang chạy thì chạy thêm đúng một lần sau đó, trên toàn bộ câu trả lời. Hàng đợi nằm trong tiến trình (tối đa 2 lần chạy song song); khởi động lại server thì lần hẹn chưa chạy bị bỏ, lần gửi sau hẹn lại.
+- Chỉ chạy khi bản đồng ý mới nhất của lượt khám còn hiệu lực và có `intake`; kiểm tra lại sau khi model trả về, rút đồng ý giữa chừng thì bỏ kết quả. Lượt khám đã hủy hoặc chưa có câu trả lời: không chạy.
+- Không ghi đè: mỗi lần chạy thêm một dòng `visit_summary` (`mode`, `model`, `prompt_version` = `summary-v1`, `input_hash`); hồ sơ trả dòng mới nhất (`created_at`, rồi thứ tự ghi). Câu trả lời không đổi so với lần trước (cùng `mode`, `prompt_version`) thì không tạo dòng mới. Đánh giá 👍/👎 gắn với từng bản. Không còn mục nào và không có cờ thì không ghi dòng (bản cũ vẫn hiện).
+- Mỗi lần chạy ghi `audit_event` `summary.generate`, actor `system`, `detail` gồm `result` (`created`, `empty`, `failed`), `summaryId`, `mode`, `model`, `promptVersion`, số câu trả lời, các mục, số cờ, các phần bị bỏ và lý do; không có lời người bệnh. Log chỉ có số đếm, chế độ, mã lỗi và độ trễ.
+
+### Chế độ
+
+`CLINIC_AI_SUMMARY` (mỗi server phục vụ một phòng khám nên đây là cấu hình theo phòng khám):
+
+| Giá trị | Hành vi |
+| --- | --- |
+| `auto` (mặc định) | `openai` khi có `OPENAI_API_KEY`, nếu không `mock` |
+| `off` | Không tạo tóm tắt. Hồ sơ vẫn trả bản cũ nếu có |
+| `mock` | Quy tắc cố định, không gọi model: mỗi câu trả lời vào một mục theo câu hỏi (câu "muốn hỏi bác sĩ" → `questions`; thuốc tự dùng, diễn biến → `course`; lúc đặt lịch → `chief`), lấy tối đa 2 câu đầu của mỗi mục, cắt gọn ở cuối câu. `mode` là `mock`, web hiện "Mô phỏng AI" |
+| `openai` | Responses API như Smart Scheduling: `OPENAI_MODEL`, `OPENAI_REASONING_EFFORT`, Structured Outputs (`strict: true`), `store: false`, `MAX_OUTPUT_TOKENS`, timeout `MODEL_TIMEOUT_MS`, lỗi mạng/timeout thử lại một lần, không đổi sang model khác. Cần key, thiếu key thì server không khởi động |
+
+`/health` có `summary_mode`.
+
+### Dữ liệu gửi model và các mục
+
+- Đầu vào **chỉ** là các dòng `intake_answer` của lượt khám: `channel`, `question`, `answer`, với id rút gọn `a1`, `a2`… (không lộ mã lượt khám). Không gửi tên, số điện thoại, mã BHYT, địa chỉ, tuổi, bệnh nền hay thuốc đã kê; nếu người bệnh tự viết tên, số điện thoại, mã BHYT hoặc địa chỉ của mình trong câu trả lời thì server thay bằng `[tên]`, `[số điện thoại]`, `[mã BHYT]`, `[địa chỉ]` trước khi gửi.
+- Model trả `{ sections: [{ key, sentences: [{ text, sources: [id] }] }] }`, `key` là `chief` (lý do khám), `course` (diễn biến, thuốc người bệnh tự dùng như họ kể) hoặc `questions` (điều muốn hỏi). Thuốc tự dùng nằm trong `course` (thẻ "Diễn biến, đã tự xử lý" của web), không có mục riêng.
+- Prompt cấm chẩn đoán, khuyên thuốc, tự gắn cờ và **mọi con số người bệnh không nói** (tỷ lệ tuân thủ, số liều quên, phần trăm): các số đó do code tính (web tính tuân thủ bằng `medic_core` từ `courses`, `doseLog`).
+
+### Kiểm tra phía server (`src/summary/guard.js`)
+
+1. Bỏ câu không có `sources` hoặc trích id không phải câu trả lời của lượt khám này; bỏ `key` lạ; tối đa 4 câu mỗi mục, mỗi câu ≤ 300 ký tự.
+2. Bỏ **cả mục** khi một câu có con số (chữ số, hoặc số viết bằng chữ có dấu như "hai", "mười") hoặc tên thuốc không có trong chính các câu trả lời nó trích. Số viết bằng chữ trong câu trả lời ("hai hôm") khớp với chữ số trong tóm tắt ("2 ngày"). Tên thuốc theo danh sách mẫu `src/summary/drug-names.json` (hoạt chất và biệt dược cùng nhóm coi là một: "panadol" ↔ "paracetamol") cộng tên trong `catalog/clinic-catalog.json`; danh sách chưa được dược sĩ duyệt.
+3. Mục còn lại ghép thành `{ key, text, sources }` (nguồn là hợp các câu), thứ tự `chief`, `course`, `questions`.
+
+Bộ kiểm tra chạy cả ở chế độ `mock`.
+
+### Cờ cần chú ý
+
+- Do **code** tìm theo danh sách cụm từ `src/summary/red-flags.json`, không do model: đau ngực, khó thở, ngất, yếu liệt nửa người, nói khó, nôn ra máu, ho ra máu, đi ngoài phân đen, co giật, có ý định tự tử, đau đầu dữ dội, lú lẫn. Danh sách ghi rõ **"cần bác sĩ phòng khám đối tác duyệt trước khi dùng"** (`reviewed: false`).
+- So khớp không phân biệt dấu ("dau nguc" khớp "đau ngực"), theo từ trọn vẹn, có danh sách loại trừ cho cụm trùng chữ khác nghĩa ("ngạt mũi" gõ không dấu là "ngat mui", không phải "ngất").
+- Phủ định đơn giản: cụm bị bỏ qua khi trước nó, trong cùng mệnh đề (ngắt bởi dấu câu) và trong 6 từ, có "không", "chưa", "chẳng", "chả", "ko", "k"…, và giữa hai bên không có từ mở ý mới ("nhưng", "mà", "vì", "khi", "lúc", "thỉnh thoảng"…). Ví dụ: "không đau ngực hay khó thở" không gắn cờ; "không sốt nhưng khó thở", "không biết có phải đau ngực không" vẫn gắn cờ. Khi không chắc thì gắn cờ.
+- Mỗi câu trả lời có dấu hiệu cho một cờ: `text` là (các) câu nguyên văn chứa dấu hiệu, `sources` là id câu trả lời đó, `signs` là nhãn. Cờ không đánh giá mức độ.
+
+### Đánh giá
+
+`npm run eval:summary` chạy 30 hội thoại mẫu tiếng Việt (`eval/summary-cases.json`: bệnh mạn tái khám, bệnh cấp, người cao tuổi, tự dùng thuốc, gõ không dấu, có dấu hiệu nguy hiểm, có câu phủ định, chỉ có câu hỏi) qua đúng pipeline của server, in bảng và thoát mã 1 nếu có ca không đạt. Tiêu chí: 100% câu được giữ có nguồn hợp lệ; không câu nào có số hay tên thuốc ngoài câu được trích; bắt đủ mọi cờ mong đợi, không cờ nào trên câu phủ định hay thừa. Chế độ `openai` khi `CLINIC_AI_SUMMARY` ra `openai` (có key), nếu không `mock`; `npm run eval:summary -- --mock` ép `mock`.
+
+**Chưa kiểm chứng:** chưa chạy với OpenAI bằng key thật (chất lượng câu chữ, tỷ lệ bị bộ kiểm tra bỏ, độ trễ, chi phí). Danh sách dấu hiệu và tên thuốc là bản mẫu.

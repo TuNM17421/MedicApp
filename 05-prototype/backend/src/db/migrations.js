@@ -192,4 +192,10 @@ export const migrations = [
   );
   CREATE INDEX patient_session_phone ON patient_session (phone);
   `,
+  // Bước 17: fingerprint of the intake answers a summary was made from, so
+  // re-sending the same answers does not add an identical summary.
+  `
+  ALTER TABLE visit_summary ADD COLUMN input_hash TEXT;
+  CREATE INDEX visit_summary_appointment ON visit_summary (appointment_id, created_at);
+  `,
 ];
