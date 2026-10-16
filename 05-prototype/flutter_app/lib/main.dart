@@ -8,6 +8,7 @@ import 'app/router/app_router.dart';
 import 'app/theme/app_theme.dart';
 import 'core/storage/local_vault.dart';
 import 'features/consent/health_consent.dart';
+import 'features/meds/application/meds_providers.dart';
 import 'features/visit_prep/reminder_scheduler.dart';
 
 Future<void> main() async {
@@ -30,13 +31,42 @@ Future<void> main() async {
   );
 }
 
-class MedicApp extends ConsumerWidget {
+class MedicApp extends ConsumerStatefulWidget {
   const MedicApp({super.key, this.builder});
   final TransitionBuilder? builder;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MedicApp> createState() => _MedicAppState();
+}
+
+class _MedicAppState extends ConsumerState<MedicApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    Future.microtask(() {
+      if (mounted) ref.read(doseLogProvider.notifier).refresh();
+    });
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(doseLogProvider.notifier).refresh();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     ref.watch(reminderSyncProvider);
+    ref.watch(medReminderSyncProvider);
     ref.watch(vaultSyncProvider);
     return _app(ref);
   }
@@ -49,6 +79,6 @@ class MedicApp extends ConsumerWidget {
     supportedLocales: const [Locale('vi')],
     localizationsDelegates: GlobalMaterialLocalizations.delegates,
     routerConfig: ref.watch(appRouterProvider),
-    builder: builder,
+    builder: widget.builder,
   );
 }

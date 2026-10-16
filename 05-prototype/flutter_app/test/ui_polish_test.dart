@@ -16,10 +16,8 @@ class _OnlySelf extends ProfileCatalogController {
   List<PreviewProfile> build() => [demoProfiles.first];
 }
 
-Finder _animated(String key) => find.ancestor(
-  of: find.byKey(Key(key)),
-  matching: find.byType(Animate),
-);
+Finder _animated(String key) =>
+    find.ancestor(of: find.byKey(Key(key)), matching: find.byType(Animate));
 
 void main() {
   testWidgets('home cards fade in, but stay still with reduced motion', (

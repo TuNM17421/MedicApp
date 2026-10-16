@@ -7,8 +7,17 @@ import 'visit_prep_catalog.dart';
 
 /// Current time in Vietnam as a naive local value, matching appointment dates.
 final prepClockProvider = Provider<DateTime Function()>(
-  (ref) =>
-      () => DateTime.now().toUtc().add(const Duration(hours: 7)),
+  (ref) => () {
+    final vietnam = DateTime.now().toUtc().add(const Duration(hours: 7));
+    return DateTime(
+      vietnam.year,
+      vietnam.month,
+      vietnam.day,
+      vietnam.hour,
+      vietnam.minute,
+      vietnam.second,
+    );
+  },
 );
 
 class PrepItem {

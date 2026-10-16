@@ -2,12 +2,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:timezone/data/latest.dart' as tz_data;
-import 'package:timezone/timezone.dart' as tz;
 
-import '../../app/router/app_router.dart';
+import '../../app/notifications.dart';
 import '../../app/state/app_state.dart';
 import '../../app/theme/app_theme.dart';
+import '../../core/notifications/notification_hub.dart';
 import '../auth/auth_controller.dart';
 import '../booking/application/booking_providers.dart';
 import '../booking/domain/booking_models.dart';
@@ -47,10 +46,7 @@ abstract interface class ReminderScheduler {
 }
 
 final reminderSchedulerProvider = Provider<ReminderScheduler>(
-  (ref) => LocalReminderScheduler(
-    onOpen: (visitId) =>
-        ref.read(appRouterProvider).go('/home/appointments/$visitId'),
-  ),
+  (ref) => LocalReminderScheduler(ref.watch(notificationHubProvider)),
 );
 
 /// Whether the phone allows our notifications; null until first asked.
@@ -78,41 +74,25 @@ final reminderSyncProvider = Provider<void>((ref) {
 });
 
 /// Local notifications scheduled on the phone itself: no push server, nothing
-/// leaves the device. Uses inexact alarms, so Android may deliver a reminder
-/// a few minutes late to save battery.
+/// leaves the device. Taps are routed by [NotificationHub]; the payload is
+/// `visit:<visit id>`.
 class LocalReminderScheduler implements ReminderScheduler {
-  LocalReminderScheduler({required this.onOpen});
+  LocalReminderScheduler(this.hub);
+  final NotificationHub hub;
 
-  /// Opens the appointment when the notification or its button is tapped.
-  final void Function(String visitId) onOpen;
-  final _plugin = FlutterLocalNotificationsPlugin();
-  Future<void>? _ready;
+  static const openAction = 'open';
+  static const dismissAction = 'dismiss';
+  static const payloadPrefix = 'visit:';
 
-  static const _openAction = 'open';
-  static const _dismissAction = 'dismiss';
-
-  void _respond(NotificationResponse response) {
-    final visitId = response.payload;
-    if (visitId != null && response.actionId != _dismissAction) {
-      onOpen(visitId);
+  /// The visit a notification is about, or null when it is not a visit
+  /// reminder. Payloads without a prefix come from before medication
+  /// reminders existed.
+  static String? visitIdOf(String? payload) {
+    if (payload == null || payload.isEmpty) return null;
+    if (payload.startsWith(payloadPrefix)) {
+      return payload.substring(payloadPrefix.length);
     }
-  }
-
-  Future<void> _init() async {
-    tz_data.initializeTimeZones();
-    await _plugin.initialize(
-      settings: const InitializationSettings(
-        android: AndroidInitializationSettings('ic_stat_medic'),
-      ),
-      onDidReceiveNotificationResponse: _respond,
-    );
-    // Opened from a notification while the app was closed.
-    final launch = await _plugin.getNotificationAppLaunchDetails();
-    if (launch?.didNotificationLaunchApp ?? false) {
-      if (launch!.notificationResponse case final response?) {
-        _respond(response);
-      }
-    }
+    return payload.contains(':') ? null : payload;
   }
 
   static AndroidNotificationDetails _details(PlannedReminder reminder) =>
@@ -140,43 +120,34 @@ class LocalReminderScheduler implements ReminderScheduler {
             .inMilliseconds,
         actions: const [
           AndroidNotificationAction(
-            _openAction,
+            openAction,
             'Xem hướng dẫn',
             showsUserInterface: true,
           ),
-          AndroidNotificationAction(_dismissAction, 'Đã hiểu'),
+          AndroidNotificationAction(dismissAction, 'Đã hiểu'),
         ],
       );
 
   @override
   Future<bool> replaceAll(List<PlannedReminder> reminders) async {
     try {
-      await (_ready ??= _init());
-      final android = _plugin
-          .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin
-          >();
+      await hub.ready();
       var allowed = true;
-      if (reminders.isNotEmpty) {
-        allowed = await android?.requestNotificationsPermission() ?? true;
-      }
-      await _plugin.cancelAll();
-      final vietnam = tz.getLocation('Asia/Ho_Chi_Minh');
-      for (final (index, reminder) in reminders.indexed) {
-        await _plugin.zonedSchedule(
-          id: index,
-          scheduledDate: tz.TZDateTime(
-            vietnam,
-            reminder.at.year,
-            reminder.at.month,
-            reminder.at.day,
-            reminder.at.hour,
-            reminder.at.minute,
-          ),
+      if (reminders.isNotEmpty) allowed = await hub.requestPermission();
+      await hub.cancelRange(
+        NotificationIds.visitStart,
+        NotificationIds.visitEnd,
+      );
+      final mode = await hub.scheduleMode();
+      final count = NotificationIds.visitEnd - NotificationIds.visitStart;
+      for (final (index, reminder) in reminders.take(count).indexed) {
+        await hub.plugin.zonedSchedule(
+          id: NotificationIds.visitStart + index,
+          scheduledDate: NotificationHub.inVietnam(reminder.at),
           title: reminder.title,
           body: reminder.summary,
-          payload: reminder.visitId,
-          androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          payload: '$payloadPrefix${reminder.visitId}',
+          androidScheduleMode: mode,
           notificationDetails: NotificationDetails(android: _details(reminder)),
         );
       }

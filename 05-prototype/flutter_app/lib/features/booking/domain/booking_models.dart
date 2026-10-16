@@ -218,6 +218,44 @@ class VisitSummary {
   final DateTime date;
   final int fee;
   final PayMethod method;
+
+  Map<String, Object?> toJson() => {
+    'id': id,
+    'patientName': patientName,
+    'type': type.name,
+    'facilityName': facilityName,
+    'address': address,
+    'departmentName': departmentName,
+    'doctorName': doctorName,
+    'date': date.toIso8601String(),
+    'time': time,
+    'fee': fee,
+    'method': method.name,
+    'contactName': contactName,
+    'contactPhone': contactPhone,
+    'note': note,
+    'patientId': patientId,
+    'departmentId': departmentId,
+  };
+
+  factory VisitSummary.fromJson(Map<String, Object?> json) => VisitSummary(
+    id: json['id']! as String,
+    patientName: json['patientName']! as String,
+    type: VisitType.values.byName(json['type']! as String),
+    facilityName: json['facilityName']! as String,
+    address: json['address']! as String,
+    departmentName: json['departmentName']! as String,
+    doctorName: json['doctorName']! as String,
+    date: DateTime.parse(json['date']! as String),
+    time: json['time']! as String,
+    fee: json['fee']! as int,
+    method: PayMethod.values.byName(json['method']! as String),
+    contactName: json['contactName']! as String,
+    contactPhone: json['contactPhone']! as String,
+    note: json['note']! as String,
+    patientId: json['patientId'] as String?,
+    departmentId: json['departmentId'] as String?,
+  );
 }
 
 class PaymentReceipt {
@@ -233,12 +271,37 @@ class PaymentReceipt {
   bool get unresolved =>
       status == PaymentStatus.checking ||
       status == PaymentStatus.paidUnconfirmed;
+
+  Map<String, Object?> toJson() => {
+    'status': status.name,
+    'method': method.name,
+    'appointmentCode': appointmentCode,
+    'transactionCode': transactionCode,
+  };
+
+  factory PaymentReceipt.fromJson(Map<String, Object?> json) => PaymentReceipt(
+    status: PaymentStatus.values.byName(json['status']! as String),
+    method: PayMethod.values.byName(json['method']! as String),
+    appointmentCode: json['appointmentCode'] as String?,
+    transactionCode: json['transactionCode'] as String?,
+  );
 }
 
 class AppointmentRecord {
   const AppointmentRecord(this.visit, this.receipt);
   final VisitSummary visit;
   final PaymentReceipt receipt;
+
+  Map<String, Object?> toJson() => {
+    'visit': visit.toJson(),
+    'receipt': receipt.toJson(),
+  };
+
+  factory AppointmentRecord.fromJson(Map<String, Object?> json) =>
+      AppointmentRecord(
+        VisitSummary.fromJson(json['visit']! as Map<String, Object?>),
+        PaymentReceipt.fromJson(json['receipt']! as Map<String, Object?>),
+      );
 }
 
 class DemoOptions {

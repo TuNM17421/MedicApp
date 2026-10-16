@@ -38,6 +38,8 @@ abstract final class AppIcons {
   static const signOut = LucideIcons.logOut;
   static const edit = LucideIcons.pencil;
   static const prep = LucideIcons.clipboardList;
+  static const pill = LucideIcons.pill;
+  static const result = LucideIcons.fileHeart;
 }
 
 class AppIcon extends StatelessWidget {

@@ -13,6 +13,7 @@ import '../domain/booking_models.dart';
 import 'booking_format.dart';
 import '../../visit_prep/visit_prep.dart' show visitStart;
 import '../../visit_prep/visit_prep_widgets.dart';
+import '../../records/presentation/visit_result_pages.dart';
 
 class AppointmentsPage extends ConsumerStatefulWidget {
   const AppointmentsPage({super.key});
@@ -291,14 +292,23 @@ class AppointmentDetailPage extends StatelessWidget {
   Widget build(BuildContext context) => AppPageBody(
     title: 'Chi tiết lịch hẹn',
     onBack: () => AppRoutes.backOrHome(context),
-    children: [AppointmentRecordView(id: id)],
+    children: [AppointmentRecordView(id: id, showResult: true)],
   );
 }
 
 class AppointmentRecordView extends ConsumerWidget {
-  const AppointmentRecordView({super.key, required this.id, this.onRetry});
+  const AppointmentRecordView({
+    super.key,
+    required this.id,
+    this.onRetry,
+    this.showResult = false,
+  });
   final String id;
   final VoidCallback? onRetry;
+
+  /// The doctor's result only makes sense on the saved appointment, not on
+  /// the booking confirmation.
+  final bool showResult;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ledger = ref.watch(appointmentsProvider);
@@ -366,6 +376,8 @@ class AppointmentRecordView extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
         if (receipt.status != PaymentStatus.failed) ...[
+          if (showResult && receipt.status == PaymentStatus.confirmed)
+            VisitResultSection(visitId: visit.id),
           VisitPrepSection(visitId: visit.id),
           VisitRemindersSection(visitId: visit.id),
         ],
