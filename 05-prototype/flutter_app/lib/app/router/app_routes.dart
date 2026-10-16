@@ -7,6 +7,7 @@ abstract final class AppRoutes {
   static const notifications = '/notifications';
   static const account = '/account';
   static const appointments = '/home/appointments';
+  static const meds = '/home/meds';
   static const booking = '/booking';
   static const smart = '/smart';
   static const smartFromBooking = '/smart?from=booking';

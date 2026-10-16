@@ -4,6 +4,7 @@ import '../../app/state/app_state.dart';
 import '../../core/storage/local_vault.dart';
 import '../booking/domain/booking_models.dart';
 import '../consent/health_consent.dart';
+import '../meds/domain/medication.dart';
 import '../records/domain/visit_result.dart';
 
 /// Prototype-only accounts. Nothing is sent to a server. An account stays in
@@ -18,6 +19,7 @@ class MockAccount {
     this.consent,
     this.appointments = const [],
     this.results = const [],
+    this.doseLog = const [],
   });
   final String phone;
   final String password;
@@ -30,11 +32,15 @@ class MockAccount {
   /// Visit results and prescriptions sent by the doctor's system.
   final List<VisitResult> results;
 
+  /// Doses marked taken or skipped, oldest first.
+  final List<DoseLogEntry> doseLog;
+
   MockAccount copyWith({
     List<PreviewProfile>? profiles,
     HealthConsent? Function()? consent,
     List<AppointmentRecord>? appointments,
     List<VisitResult>? results,
+    List<DoseLogEntry>? doseLog,
   }) => MockAccount(
     phone: phone,
     password: password,
@@ -42,6 +48,7 @@ class MockAccount {
     consent: consent == null ? this.consent : consent(),
     appointments: appointments ?? this.appointments,
     results: results ?? this.results,
+    doseLog: doseLog ?? this.doseLog,
   );
 
   MockAccount withProfiles(List<PreviewProfile> value) =>
@@ -57,6 +64,7 @@ class MockAccount {
     'consent': consent?.toJson(),
     'appointments': [for (final record in appointments) record.toJson()],
     'results': [for (final result in results) result.toJson()],
+    'doseLog': [for (final entry in doseLog) entry.toJson()],
   };
 
   factory MockAccount.fromJson(Map<String, Object?> json) => MockAccount(
@@ -77,6 +85,10 @@ class MockAccount {
     results: List.unmodifiable([
       for (final result in json['results'] as List<Object?>? ?? const [])
         VisitResult.fromJson(result! as Map<String, Object?>),
+    ]),
+    doseLog: List.unmodifiable([
+      for (final entry in json['doseLog'] as List<Object?>? ?? const [])
+        DoseLogEntry.fromJson(entry! as Map<String, Object?>),
     ]),
   );
 }

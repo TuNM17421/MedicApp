@@ -12,6 +12,7 @@ import '../../features/booking/presentation/booking_demo_page.dart';
 import '../../features/design_preview/design_preview_page.dart';
 import '../../features/smart/presentation/smart_page.dart';
 import '../../features/home/home_page.dart';
+import '../../features/meds/presentation/today_meds_page.dart';
 import '../../features/notifications/notification_pages.dart';
 import '../../features/profiles/add_profile_pages.dart';
 import '../../features/records/presentation/visit_result_pages.dart';
@@ -101,6 +102,10 @@ GoRouter createAppRouter({
                 path: AppRoutes.home,
                 builder: (_, _) => const HomePage(),
                 routes: [
+                  _route(
+                    path: 'meds',
+                    builder: (_, _) => const TodayMedsPage(),
+                  ),
                   _route(
                     path: 'appointments',
                     builder: (_, _) => const AppointmentsPage(),
