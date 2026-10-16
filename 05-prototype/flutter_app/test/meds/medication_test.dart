@@ -11,11 +11,11 @@ import 'package:medic_app/features/booking/application/booking_providers.dart';
 import 'package:medic_app/features/meds/application/meds_providers.dart';
 import 'package:medic_app/features/meds/data/med_reminder_scheduler.dart';
 import 'package:medic_app/features/meds/domain/med_reminder_planner.dart';
-import 'package:medic_core/medic_core.dart';
 import 'package:medic_app/features/records/application/records_providers.dart';
 import 'package:medic_app/features/visit_prep/reminder_scheduler.dart';
 import 'package:medic_app/features/visit_prep/visit_prep.dart';
 import 'package:medic_app/main.dart';
+import 'package:medic_core/medic_core.dart';
 
 import '../visit_prep/reminder_planner_test.dart' show FakeScheduler;
 

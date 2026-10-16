@@ -1,12 +1,11 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:medic_core/medic_core.dart';
 
 import '../../../app/notifications.dart';
 import '../../../app/state/app_state.dart';
 import '../../auth/auth_controller.dart';
 import '../../records/application/records_providers.dart';
-
-import 'package:medic_core/medic_core.dart';
 
 import '../../visit_prep/reminder_scheduler.dart';
 import '../../visit_prep/visit_prep.dart';

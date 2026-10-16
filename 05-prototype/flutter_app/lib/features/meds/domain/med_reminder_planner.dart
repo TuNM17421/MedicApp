@@ -1,8 +1,7 @@
 import 'package:intl/intl.dart';
+import 'package:medic_core/medic_core.dart';
 
 import '../../../app/state/app_state.dart';
-
-import 'package:medic_core/medic_core.dart';
 
 import '../../visit_prep/reminder_planner.dart' show ReminderLine;
 

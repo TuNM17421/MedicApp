@@ -1,11 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:medic_core/medic_core.dart';
 
 import '../../../app/state/app_state.dart';
 import '../../auth/auth_controller.dart';
 import '../../booking/application/booking_providers.dart';
 import '../data/doctor_portal.dart';
-
-import 'package:medic_core/medic_core.dart';
 
 final doctorPortalProvider = Provider<DoctorPortal>(
   (ref) => const MockDoctorPortal(),

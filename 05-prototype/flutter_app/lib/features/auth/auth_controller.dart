@@ -1,11 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:medic_core/medic_core.dart';
 
 import '../../app/state/app_state.dart';
 import '../../core/storage/local_vault.dart';
 import '../booking/domain/booking_models.dart';
 import '../consent/health_consent.dart';
-
-import 'package:medic_core/medic_core.dart';
 
 /// Prototype-only accounts. Nothing is sent to a server. An account stays in
 /// memory and disappears when the app closes, unless its holder agreed to
