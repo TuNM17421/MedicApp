@@ -10,6 +10,7 @@ abstract final class AppIcons {
   static const payment = LucideIcons.creditCard;
   static const help = LucideIcons.circleHelp;
   static const back = LucideIcons.chevronLeft;
+  static const forward = LucideIcons.chevronRight;
   static const next = LucideIcons.arrowRight;
   static const check = LucideIcons.check;
   static const unselected = LucideIcons.circle;
@@ -22,6 +23,21 @@ abstract final class AppIcons {
   static const notifications = LucideIcons.bell;
   static const clock = LucideIcons.clock;
   static const search = LucideIcons.search;
+  static const mic = LucideIcons.mic;
+  static const micOff = LucideIcons.micOff;
+  static const send = LucideIcons.sendHorizontal;
+  static const smart = LucideIcons.sparkles;
+  static const undo = LucideIcons.undo2;
+  static const stop = LucideIcons.square;
+  static const phone = LucideIcons.phone;
+  static const qr = LucideIcons.qrCode;
+  static const family = LucideIcons.usersRound;
+  static const lock = LucideIcons.lockKeyhole;
+  static const image = LucideIcons.image;
+  static const flashlight = LucideIcons.flashlight;
+  static const signOut = LucideIcons.logOut;
+  static const edit = LucideIcons.pencil;
+  static const prep = LucideIcons.clipboardList;
 }
 
 class AppIcon extends StatelessWidget {

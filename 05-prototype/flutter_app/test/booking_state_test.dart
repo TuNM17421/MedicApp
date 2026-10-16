@@ -286,6 +286,42 @@ void main() {
     expect(c.read(bookingSessionProvider).draft.date, dates[1]);
     expect(c.read(bookingSessionProvider).slots.single.doctorId, 'new');
   });
+  test('Back while editing the visit type never closes the flow', () async {
+    final c = bookingContainer();
+    final actions = c.read(bookingSessionProvider.notifier);
+    await selectVisit(c, facility: 'songxanh');
+    expect(c.read(bookingSessionProvider).stage, BookingStage.review);
+
+    actions.edit(BookingStage.type);
+    expect(actions.closesOnBack, isFalse);
+    actions.back();
+    expect(c.read(bookingSessionProvider).stage, BookingStage.review);
+
+    // BHYT invalidates this facility: Back returns to the first missing choice.
+    actions.edit(BookingStage.type);
+    actions.chooseType(VisitType.insurance);
+    actions.back();
+    final session = c.read(bookingSessionProvider);
+    expect(session.stage, BookingStage.facility);
+    expect(session.draft.patientId, 'self');
+  });
+
+  test(
+    'change visit type from the facility step returns to facility',
+    () async {
+      final c = bookingContainer();
+      final actions = c.read(bookingSessionProvider.notifier);
+      actions.chooseType(VisitType.insurance);
+      await actions.next();
+      actions.choosePatient('self');
+      await actions.next();
+      expect(c.read(bookingSessionProvider).stage, BookingStage.facility);
+      actions.edit(BookingStage.type);
+      actions.back();
+      expect(c.read(bookingSessionProvider).stage, BookingStage.facility);
+      expect(c.read(bookingSessionProvider).draft.patientId, 'self');
+    },
+  );
 }
 
 class ControlledRepository implements BookingRepository {

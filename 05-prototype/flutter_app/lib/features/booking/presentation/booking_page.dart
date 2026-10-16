@@ -40,8 +40,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
 
   void _back(BookingSession session) {
     if (session.busy) return;
-    if (session.stage == BookingStage.type ||
-        session.stage == BookingStage.result) {
+    if (actions.closesOnBack) {
       AppRoutes.backOrHome(context);
     } else {
       actions.back();
@@ -249,6 +248,12 @@ class _BookingPageState extends ConsumerState<BookingPage> {
               prefixIcon: AppIcon(AppIcons.search),
             ),
             onChanged: (value) => setState(() => _query = value),
+          ),
+          OutlinedButton.icon(
+            key: const Key('booking-smart'),
+            onPressed: () => context.push(AppRoutes.smartFromBooking),
+            icon: const AppIcon(AppIcons.smart),
+            label: const Text('Chưa biết chọn khoa? Nói hoặc nhập nhu cầu'),
           ),
           if (departments.isEmpty)
             AppEmptyState(
@@ -510,6 +515,7 @@ class _BookingPageState extends ConsumerState<BookingPage> {
         ];
       case BookingStage.result:
         return [
+          BookingSuccessMark(id: draft.id),
           AppointmentRecordView(id: draft.id, onRetry: actions.retryFailed),
         ];
     }
@@ -572,7 +578,8 @@ class _BookingPageState extends ConsumerState<BookingPage> {
     return PopScope(
       canPop:
           !session.busy &&
-          (stage == BookingStage.type || stage == BookingStage.result),
+          (stage == BookingStage.result ||
+              (stage == BookingStage.type && !session.editing)),
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _back(session);
       },

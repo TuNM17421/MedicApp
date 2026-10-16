@@ -197,4 +197,18 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  testWidgets('header Back while editing the visit type keeps the draft', (
+    tester,
+  ) async {
+    final c = await openApp(tester, location: '/home');
+    await tapText(tester, 'Bắt đầu');
+    await chooseToReview(tester);
+    c.read(bookingSessionProvider.notifier).edit(BookingStage.type);
+    await tester.pumpAndSettle();
+    await tapText(tester, 'Quay lại');
+    expect(find.byKey(const Key('booking-action')), findsOneWidget);
+    expect(c.read(bookingSessionProvider).stage, BookingStage.review);
+    expect(tester.takeException(), isNull);
+  });
 }

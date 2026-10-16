@@ -109,3 +109,11 @@
 - Bàn giao code: Nhánh `codex/booking-ui-smart-scheduling-prd`, commit `a6e0e9a`; Flutter bước 1–4, tests, font và script môi trường portable. Analyze sạch và 52 test pass trước push. Không đưa SDK/cache/APK/.env vào Git.
 - Bàn giao tài liệu: `prd-smart-scheduling-implementation.md`, liên kết từ README/PRD cũ; mẫu backend đổi sang `gpt-6-luna` / reasoning `low`, STT giữ `gpt-live-transcribe`. Tài liệu nêu rõ luồng hỏi-sửa-đề xuất-xác nhận-thanh toán, contract, version, giới hạn chi phí, fallback và tiêu chí nghiệm thu.
 - Giới hạn: Chưa triển khai Smart Scheduling hoặc gọi OpenAI; không nâng model đắt tự động. Mới có mẫu cấu hình backend, chưa có server chạy được. Không tạo log thử hoặc số liệu lâm sàng giả.
+
+## AI-013 — Sửa lỗi Quay lại và triển khai Smart Scheduling
+
+- Ngày: 2026-10-15.
+- Yêu cầu: Sửa lỗi "Quay lại", sau đó đọc PRD Smart Scheduling và triển khai.
+- Sửa lỗi: Khi sửa Hình thức khám từ màn xác nhận, Quay lại không còn đóng luồng mà trở về bước còn thiếu hoặc màn xác nhận; thêm 3 test.
+- Triển khai: Backend Node local (`05-prototype/backend`, Responses API `gpt-6-luna`, Realtime transcription `gpt-live-transcribe`, chế độ mô phỏng khi không có key, 28 test) và màn Đặt lịch thông minh trong app (giọng nói, nhập tay, lựa chọn nhanh, đề xuất có Sửa/Hoàn tác, bàn giao vào bước Thanh toán, 22 test).
+- Giới hạn: Chưa build APK, chưa thử trên OPPO, chưa gọi OpenAI bằng key thật, chưa làm "Dùng vị trí hiện tại". 8 test ảnh chuẩn cần cập nhật trên Windows. Code và tài liệu do Claude viết; không có log thử người dùng thật.
