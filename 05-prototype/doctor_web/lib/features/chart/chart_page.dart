@@ -433,8 +433,17 @@ class _ConsentNote extends StatelessWidget {
         'Đồng ý chia sẻ lúc ${fmtClock(d.consent.grantedAt!)} '
             '${fmtDay(d.consent.grantedAt!)}. Chỉ phòng khám của lượt khám '
             'này xem được.',
-      ConsentState.declined =>
-        'Người bệnh không chia sẻ dữ liệu cho lượt khám này.',
+      ConsentState.declined => switch ((
+        d.consent.reason,
+        d.consent.revokedAt,
+      )) {
+        ('revoked', final DateTime at) =>
+          'Người bệnh đã rút lại đồng ý chia sẻ lúc ${fmtClock(at)} '
+              '${fmtDay(at)}. Dữ liệu đã chia sẻ không còn hiện ở đây.',
+        ('expired', _) =>
+          'Đồng ý chia sẻ đã hết hạn. Dữ liệu đã chia sẻ không còn hiện ở đây.',
+        _ => 'Người bệnh không chia sẻ dữ liệu cho lượt khám này.',
+      },
       ConsentState.none => 'Người bệnh chưa trả lời câu hỏi trước khám.',
     };
     return Container(

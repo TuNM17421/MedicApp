@@ -320,6 +320,9 @@ class FakeBackend {
   bool signedIn;
   final calls = <String>[];
 
+  /// Overrides anh Hòa's consent in his chart.
+  Map<String, Object?>? hoaConsent;
+
   /// Bà Lan's result as the server holds it; null before the first draft.
   Map<String, Object?>? result;
 
@@ -399,7 +402,10 @@ class FakeBackend {
       'POST /v1/staff/logout' => http.Response('', 204),
       'GET /v1/clinic/worklist' => _json(worklist),
       'GET /v1/appointments/a-p2/chart' => _json(chartLan),
-      'GET /v1/appointments/a-p3/chart' => _json(chartHoa),
+      'GET /v1/appointments/a-p3/chart' => _json({
+        ...chartHoa,
+        'consent': hoaConsent ?? chartHoa['consent'],
+      }),
       'GET /v1/patients/p2/history' => _json([_lastVisit]),
       'POST /v1/summaries/s-p2/feedback' => _json({
         'feedback': {'value': 'up'},

@@ -377,7 +377,7 @@ test('CORS chỉ cho đúng origin dev, có credentials, không bao giờ *', as
   assert.equal(res.headers.get('access-control-allow-origin'), ORIGIN);
   assert.equal(res.headers.get('access-control-allow-credentials'), 'true');
   assert.match(res.headers.get('access-control-allow-methods'), /POST/);
-  assert.equal(res.headers.get('access-control-allow-headers'), 'content-type');
+  assert.equal(res.headers.get('access-control-allow-headers'), 'content-type, authorization');
 
   res = await req('/v1/clinic/worklist', { headers: { origin: ORIGIN } });
   assert.equal(res.headers.get('access-control-allow-origin'), ORIGIN);

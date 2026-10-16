@@ -12,12 +12,13 @@ export class HttpError extends Error {
   }
 }
 
-export async function readJson(req) {
+/** Parses a JSON body of at most [max] bytes (default 16 KiB). */
+export async function readJson(req, max = MAX_BODY) {
   let size = 0;
   const chunks = [];
   for await (const chunk of req) {
     size += chunk.length;
-    if (size > MAX_BODY) throw new HttpError(413, 'too_large', 'Yêu cầu quá lớn.');
+    if (size > max) throw new HttpError(413, 'too_large', 'Yêu cầu quá lớn.');
     chunks.push(chunk);
   }
   if (!size) return {};

@@ -1,6 +1,6 @@
 # API phòng khám (web bác sĩ)
 
-Hợp đồng giữa backend và `doctor_web`. Bước 14 có phần xem; bước 15 thêm kê đơn và gửi kết quả, bước 16 thêm phía người bệnh.
+Hợp đồng giữa backend, `doctor_web` và app người bệnh. Bước 14 có phần xem; bước 15 thêm kê đơn và gửi kết quả; bước 16 thêm phía người bệnh (đăng nhập bằng số điện thoại, đồng ý chia sẻ, gửi dữ liệu từ app).
 
 Mọi phản hồi là JSON UTF-8, `cache-control: no-store`. Lỗi có dạng `{ "error": { "code", "message" } }`, message tiếng Việt, không có stack trace. Ngày có dạng `yyyy-MM-dd`, thời điểm là ISO-8601 có múi giờ, luôn theo giờ phòng khám `+07:00` (ví dụ `2026-10-16T08:30:00+07:00`). Phía Dart cần `DateTime.parse(...).toLocal()` trước khi đưa vào `medic_core` (máy bác sĩ ở múi giờ Việt Nam), nếu không `dayOf` sẽ lấy ngày theo UTC.
 
@@ -41,6 +41,8 @@ Mọi giao diện dưới đây cần phiên hợp lệ (`401 unauthenticated`) 
       "specialty": "Nội tổng hợp",
       "patient": { "id": "p2", "code": "000482", "name": "Phạm Thị Lan", "age": 78, "gender": "Nữ" },
       "consent": "shared",
+      "consentReason": null,
+      "consentRevokedAt": null,
       "hasSummary": true,
       "chiefComplaint": "Đau khớp gối phải khoảng 1 tuần, sưng về đêm.",
       "flagged": false,
@@ -54,6 +56,7 @@ Mọi giao diện dưới đây cần phiên hợp lệ (`401 unauthenticated`) 
 
 - `status`: `booked` (chưa đến), `arrived`, `in_progress`, `done`, `cancelled`.
 - `consent`: `shared` (đang chia sẻ), `declined` (đã từ chối hoặc đã rút lại), `none` (chưa trả lời).
+- `consentReason`, `consentRevokedAt`: giống `consent.reason`, `consent.revokedAt` của hồ sơ bên dưới.
 - `resultStatus`: `none`, `draft`, `sent`.
 - `chiefComplaint`: nội dung mục `chief` của tóm tắt mới nhất khi `consent` là `shared` và có tóm tắt, nếu không thì `null` (cột "Lý do khám").
 - `flagged`: tóm tắt có ít nhất một cờ.
@@ -71,7 +74,7 @@ Mọi giao diện dưới đây cần phiên hợp lệ (`401 unauthenticated`) 
     "address", "weightKg", "insuranceCode": "•••• 3921", "allergy",
     "conditions": ["Gút (M10)", "Rối loạn lipid máu (E78)"]
   },
-  "consent": { "state": "shared", "grantedAt", "expiresAt", "scope": ["intake", "dose_log", "self_meds"] },
+  "consent": { "state": "shared", "grantedAt", "expiresAt", "scope": ["intake", "dose_log", "self_meds"], "reason": null, "revokedAt": null },
   "period": { "from": "2026-09-16", "days": 30, "now": "2026-10-16T08:40:00+07:00" },
   "summary": {
     "id", "mode": "mock", "createdAt",
@@ -89,6 +92,7 @@ Mọi giao diện dưới đây cần phiên hợp lệ (`401 unauthenticated`) 
 ```
 
 - `consent.state` là `shared`, `declined` hoặc `none`. Lấy bản ghi `consent` mới nhất của lượt khám: không có là `none`; đã rút (`revoked_at`), hết hạn hoặc phạm vi rỗng là `declined` (khi đó `grantedAt`, `expiresAt` là `null`, `scope` rỗng). Từng phần theo phạm vi: `intake` mở `summary` và `intake`, `dose_log` mở `courses` và `doseLog`, `self_meds` mở `selfMeds`. Khi không phải `shared`: `summary`, `intake`, `courses`, `doseLog`, `selfMeds` là `null`/`[]`. Cột người bệnh và lịch sử khám tại phòng khám vẫn trả về.
+- `consent.reason` cho biết vì sao `declined`: `revoked` (người bệnh đã rút lại hoặc đã từ chối; `revokedAt` là lúc rút, ISO `+07:00`), `expired` (hết hạn chia sẻ; `revokedAt` là `null`), hoặc `null` (đang `shared`, chưa trả lời, hoặc phạm vi rỗng mà chưa rút). Web dùng để ghi "Người bệnh đã rút lại lúc …" hay "Đã hết hạn chia sẻ".
 - `PrescriptionItem`, `DoseLogEntry` đúng dạng JSON của `medic_core` (`toJson`).
 - `summary.feedback`: `null` hoặc `{ "value": "up" | "down", "by": "BS. Nguyễn Thu Hà", "at" }` (`by` là tên hiển thị).
 - `patient.insuranceCode`: chỉ 4 số cuối (`"•••• 3921"`), `null` khi không dùng BHYT. `patient.weightKg` có thể `null`.
@@ -112,7 +116,7 @@ Mọi giao diện dưới đây cần phiên hợp lệ (`401 unauthenticated`) 
 
 ## Dữ liệu mẫu
 
-`npm run seed` tạo `data/clinic.db` với phòng khám An Bình, bác sĩ `bs.ha@anbinh.test` (mật khẩu lấy từ `DEMO_PASSWORD`, mặc định `medicapp-demo`) và 6 người bệnh giống bản bấm thử, lịch khám vào ngày chạy seed (giờ Việt Nam, đổi bằng `SEED_TODAY=yyyy-MM-dd`). Lượt khám trước của Trần Văn Minh và Phạm Thị Lan là 30 ngày trước, lúc 06:30, để liều sáng của ngày đầu được tính; với quy tắc `medic_core`, Phạm Thị Lan ra Atorvastatin 18/30 và Allopurinol 27/30. Mã lượt khám có dạng `a-<người bệnh>-<yyyyMMdd>` (ví dụ `a-p2-20261016`). Chỉ dùng cho dev; seed xóa và tạo lại file, chỉ chấp nhận đường dẫn trong `backend/data` hoặc thư mục tạm.
+`npm run seed` tạo `data/clinic.db` với phòng khám An Bình, bác sĩ `bs.ha@anbinh.test` (mật khẩu lấy từ `DEMO_PASSWORD`, mặc định `medicapp-demo`) và 6 người bệnh giống bản bấm thử, lịch khám vào ngày chạy seed (giờ Việt Nam, đổi bằng `SEED_TODAY=yyyy-MM-dd`). Lượt khám trước của Trần Văn Minh và Phạm Thị Lan là 30 ngày trước, lúc 06:30, để liều sáng của ngày đầu được tính; với quy tắc `medic_core`, Phạm Thị Lan ra Atorvastatin 18/30 và Allopurinol 27/30. Mã lượt khám có dạng `a-<người bệnh>-<yyyyMMdd>` (ví dụ `a-p2-20261016`). Mỗi người bệnh có số điện thoại `0912` + mã người bệnh (xem bước 16). Chỉ dùng cho dev; seed xóa và tạo lại file, chỉ chấp nhận đường dẫn trong `backend/data` hoặc thư mục tạm.
 
 ## Kết quả khám và đơn thuốc (bước 15)
 
@@ -164,3 +168,107 @@ Chưa có tài khoản người bệnh trên máy chủ (rủi ro R1 trong plan)
 - Trả về bản đã gửi mới nhất theo dạng `VisitResult` của `medic_core`, trừ `visitId` và `profileId` (app tự gắn vào lượt khám của mình): `{ appointmentId, version, issuedAt, facilityName, facilityPhone, doctorName, patientName, patientAge, patientGender, address, insuranceCode (đã che, "" khi không dùng BHYT), weightKg (null khi không có), diagnosis: "Gút (M10); Rối loạn lipid máu (E78)", items, advice: ["…", "Hẹn tái khám ngày 13/11/2026."], followUpDate }`.
 - `advice`: lời dặn tách theo dòng (bỏ dòng trống), thêm câu hẹn tái khám khi có `followUpDate`. `issuedAt` là lúc ký gửi bản đó; `patientAge` tính theo ngày khám.
 - Dữ liệu mẫu: kết quả đã gửi của Trần Văn Minh có mã nhận. `npm run seed` in mã ra màn hình; đặt `SEED_CLAIM_CODE=K7MQ-4XR2-9D` để mã cố định khi demo.
+
+## Người bệnh (bước 16)
+
+Người bệnh đăng nhập bằng số điện thoại và mã xác nhận một lần (OTP), xem lịch khám và kết quả của mình, đồng ý chia sẻ theo từng lượt khám và gửi dữ liệu từ app lên phòng khám. Giải quyết rủi ro R1 trong plan (chưa có tài khoản người bệnh). Mã nhận kết quả của bước 15 vẫn dùng được.
+
+### Số điện thoại
+
+- `patient.phone` lưu dạng chuẩn `0xxxxxxxxx`, duy nhất trong một phòng khám, có thể trống. Một số có thể gắn với người bệnh ở nhiều phòng khám; phiên đăng nhập gắn với số điện thoại nên thấy lượt khám ở mọi phòng khám có số đó.
+- Chuẩn hóa: bỏ khoảng trắng, dấu chấm, dấu gạch; `+84xxxxxxxxx` và `84xxxxxxxxx` thành `0xxxxxxxxx`. Hợp lệ khi là `0` và 9 chữ số. Sai: `422 bad_phone` (`fields: ["phone"]`).
+
+### Đăng nhập
+
+| Giao diện | Thân | Trả về |
+| --- | --- | --- |
+| `POST /v1/patient/otp` | `{ phone }` | `202 { expiresIn: 300, devCode }`. Cùng một câu trả lời dù số có trong hệ thống hay không (không dò được số); số lạ không được lưu mã nên không đăng nhập được. |
+| `POST /v1/patient/session` | `{ phone, code }` | `200 { token, expiresAt, patient: { phone, name } }`. Sai mã, hết hạn, quá số lần hoặc số lạ: `401 bad_code` (một thông báo chung). |
+| `DELETE /v1/patient/session` | | `204`, thu hồi token trong header (luôn `204`, kể cả khi token đã hết hạn hoặc không có). |
+
+- Mã gồm 6 chữ số, hết hạn sau 5 phút, tối đa 5 lần nhập; lần sai thứ 5 xóa mã, phải xin mã mới. Mỗi số chỉ có một mã còn hiệu lực: xin mã mới thay mã cũ. Đăng nhập đúng thì mã bị xóa (chỉ dùng một lần).
+- Mã lưu dạng HMAC-SHA256 với khóa bí mật của server (`PATIENT_OTP_PEPPER`; bản dev có giá trị mặc định, `NODE_ENV=production` bắt buộc đặt). Không lưu mã gốc.
+- Giới hạn xin mã: 3 lần/10 phút mỗi số (kể cả số lạ), 10 lần/10 phút mỗi IP: `429 rate_limited`. Bộ đếm ở bộ nhớ, mất khi khởi động lại server.
+- Chưa có nhà cung cấp SMS (việc của bước 18). `PATIENT_OTP_MODE`:
+  - `dev` (mặc định khi `NODE_ENV` khác `production`): mã ghi vào log `{"event":"patient_otp","phone":"09•••••482","code":"123456"}` và trả trong `devCode` để app dev tự điền. Đặt `DEMO_OTP=000000` để mã luôn là `000000` (chỉ dùng khi demo với dữ liệu mẫu, chỉ có tác dụng ở chế độ `dev`).
+  - `off` (mặc định khi `NODE_ENV=production`): `POST /v1/patient/otp` trả `503 otp_unavailable`.
+- `patient.name` là tên ở lượt khám gần nhất của số điện thoại đó.
+- Token: 32 byte ngẫu nhiên (base64url, 43 ký tự), chỉ lưu SHA-256 trong bảng `patient_session`, hết hạn sau 30 ngày (không trượt). Gửi trong header `Authorization: Bearer <token>`. Thiếu, sai, hết hạn hoặc đã đăng xuất: `401 unauthenticated`. Phiên lưu trong cơ sở dữ liệu nên khởi động lại server vẫn còn.
+
+Mọi giao diện dưới đây cần token. Lượt khám không thuộc số điện thoại của phiên trả `404 not_found` như lượt không tồn tại.
+
+### Lịch khám và kết quả
+
+`GET /v1/patient/appointments`: mọi lượt khám của người bệnh có số này, ở mọi phòng khám, mới nhất trước.
+
+```json
+[
+  {
+    "id": "a-p2-20261016",
+    "clinic": { "id": "c-anbinh", "name": "Phòng khám Đa khoa An Bình", "phone": "0900 000 000" },
+    "startsAt": "2026-10-16T08:30:00+07:00", "time": "08:30",
+    "specialty": "Nội tổng hợp", "kind": "Khám dịch vụ", "status": "arrived",
+    "resultStatus": "none",
+    "consent": { "state": "shared", "scope": ["intake", "dose_log", "self_meds"],
+                 "grantedAt": "...", "expiresAt": "...", "revokedAt": null },
+    "intakeCount": 4,
+    "selfMeds": [ { "name": "Paracetamol 500mg", "how": "..." } ]
+  }
+]
+```
+
+- `resultStatus`: `sent` khi lượt khám có bản kết quả đã gửi, nếu không `none`. Bản nháp (kể cả bản sửa đang mở) không hiện cho người bệnh: khi đang sửa, người bệnh vẫn thấy `sent` và bản đã gửi trước đó.
+- `consent` (`ConsentView`): bản ghi đồng ý mới nhất của lượt khám, hoặc `null` khi chưa có. `state`: `shared`, `revoked` (đã rút, hoặc đã từ chối), `expired` (quá `expiresAt`). `scope` là phạm vi của bản ghi đó.
+- `intakeCount`: số câu trả lời trước khám đang lưu cho lượt khám; `selfMeds`: thuốc tự dùng đang lưu.
+
+`GET /v1/patient/appointments/:id/result`: bản đã gửi mới nhất, cùng dạng với `GET /v1/results/claim/:code` (bước 15). Chưa có bản đã gửi: `404 not_found`. Ghi `audit_event` (`result.view`, actor `patient`).
+
+Khi bác sĩ gửi kết quả (`POST /v1/appointments/:id/result/send`), mỗi thuốc trong đơn thành một dòng `med_course` của người bệnh: `id = "<appointmentId>#<n>"` (n từ 1 theo thứ tự trong đơn), `item` là `PrescriptionItem`, `prescribed_at` là lúc ký gửi lần đầu. Gửi bản sửa thay `item` của các dòng đó (giữ `prescribed_at`), thêm dòng mới nếu đơn dài hơn và xóa các dòng vượt quá nếu đơn ngắn hơn. App dùng các `id` này làm `courseId` khi gửi nhật ký liều.
+
+### Đồng ý chia sẻ
+
+Đồng ý theo từng lượt khám, tách khỏi đồng ý lưu dữ liệu trên máy. `ConsentView` như trên.
+
+| Giao diện | Thân | Trả về |
+| --- | --- | --- |
+| `PUT /v1/patient/appointments/:id/consent` | `{ scope: ["intake", "dose_log", "self_meds"] (tập con, không rỗng, không trùng), wordingVersion: 1 }` | `200 ConsentView` (`shared`). Thêm một bản ghi mới; các bản còn hiệu lực trước đó bị rút (`revoked_at`). Ghi `audit_event` (`consent.grant`). |
+| `DELETE /v1/patient/appointments/:id/consent` | | `200 ConsentView` (`revoked`). Ghi `audit_event` (`consent.revoke`) khi có bản bị rút. Gọi lại khi đã rút: `200`, không đổi gì. Chưa từng đồng ý: `404 not_found`. |
+
+- `scope` được sắp theo thứ tự `intake`, `dose_log`, `self_meds`. Sai `scope` hoặc `wordingVersion` (số nguyên 1–1000): `422 bad_consent` kèm `fields`.
+- `expiresAt` = giờ khám + 30 ngày; nếu thời điểm đó đã qua (lượt khám cũ) thì bây giờ + 30 ngày.
+- Lượt khám đã hủy: `409 bad_state`.
+- Rút lại thì lần tải tiếp theo của web bác sĩ không còn thấy tóm tắt, câu trả lời, thuốc và nhật ký liều, thuốc tự dùng (hồ sơ và hàng chờ, xem `consent.reason`). Lịch sử khám và kết quả do phòng khám tự ghi vẫn hiện. Hết hạn cũng vậy.
+- Bước này **chưa xóa** dữ liệu đã gửi khi rút lại: các dòng vẫn nằm trong cơ sở dữ liệu nhưng bị ẩn. Yêu cầu xóa dữ liệu là việc của bước 18.
+
+### Gửi dữ liệu từ app
+
+Cần đồng ý đang hiệu lực (bản mới nhất của lượt khám, chưa rút, chưa hết hạn) có phạm vi tương ứng, nếu không `403 consent_required`. Sai dạng dữ liệu: `400 bad_upload` kèm `fields` (ví dụ `answers[0].answer`, không kèm giá trị); dữ liệu được kiểm tra trước khi kiểm tra đồng ý. Thân tối đa 512 KiB (các giao diện khác 16 KiB). Mỗi token tối đa 60 lần gửi/phút (`429 rate_limited`). Thời điểm gửi lên là ISO-8601 có múi giờ (`Z` hoặc `+07:00`), server lưu theo giờ `+07:00`.
+
+| Giao diện | Thân | Trả về |
+| --- | --- | --- |
+| `PUT /v1/patient/appointments/:id/intake` | `{ answers: [{ id, channel: "booking" \| "pre_visit", question, answer, answeredAt }] }`, tối đa 50 | `200 { count }`: số câu trả lời đang lưu cho lượt khám. Phạm vi `intake`. |
+| `PUT /v1/patient/appointments/:id/self-meds` | `{ items: [{ name, how }] }`, tối đa 30 | `200 { count }`. Thay toàn bộ danh sách cũ. Phạm vi `self_meds`. |
+| `POST /v1/patient/dose-events` | `{ events: [{ courseId, day: "yyyy-MM-dd", slot, mark, reason, at }] }`, tối đa 500 | `200 { accepted, ignored: [courseId…] }`. Phạm vi `dose_log`. |
+
+- `intake`: `id` do app tạo (uuid, 1–64 ký tự), `question` ≤ 300 ký tự (có thể rỗng hoặc bỏ), `answer` 1–2000 ký tự. Ghi đè theo `id`; server lưu `id` dạng `<appointmentId>/<id>` nên một `id` không chạm được lượt khám khác. Gửi lại cùng `id` là sửa câu trả lời, không thêm dòng. Hồ sơ bác sĩ trả `intake[].id` theo dạng đã lưu.
+- `self-meds`: `name` 1–120 ký tự, `how` ≤ 200 (có thể bỏ). Danh sách rỗng xóa hết.
+- `dose-events`: `slot` là `morning`, `noon`, `afternoon`, `evening`; `mark` là `taken` hoặc `skipped`; `reason` là `null` hoặc `forgot`, `outOfStock`, `unwell`, `other` (chỉ lưu khi `skipped`); `at` là lúc ghi. Ghi đè theo (người bệnh, `courseId`, `day`, `slot`), nên gửi lại cùng một liều không tạo dòng mới.
+  - Một liều được nhận khi `courseId` là một dòng `med_course` của người bệnh có số điện thoại này **và** người bệnh đó có ít nhất một lượt khám với đồng ý đang hiệu lực có `dose_log`. Các liều khác bị bỏ qua, `courseId` của chúng có trong `ignored` (mỗi mã một lần).
+  - Không người bệnh nào của số này có đồng ý `dose_log` đang hiệu lực: `403 consent_required`.
+- Gửi câu trả lời và thuốc tự dùng ghi `audit_event` (`intake.upload`, `self_meds.upload`, actor `patient`).
+
+### Dữ liệu mẫu
+
+`npm run seed` gán số `0912` + mã người bệnh và in ra (`patientPhones`):
+
+| Người bệnh | Số điện thoại | Đồng ý chia sẻ lượt hôm nay |
+| --- | --- | --- |
+| Trần Văn Minh (000317) | `0912000317` | có, đủ 3 phạm vi; có kết quả đã gửi |
+| Phạm Thị Lan (000482) | `0912000482` | có, đủ 3 phạm vi |
+| Phạm Văn Hòa (000455) | `0912000455` | đã từ chối (`revoked`) |
+| Lê Thị Mai (000501) | `0912000501` | có, đủ 3 phạm vi |
+| Đỗ Văn Tùng (000233) | `0912000233` | chưa trả lời |
+| Vũ Thị Hạnh (000519) | `0912000519` | có, đủ 3 phạm vi |
+
+Demo: đặt `DEMO_OTP=000000` trong `.env`, chạy server, trong app nhập `0912000482` rồi mã `000000`. Không đặt `DEMO_OTP` thì lấy mã ở `devCode` hoặc trong log server.
+

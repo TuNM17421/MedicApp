@@ -65,6 +65,15 @@ export function readConfig(env = process.env) {
     throw new Error('OPENAI_REASONING_EFFORT không hợp lệ.');
   }
   const maxRecordingSeconds = int(env, 'MAX_RECORDING_SECONDS', 60, { max: 300 });
+  // Bước 16: patient sign-in codes. No SMS provider yet: `dev` logs the code
+  // and returns it as devCode; `off` answers 503 otp_unavailable.
+  const production = (env.NODE_ENV ?? '').trim() === 'production';
+  const otpMode = ((env.PATIENT_OTP_MODE ?? '').trim().toLowerCase()) || (production ? 'off' : 'dev');
+  if (!['dev', 'off'].includes(otpMode)) throw new Error('PATIENT_OTP_MODE chỉ nhận dev hoặc off.');
+  const demoOtp = (env.DEMO_OTP ?? '').trim();
+  if (demoOtp && !/^\d{6}$/.test(demoOtp)) throw new Error('DEMO_OTP phải gồm 6 chữ số.');
+  const otpPepper = (env.PATIENT_OTP_PEPPER ?? '').trim();
+  if (production && !otpPepper) throw new Error('NODE_ENV=production cần PATIENT_OTP_PEPPER.');
   const config = {
     mode,
     host,
@@ -90,8 +99,13 @@ export function readConfig(env = process.env) {
     doctorWebDevOrigin: origin(env, 'DOCTOR_WEB_DEV_ORIGIN'),
     // Set when the server sits behind HTTPS: the staff cookie gets `Secure`.
     https: env.HTTPS === '1',
+    patientOtpMode: otpMode,
+    // Fixed code for the seeded demo; only honoured in dev mode.
+    demoOtp: otpMode === 'dev' && demoOtp ? demoOtp : null,
   };
   Object.defineProperty(config, 'apiKey', { value: apiKey, enumerable: false });
+  // Server secret mixed into code hashes; the default is for dev only.
+  Object.defineProperty(config, 'otpPepper', { value: otpPepper || 'medicapp-dev-otp-pepper', enumerable: false });
   return Object.freeze(config);
 }
 

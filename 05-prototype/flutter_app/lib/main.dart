@@ -9,6 +9,7 @@ import 'app/theme/app_theme.dart';
 import 'core/storage/local_vault.dart';
 import 'features/consent/health_consent.dart';
 import 'features/meds/application/meds_providers.dart';
+import 'features/sharing/application/sharing_providers.dart';
 import 'features/visit_prep/reminder_scheduler.dart';
 
 Future<void> main() async {
@@ -46,7 +47,9 @@ class _MedicAppState extends ConsumerState<MedicApp>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     Future.microtask(() {
-      if (mounted) ref.read(doseLogProvider.notifier).refresh();
+      if (!mounted) return;
+      ref.read(doseLogProvider.notifier).refresh();
+      ref.read(serverAppointmentsProvider.notifier).sync();
     });
   }
 
@@ -60,6 +63,7 @@ class _MedicAppState extends ConsumerState<MedicApp>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       ref.read(doseLogProvider.notifier).refresh();
+      ref.read(serverAppointmentsProvider.notifier).sync();
     }
   }
 
@@ -68,6 +72,7 @@ class _MedicAppState extends ConsumerState<MedicApp>
     ref.watch(reminderSyncProvider);
     ref.watch(medReminderSyncProvider);
     ref.watch(vaultSyncProvider);
+    ref.watch(clinicSyncProvider);
     return _app(ref);
   }
 

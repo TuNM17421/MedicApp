@@ -14,6 +14,8 @@
 
 **Nhận kết quả bằng mã:** Ở lịch hẹn, nút "Nhập mã nhận kết quả" nhận kết quả khám bằng mã 10 ký tự in cuối đơn thuốc (dạng `XXXX-XXXX-XX`), lưu như kết quả cũ nên nhắc uống thuốc vẫn chạy. Chạy với `--dart-define=API_BASE_URL=http://localhost:8080` để gọi `GET /v1/results/claim/:code` của [backend](../backend/CLINIC-API.md); không có `API_BASE_URL` thì app dùng bản giả lập (mã nào đúng dạng cũng được). Mã demo cố định: chạy `SEED_CLAIM_CODE=K7MQ-4XR2-9D npm run seed` trong `backend`.
 
+**Bước 16:** Người bệnh đăng nhập bằng số điện thoại và mã 6 số do phòng khám gửi, xem lịch khám và kết quả của phòng khám ngay trong Lịch hẹn (không cần mã nhận kết quả), trả lời "Câu hỏi trước khám" và chọn "Chia sẻ với phòng khám" cho từng lượt khám: chọn từng mục (câu trả lời trước khám, 30 ngày uống thuốc, thuốc tự dùng), thấy rõ phòng khám nào và đến ngày nào, phải tự đánh dấu đồng ý, rút lại bất kỳ lúc nào. Dữ liệu chưa gửi được (mất mạng) được giữ lại và gửi lại khi mở app, quay lại app hoặc ghi liều thuốc mới. Cách chạy: trong `backend` đặt `DEMO_OTP=000000` trong `.env`, chạy `npm run seed` rồi `npm start`; chạy app với `--dart-define=API_BASE_URL=http://localhost:8080`, nhập số mẫu `0912000482` (Phạm Thị Lan) và mã `000000` (app cũng hiện "Mã thử"). Không có `API_BASE_URL` thì app vẫn đăng nhập bằng mật khẩu giả lập như cũ. Kiểm tra hợp đồng với backend thật: `PATIENT_CONTRACT=1 flutter test test/sharing/patient_contract_test.dart`. Xem [API người bệnh](../backend/CLINIC-API.md).
+
 **Bước 8:** App đặt thông báo nhắc khám trên điện thoại, chọn giờ theo thời gian phải kiêng và nội dung theo tuổi, giới của người khám. Xem [bước 8](THONG-BAO-NHAC-KHAM.md).
 
 **Bước 7:** Có lưu ý cá nhân hóa trước khi khám cho 5 bệnh, đọc từ hồ sơ và lịch hẹn. Xem [bước 7](LUU-Y-TRUOC-KHAM.md).
@@ -27,7 +29,7 @@ App `medic_app` mở màn **Chào mừng** khi chưa đăng nhập, sau đó và
 - Java: Eclipse Temurin 21.0.12.1+1.
 - Application ID tạm: `com.example.medic_app`; cần đổi trước khi phát hành.
 - Entry point cục bộ: `lib/main.dart`.
-- Tests: giao diện, điều hướng, trạng thái và luồng đặt lịch trong `test/`; ảnh chuẩn trong `test/goldens/`. Bộ kiểm tra hiện gồm 148 test (140 pass); 8 test ảnh chuẩn cần cập nhật trên Windows (xem bước 5).
+- Tests: giao diện, điều hướng, trạng thái và luồng đặt lịch trong `test/`; ảnh chuẩn trong `test/goldens/`. Bộ kiểm tra hiện gồm 186 test (177 pass, 1 test hợp đồng bước 16 bỏ qua khi không bật); 8 test ảnh chuẩn cần cập nhật trên Windows (xem bước 5).
 
 Source Flutter, font, tests và script môi trường đã được đưa vào bản bàn giao này. Trên máy Windows mới cần Git và chạy `scripts/setup.ps1` từ gốc repo để tải bộ công cụ trước khi kích hoạt; SDK/cache không nằm trong Git.
 

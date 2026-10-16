@@ -214,9 +214,19 @@ class PatientDetail {
 
 @immutable
 class Consent {
-  const Consent({required this.state, this.grantedAt, this.expiresAt});
+  const Consent({
+    required this.state,
+    this.grantedAt,
+    this.expiresAt,
+    this.reason,
+    this.revokedAt,
+  });
   final ConsentState state;
   final DateTime? grantedAt, expiresAt;
+
+  /// Why a once-given consent no longer holds: 'revoked' or 'expired'.
+  final String? reason;
+  final DateTime? revokedAt;
 
   factory Consent.fromJson(Json? j) => j == null
       ? const Consent(state: ConsentState.none)
@@ -224,6 +234,8 @@ class Consent {
           state: ConsentState.values.byName(j['state']! as String),
           grantedAt: _date(j['grantedAt']),
           expiresAt: _date(j['expiresAt']),
+          reason: j['reason'] as String?,
+          revokedAt: _date(j['revokedAt']),
         );
 }
 

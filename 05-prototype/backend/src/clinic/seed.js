@@ -6,6 +6,9 @@
 //   SEED_TODAY=2026-11-19 npm run seed
 //   SEED_CLAIM_CODE=K7MQ-4XR2-9D npm run seed   (fixed claim code for p1)
 //
+// Each person gets the demo phone '0912' + their code (bước 16 sign-in);
+// with DEMO_OTP=000000 in .env the server's sign-in code is fixed too.
+//
 // Dev only. The file is deleted and recreated.
 import { existsSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -136,6 +139,9 @@ function parseSource(label) {
 
 const compact = (day) => day.replaceAll('-', '');
 
+/** Demo phone of a seeded person, e.g. Phạm Thị Lan (000482) -> 0912000482. */
+export const demoPhone = (code) => `0912${code}`;
+
 /**
  * Writes the demo data into [db] (already migrated, empty). Dates are
  * relative to [today] ("yyyy-MM-dd", clinic time). Returns the ids tests need.
@@ -146,7 +152,7 @@ export async function seedClinic(db, { today = clinicToday(), password = DEMO_PA
   if (!p1Claim) throw new Error('SEED_CLAIM_CODE phải gồm 10 ký tự Crockford base32, ví dụ K7MQ-4XR2-9D.');
   const passwordHash = await hashPassword(password);
   const historyDay = addDays(today, HISTORY_OFFSET);
-  const ids = { claimCodes: {}, clinicId: CLINIC_ID, doctorId: DOCTOR_ID, today, historyDay, appointments: {}, historyAppointments: {}, summaries: {} };
+  const ids = { claimCodes: {}, phones: {}, clinicId: CLINIC_ID, doctorId: DOCTOR_ID, today, historyDay, appointments: {}, historyAppointments: {}, summaries: {} };
 
   transaction(db, () => {
     const run = (sql, ...args) => db.prepare(sql).run(...args);
@@ -165,9 +171,10 @@ export async function seedClinic(db, { today = clinicToday(), password = DEMO_PA
 
     for (const p of PATIENTS) {
       const birthDate = minusYears(addDays(today, -p.birthOffset), p.age);
-      run(`INSERT INTO patient (id, clinic_id, code, full_name, birth_date, gender, address, weight_kg, insurance_code, allergy, conditions)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, p.id, CLINIC_ID, p.code, p.name, birthDate, p.sex, p.address ?? '',
-      p.weight ?? null, p.insurance, p.allergy, JSON.stringify(p.conditions ?? []));
+      ids.phones[p.id] = demoPhone(p.code);
+      run(`INSERT INTO patient (id, clinic_id, code, full_name, birth_date, gender, address, weight_kg, insurance_code, allergy, conditions, phone)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, p.id, CLINIC_ID, p.code, p.name, birthDate, p.sex, p.address ?? '',
+      p.weight ?? null, p.insurance, p.allergy, JSON.stringify(p.conditions ?? []), ids.phones[p.id]);
 
       // Visit 30 days ago: its sent result is the source of the courses.
       if (p.history) {
@@ -276,6 +283,10 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const password = process.env.DEMO_PASSWORD || DEMO_PASSWORD;
   const ids = await seedClinic(db, { today, password, claimCode: (process.env.SEED_CLAIM_CODE ?? '').trim() || null });
   db.close();
-  // Demo data only: the claim code is printed so the app demo can fetch p1's result.
-  console.log(JSON.stringify({ event: 'seeded', today, email: DEMO_EMAIL, patients: PATIENTS.length, claimCodeP1: ids.claimCodes.p1 }));
+  // Demo data only: the claim code and the phones are printed for the app demo.
+  console.log(JSON.stringify({
+    event: 'seeded', today, email: DEMO_EMAIL, patients: PATIENTS.length, claimCodeP1: ids.claimCodes.p1,
+    patientPhones: Object.fromEntries(PATIENTS.map((p) => [p.code, ids.phones[p.id]])),
+    demoOtp: config.demoOtp ?? (config.patientOtpMode === 'dev' ? 'devCode (random, in the server log)' : 'off'),
+  }));
 }

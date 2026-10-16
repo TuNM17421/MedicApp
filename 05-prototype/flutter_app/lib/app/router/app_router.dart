@@ -16,6 +16,7 @@ import '../../features/meds/presentation/today_meds_page.dart';
 import '../../features/notifications/notification_pages.dart';
 import '../../features/profiles/add_profile_pages.dart';
 import '../../features/records/presentation/visit_result_pages.dart';
+import '../../features/sharing/presentation/clinic_sharing_pages.dart';
 import '../../features/profiles/profile_pages.dart';
 import '../../features/support/support_pages.dart';
 import '../app_shell.dart';
@@ -120,6 +121,12 @@ GoRouter createAppRouter({
                             path: 'result',
                             builder: (_, state) => VisitResultPage(
                               visitId: state.pathParameters['id']!,
+                            ),
+                          ),
+                          _route(
+                            path: 'share',
+                            builder: (_, state) => ClinicSharingPage(
+                              appointmentId: state.pathParameters['id']!,
                             ),
                           ),
                         ],

@@ -166,4 +166,30 @@ export const migrations = [
   ALTER TABLE appointment ADD COLUMN claim_expires_at TEXT;
   CREATE UNIQUE INDEX appointment_claim_code ON appointment (claim_code);
   `,
+  // Bước 16: patient sign-in by phone and one-time code. phone is normalised
+  // '0xxxxxxxxx'; one phone may belong to patients of several clinics, and a
+  // session is per phone. Codes and tokens are stored hashed only.
+  `
+  ALTER TABLE patient ADD COLUMN phone TEXT;
+  CREATE UNIQUE INDEX patient_clinic_phone ON patient (clinic_id, phone) WHERE phone IS NOT NULL;
+  CREATE INDEX patient_phone ON patient (phone);
+
+  -- At most one live code per phone; a new request replaces it.
+  CREATE TABLE patient_otp (
+    phone TEXT PRIMARY KEY,
+    code_hash TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL
+  );
+
+  CREATE TABLE patient_session (
+    token_hash TEXT PRIMARY KEY,
+    phone TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    revoked_at TEXT
+  );
+  CREATE INDEX patient_session_phone ON patient_session (phone);
+  `,
 ];

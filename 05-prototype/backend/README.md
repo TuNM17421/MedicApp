@@ -79,6 +79,7 @@ Mở `http://localhost:8080/doctor/`, đăng nhập `bs.ha@anbinh.test`, mật k
 - Mỗi lần mở hồ sơ, đánh giá tóm tắt, đổi trạng thái lượt khám ghi một dòng `audit_event`. Log chỉ có tên sự kiện, không có tên người bệnh, triệu chứng, mật khẩu hay token.
 - Bước 15: bác sĩ soạn chẩn đoán và đơn thuốc (danh mục mẫu trong `catalog/clinic-catalog.json`, chưa được duyệt), ký gửi thì có **mã nhận kết quả** dạng `XXXX-XXXX-XX`. Người bệnh nhập mã trong app (`GET /v1/results/claim/:code`, không cần đăng nhập, 10 lần/phút mỗi IP, mã hết hạn sau 30 ngày). Kết quả đã gửi không sửa được, chỉ mở bản sửa mới kèm lý do.
 - Seed in mã của Trần Văn Minh (`claimCodeP1`); đặt `SEED_CLAIM_CODE=K7MQ-4XR2-9D` để mã cố định khi demo.
+- Bước 16: người bệnh đăng nhập trong app bằng số điện thoại và mã xác nhận (`/v1/patient/...`, xem [CLINIC-API.md](CLINIC-API.md#người-bệnh-bước-16)): xem lịch khám và kết quả của mình, đồng ý chia sẻ theo từng lượt khám, gửi câu trả lời trước khám, thuốc tự dùng và nhật ký liều. Chưa có SMS: `PATIENT_OTP_MODE=dev` (mặc định) ghi mã vào log và trả trong `devCode`; `off` tắt đăng nhập (`503 otp_unavailable`). Seed gán số `0912` + mã người bệnh (ví dụ Phạm Thị Lan `0912000482`); đặt `DEMO_OTP=000000` để mã cố định khi demo. Rút đồng ý thì web bác sĩ ẩn dữ liệu chia sẻ ngay lần tải sau, nhưng chưa xóa dữ liệu (bước 18).
 - Chạy `flutter run -d web-server --web-port 5000` thì đặt `DOCTOR_WEB_DEV_ORIGIN=http://localhost:5000` trong `.env` để bật CORS cho đúng origin đó.
 
 ## Giới hạn và dữ liệu
@@ -93,6 +94,6 @@ Phiên chỉ ở bộ nhớ, mất khi đóng hoặc khởi động lại server
 npm test
 ```
 
-58 test (`node --test`) với provider giả: điều phối hội thoại theo AC01–AC17, máy chủ HTTP, relay audio và giới hạn, xử lý lỗi Responses API, cơ sở dữ liệu, và API phòng khám (đăng nhập, khóa tài khoản, hàng chờ, đồng ý chia sẻ, hồ sơ, audit, phạm vi phòng khám, phục vụ web, CORS, đơn thuốc, gửi và sửa kết quả, mã nhận kết quả). Test Flutter `test/smart/backend_contract_test.dart` chạy server thật ở chế độ mock nếu đã `npm ci`.
+75 test (`node --test`) với provider giả: điều phối hội thoại theo AC01–AC17, máy chủ HTTP, relay audio và giới hạn, xử lý lỗi Responses API, cơ sở dữ liệu, và API phòng khám (đăng nhập, khóa tài khoản, hàng chờ, đồng ý chia sẻ, hồ sơ, audit, phạm vi phòng khám, phục vụ web, CORS, đơn thuốc, gửi và sửa kết quả, mã nhận kết quả, đăng nhập người bệnh bằng mã xác nhận, đồng ý chia sẻ, gửi dữ liệu từ app). Test Flutter `test/smart/backend_contract_test.dart` chạy server thật ở chế độ mock nếu đã `npm ci`.
 
-**Chưa kiểm chứng:** chưa gọi OpenAI bằng key thật, chưa đo chất lượng nhận tiếng Việt, độ trễ hay chi phí, chưa thử trên OPPO. Đây là prototype dùng dữ liệu minh họa, không phải công cụ phân luồng y khoa và không phải kiến trúc production (phía app chưa có xác thực người dùng, quota theo người dùng; chưa có HTTPS).
+**Chưa kiểm chứng:** chưa gọi OpenAI bằng key thật, chưa đo chất lượng nhận tiếng Việt, độ trễ hay chi phí, chưa thử trên OPPO. Đây là prototype dùng dữ liệu minh họa, không phải công cụ phân luồng y khoa và không phải kiến trúc production (phía Smart Scheduling chưa có xác thực người dùng, quota theo người dùng; đăng nhập người bệnh chưa gửi SMS thật; chưa có HTTPS).

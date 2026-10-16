@@ -160,4 +160,22 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Đăng nhập'), findsOneWidget);
   });
+
+  testWidgets('người bệnh rút lại đồng ý: hồ sơ nói rõ, không có dữ liệu', (
+    tester,
+  ) async {
+    final backend = await pumpApp(tester);
+    backend.hoaConsent = {
+      'state': 'declined',
+      'reason': 'revoked',
+      'revokedAt': '2026-11-19T08:10:00+07:00',
+    };
+    await tester.tap(find.text('Phạm Văn Hòa'));
+    await tester.pumpAndSettle();
+    expect(
+      find.textContaining('đã rút lại đồng ý chia sẻ lúc 08:10'),
+      findsOneWidget,
+    );
+    expect(find.text('Tuân thủ thuốc'), findsNothing);
+  });
 }

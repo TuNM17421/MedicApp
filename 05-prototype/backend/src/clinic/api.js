@@ -9,12 +9,14 @@ import {
 } from './auth.js';
 import { readFileSync } from 'node:fs';
 
+import { createPatientApi } from './patient.js';
+
 import {
   formatClaimCode, missingForSend, newClaimCode, normalizeClaimCode, parseDraft,
 } from './prescription.js';
 import { addDays, ageOn, localIso, parseDay, today } from './time.js';
 
-export const CLINIC_PREFIXES = ['staff', 'clinic', 'appointments', 'summaries', 'patients', 'results'];
+export const CLINIC_PREFIXES = ['staff', 'clinic', 'appointments', 'summaries', 'patients', 'results', 'patient'];
 export const CLAIM_DAYS = 30;
 export const CLAIM_PER_MINUTE = 10;
 
@@ -35,8 +37,42 @@ const staffJson = (p) => ({ id: p.id, name: `${p.title} ${p.full_name}`.trim(), 
 const clinicJson = (c) => ({ id: c.id, name: c.name, phone: c.phone });
 const maskInsurance = (code) => (code ? `•••• ${code.slice(-4)}` : null);
 
+/**
+ * A sent result as medic_core VisitResult (without visitId, profileId): the
+ * body of the claim by code and of the signed-in patient's result view.
+ * [a] is the appointment joined with patient and clinic (clinic_name,
+ * clinic_phone); [r] the sent visit_result joined with the signer.
+ */
+export function visitResultJson(a, r) {
+  const day = a.starts_at.slice(0, 10);
+  const advice = r.advice.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+  if (r.follow_up_date) {
+    const [y, m, d] = r.follow_up_date.split('-');
+    advice.push(`Hẹn tái khám ngày ${d}/${m}/${y}.`);
+  }
+  return {
+    appointmentId: a.id,
+    version: r.version,
+    issuedAt: r.signed_at,
+    facilityName: a.clinic_name,
+    facilityPhone: a.clinic_phone,
+    doctorName: r.doctor_name ? `${r.title} ${r.doctor_name}`.trim() : '',
+    patientName: a.full_name,
+    patientAge: ageOn(a.birth_date, day),
+    patientGender: a.gender,
+    address: a.address,
+    insuranceCode: maskInsurance(a.insurance_code) ?? '',
+    weightKg: a.weight_kg ?? null,
+    diagnosis: json(r.diagnosis, []).map(([c, n]) => `${n} (${c})`).join('; '),
+    items: json(r.items, []),
+    advice,
+    followUpDate: r.follow_up_date ?? null,
+  };
+}
+
 export function createClinicApi({ db, config, log }) {
   const store = createSessionStore();
+  const patient = createPatientApi({ db, config, log });
   const q = (sql) => db.prepare(sql);
 
   const stmt = {
@@ -53,7 +89,7 @@ export function createClinicApi({ db, config, log }) {
     appointment: q(`SELECT a.*, p.code, p.full_name, p.birth_date, p.gender, p.address, p.weight_kg,
       p.insurance_code, p.allergy, p.conditions FROM appointment a
       JOIN patient p ON p.id = a.patient_id WHERE a.id = ? AND a.clinic_id = ?`),
-    consent: q('SELECT * FROM consent WHERE appointment_id = ? ORDER BY granted_at DESC, id DESC LIMIT 1'),
+    consent: q('SELECT * FROM consent WHERE appointment_id = ? ORDER BY granted_at DESC, rowid DESC LIMIT 1'),
     summary: q('SELECT * FROM visit_summary WHERE appointment_id = ? ORDER BY created_at DESC, id DESC LIMIT 1'),
     summaryById: q(`SELECT s.*, a.patient_id, a.clinic_id FROM visit_summary s
       JOIN appointment a ON a.id = s.appointment_id WHERE s.id = ? AND a.clinic_id = ?`),
@@ -73,6 +109,11 @@ export function createClinicApi({ db, config, log }) {
     claimTaken: q('SELECT 1 FROM appointment WHERE claim_code = ?'),
     setClaim: q('UPDATE appointment SET claim_code = ?, claim_expires_at = ? WHERE id = ? AND claim_code IS NULL'),
     setDone: q("UPDATE appointment SET status = 'done', practitioner_id = coalesce(practitioner_id, ?) WHERE id = ?"),
+    firstSigned: q('SELECT min(signed_at) AS at FROM visit_result WHERE appointment_id = ? AND signed_at IS NOT NULL'),
+    upsertCourse: q(`INSERT INTO med_course (id, patient_id, item, prescribed_at) VALUES (?, ?, ?, ?)
+      ON CONFLICT (patient_id, id) DO UPDATE SET item = excluded.item, prescribed_at = excluded.prescribed_at`),
+    coursesOfPatient: q('SELECT id FROM med_course WHERE patient_id = ?'),
+    deleteCourse: q('DELETE FROM med_course WHERE patient_id = ? AND id = ?'),
     byClaim: q(`SELECT a.*, p.full_name, p.birth_date, p.gender, p.address, p.weight_kg, p.insurance_code,
       c.name AS clinic_name, c.phone AS clinic_phone FROM appointment a
       JOIN patient p ON p.id = a.patient_id JOIN clinic c ON c.id = a.clinic_id WHERE a.claim_code = ?`),
@@ -104,14 +145,19 @@ export function createClinicApi({ db, config, log }) {
 
   // ---- read models -------------------------------------------------------
 
+  /**
+   * The latest consent row of the visit. `reason` tells why it is
+   * `declined`: 'revoked' (withdrawn or refused) or 'expired'.
+   */
   function consentOf(appointmentId, now) {
     const row = stmt.consent.get(appointmentId);
-    if (!row) return { state: 'none', grantedAt: null, expiresAt: null, scope: [] };
+    if (!row) return { state: 'none', grantedAt: null, expiresAt: null, scope: [], reason: null, revokedAt: null };
     const scope = json(row.scope, []);
-    if (row.revoked_at || row.expires_at <= now || !scope.length) {
-      return { state: 'declined', grantedAt: null, expiresAt: null, scope: [] };
+    const reason = row.revoked_at ? 'revoked' : row.expires_at <= now ? 'expired' : null;
+    if (reason || !scope.length) {
+      return { state: 'declined', grantedAt: null, expiresAt: null, scope: [], reason, revokedAt: row.revoked_at ?? null };
     }
-    return { state: 'shared', grantedAt: row.granted_at, expiresAt: row.expires_at, scope };
+    return { state: 'shared', grantedAt: row.granted_at, expiresAt: row.expires_at, scope, reason: null, revokedAt: null };
   }
 
   /** Status of the newest version: `draft` while an amendment is open. */
@@ -282,6 +328,8 @@ export function createClinicApi({ db, config, log }) {
         specialty: a.specialty,
         patient: patientBrief(a, date),
         consent: consent.state,
+        consentReason: consent.reason,
+        consentRevokedAt: consent.revokedAt,
         hasSummary: Boolean(summary),
         chiefComplaint: summary ? (json(summary.sections, []).find((s) => s.key === 'chief')?.text ?? null) : null,
         flagged: Boolean(summary && json(summary.flags, []).length),
@@ -409,6 +457,7 @@ export function createClinicApi({ db, config, log }) {
       stmt.markAmended.run(a.id);
       stmt.markSent.run(staff.id, now, now, latest.id);
       stmt.setDone.run(staff.id, a.id);
+      syncCourses(a, json(latest.items, []));
       if (a.claim_code) return a.claim_code;
       let fresh;
       do fresh = newClaimCode(); while (stmt.claimTaken.get(fresh));
@@ -418,6 +467,20 @@ export function createClinicApi({ db, config, log }) {
     audit(req, staff, 'result.send', { patientId: a.patient_id, appointmentId: a.id, detail: { version: latest.version } });
     log('result_sent', { version: latest.version });
     return sendJson(res, 200, resultDraftJson(stmt.latestResult.get(a.id), code));
+  }
+
+  /**
+   * Bước 16: the sent prescription as med_course rows '<appointmentId>#<n>'
+   * (n from 1), so the app's dose events can name them. prescribed_at is the
+   * first signing; an amendment replaces the items and drops lines it removed.
+   */
+  function syncCourses(a, items) {
+    const prescribedAt = stmt.firstSigned.get(a.id).at;
+    items.forEach((item, i) => stmt.upsertCourse.run(`${a.id}#${i + 1}`, a.patient_id, JSON.stringify(item), prescribedAt));
+    const prefix = `${a.id}#`;
+    for (const { id } of stmt.coursesOfPatient.all(a.patient_id)) {
+      if (id.startsWith(prefix) && Number(id.slice(prefix.length)) > items.length) stmt.deleteCourse.run(a.patient_id, id);
+    }
   }
 
   async function amendResult(req, res, staff, id) {
@@ -460,32 +523,9 @@ export function createClinicApi({ db, config, log }) {
       log('result_claim', { result: 'not_found' });
       throw missing();
     }
-    const day = a.starts_at.slice(0, 10);
-    const advice = r.advice.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
-    if (r.follow_up_date) {
-      const [y, m, d] = r.follow_up_date.split('-');
-      advice.push(`Hẹn tái khám ngày ${d}/${m}/${y}.`);
-    }
     stmt.audit.run(localIso(t), 'patient', 'result.claim', a.patient_id, a.id, JSON.stringify({ version: r.version }), ip);
     log('result_claim', { result: 'ok' });
-    return sendJson(res, 200, {
-      appointmentId: a.id,
-      version: r.version,
-      issuedAt: r.signed_at,
-      facilityName: a.clinic_name,
-      facilityPhone: a.clinic_phone,
-      doctorName: r.doctor_name ? `${r.title} ${r.doctor_name}`.trim() : '',
-      patientName: a.full_name,
-      patientAge: ageOn(a.birth_date, day),
-      patientGender: a.gender,
-      address: a.address,
-      insuranceCode: maskInsurance(a.insurance_code) ?? '',
-      weightKg: a.weight_kg ?? null,
-      diagnosis: json(r.diagnosis, []).map(([c, n]) => `${n} (${c})`).join('; '),
-      items: json(r.items, []),
-      advice,
-      followUpDate: r.follow_up_date ?? null,
-    });
+    return sendJson(res, 200, visitResultJson(a, r));
   }
 
   function history(req, res, staff, patientId) {
@@ -506,6 +546,7 @@ export function createClinicApi({ db, config, log }) {
     });
     const [, area, id, sub] = parts;
     const m = req.method;
+    if (area === 'patient') return patient.handle(req, res, parts);
     if (area === 'staff' && parts.length === 3) {
       if (m === 'POST' && id === 'login') return login(req, res);
       if (m === 'POST' && id === 'logout') {
@@ -548,8 +589,10 @@ export function createClinicApi({ db, config, log }) {
   return {
     handle,
     sessions: store,
+    patient,
     close: () => {
       store.close();
+      patient.close();
       clearInterval(claimSweep);
     },
   };

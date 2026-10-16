@@ -14,7 +14,7 @@ test('tạo đủ bảng theo plan và ghi phiên bản schema', () => {
   const db = openDatabase();
   assert.deepEqual(tables(db), [
     'appointment', 'audit_event', 'clinic', 'consent', 'dose_event', 'intake_answer', 'med_course',
-    'patient', 'practitioner', 'self_medication', 'visit_result', 'visit_summary',
+    'patient', 'patient_otp', 'patient_session', 'practitioner', 'self_medication', 'visit_result', 'visit_summary',
   ]);
   assert.equal(db.prepare('PRAGMA user_version').get().user_version, migrations.length);
 });
