@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../app/router/app_routes.dart';
 import '../../app/theme/app_theme.dart';
 import '../../core/widgets/app_widgets.dart';
+import 'reminder_planner.dart';
+import 'reminder_scheduler.dart';
 import 'visit_prep.dart';
 import 'visit_prep_catalog.dart';
 
@@ -230,6 +232,77 @@ class ProfileConditionsEditor extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// What will be pushed to the phone for one appointment, so the user can see
+/// when they will be reminded.
+class VisitRemindersSection extends ConsumerWidget {
+  const VisitRemindersSection({super.key, required this.visitId});
+  final String visitId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final reminders = ref
+        .watch(reminderPlanProvider)
+        .where((reminder) => reminder.visitId == visitId)
+        .toList();
+    if (reminders.isEmpty) return const SizedBox.shrink();
+    final now = ref.watch(prepClockProvider)();
+    final allowed = ref.watch(notificationsAllowedProvider);
+    final text = Theme.of(context).textTheme;
+    return Padding(
+      key: const Key('visit-reminders'),
+      padding: const EdgeInsets.only(bottom: 16),
+      child: AppSurface(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const AppIconTile(
+                  icon: AppIcons.notifications,
+                  tone: AppTone.sky,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text('Nhắc trên điện thoại', style: text.titleMedium),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            for (final reminder in reminders)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      reminder.at.difference(now).inMinutes <= 1
+                          ? 'Ngay bây giờ'
+                          : prepMoment(reminder.at, now),
+                      style: text.titleMedium?.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                    Text(
+                      '${reminder.kind.label}: ${reminder.title}',
+                      style: text.bodyMedium,
+                    ),
+                  ],
+                ),
+              ),
+            if (allowed == false)
+              const AppStatusBanner(
+                status: AppStatus.warning,
+                message:
+                    'Điện thoại đang chặn thông báo của MedicApp. Hãy bật '
+                    'trong Cài đặt của điện thoại để nhận nhắc.',
+              ),
+          ],
+        ),
       ),
     );
   }

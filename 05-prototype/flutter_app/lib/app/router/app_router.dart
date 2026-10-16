@@ -6,6 +6,7 @@ import '../../features/account/account_page.dart';
 import '../../features/auth/auth_controller.dart';
 import '../../features/auth/auth_pages.dart';
 import '../../features/booking/presentation/booking_page.dart';
+import '../../features/consent/health_consent_page.dart';
 import '../../features/booking/presentation/appointment_pages.dart';
 import '../../features/booking/presentation/booking_demo_page.dart';
 import '../../features/design_preview/design_preview_page.dart';
@@ -181,6 +182,10 @@ GoRouter createAppRouter({
         ),
       ),
       _route(path: AppRoutes.help, builder: (_, _) => const HelpPage()),
+      _route(
+        path: AppRoutes.healthConsent,
+        builder: (_, _) => const HealthConsentPage(),
+      ),
       _route(
         path: AppRoutes.bookingDemo,
         builder: (_, _) => const BookingDemoPage(),

@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 
 import '../../app/router/app_routes.dart';
 import '../../app/state/app_state.dart';
 import '../../core/widgets/app_widgets.dart';
 import '../auth/auth_controller.dart';
+import '../consent/health_consent.dart';
 
 class AccountPage extends ConsumerWidget {
   const AccountPage({super.key});
@@ -25,6 +27,7 @@ class AccountPage extends ConsumerWidget {
               (label: 'Số điện thoại đăng nhập', value: formatPhone(phone)),
           ],
         ),
+        if (phone != null) const _HealthDataSection(),
         AppLinkCard(
           title: 'Trợ giúp',
           icon: AppIcons.help,
@@ -62,6 +65,74 @@ class AccountPage extends ConsumerWidget {
         ],
       ),
     );
-    if (confirmed == true) ref.read(authSessionProvider.notifier).signOut();
+    if (confirmed != true || !context.mounted) return;
+    // Messages for the old session must not cover the welcome buttons.
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ref.read(authSessionProvider.notifier).signOut();
+  }
+}
+
+class _HealthDataSection extends ConsumerWidget {
+  const _HealthDataSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final consent = ref.watch(healthConsentProvider);
+    final text = Theme.of(context).textTheme;
+    return AppSurface(
+      key: const Key('account-health-data'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text('Dữ liệu sức khỏe', style: text.titleMedium),
+          const SizedBox(height: 8),
+          Text(
+            consent == null
+                ? 'Chưa lưu trên máy này. Hồ sơ sẽ mất khi đóng app.'
+                : 'Đang lưu trên máy này (đã mã hóa) từ ${DateFormat('dd/MM/yyyy').format(consent.acceptedAt)}.',
+            style: text.bodyLarge,
+          ),
+          const SizedBox(height: 12),
+          if (consent == null)
+            FilledButton.icon(
+              key: const Key('account-consent-open'),
+              onPressed: () => context.push(AppRoutes.healthConsent),
+              icon: const AppIcon(AppIcons.lock, color: Colors.white),
+              label: const Text('Lưu trên máy này'),
+            )
+          else
+            OutlinedButton(
+              key: const Key('account-consent-withdraw'),
+              onPressed: () => _confirmWithdraw(context, ref),
+              child: const Text('Ngừng lưu và xóa khỏi máy'),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _confirmWithdraw(BuildContext context, WidgetRef ref) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Ngừng lưu dữ liệu sức khỏe?'),
+        content: const Text(
+          'Hồ sơ trên máy này sẽ bị xóa. Bạn vẫn dùng được app cho đến khi đóng app.',
+          style: TextStyle(fontSize: 18),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Giữ lại'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Ngừng lưu'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    ref.read(authSessionProvider.notifier).setConsent(null);
   }
 }

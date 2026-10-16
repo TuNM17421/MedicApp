@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 import '../../app/theme/app_theme.dart';
 import 'app_icons.dart';
@@ -69,18 +70,42 @@ class AppStatusBanner extends StatelessWidget {
   }
 }
 
+/// Flat illustrations in the app's colours, drawn for MedicApp.
+abstract final class AppArt {
+  static const welcome = 'assets/illustrations/welcome.svg';
+  static const emptyCalendar = 'assets/illustrations/empty_calendar.svg';
+  static const family = 'assets/illustrations/family.svg';
+  static const emptyBell = 'assets/illustrations/empty_bell.svg';
+}
+
+/// A decorative illustration; screen readers skip it.
+class AppIllustration extends StatelessWidget {
+  const AppIllustration(this.asset, {super.key, this.height = 140});
+  final String asset;
+  final double height;
+
+  @override
+  Widget build(BuildContext context) => ExcludeSemantics(
+    child: SvgPicture.asset(asset, height: height, fit: BoxFit.contain),
+  );
+}
+
 class AppEmptyState extends StatelessWidget {
   const AppEmptyState({
     super.key,
     required this.title,
     required this.message,
     this.icon = AppIcons.calendar,
+    this.art,
     this.actionLabel,
     this.onAction,
   });
   final String title;
   final String message;
   final IconData icon;
+
+  /// Shown instead of [icon] when set, see [AppArt].
+  final String? art;
   final String? actionLabel;
   final VoidCallback? onAction;
 
@@ -88,7 +113,10 @@ class AppEmptyState extends StatelessWidget {
   Widget build(BuildContext context) => AppSurface(
     child: Column(
       children: [
-        AppIconTile(icon: icon),
+        if (art case final art?)
+          AppIllustration(art, height: 120)
+        else
+          AppIconTile(icon: icon),
         const SizedBox(height: 16),
         Text(
           title,

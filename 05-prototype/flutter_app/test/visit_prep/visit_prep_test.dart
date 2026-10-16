@@ -15,11 +15,12 @@ VisitSummary visit({
   DateTime? date,
   String time = '08:00',
   String id = 'V1',
+  String facilityName = 'Phòng khám Đa khoa An Bình',
 }) => VisitSummary(
   id: id,
   patientName: 'Phạm Văn Hòa',
   type: VisitType.service,
-  facilityName: 'Phòng khám Đa khoa An Bình',
+  facilityName: facilityName,
   address: '12 đường Hoa Sữa',
   departmentName: departmentName,
   doctorName: 'BS. Nguyễn Thu Hà',
@@ -85,7 +86,7 @@ void main() {
       now: evening,
     );
     final note = notes.single;
-    expect(note.headline, startsWith('Mẹ Phạm Thị Lan có lịch khám'));
+    expect(note.headline, startsWith('Mẹ Phạm Thị Lan (78 tuổi) có lịch khám'));
     expect(note.headline, contains('14:30 chiều Thứ Bảy 17/10'));
     expect(
       note.items.map((i) => i.text),
