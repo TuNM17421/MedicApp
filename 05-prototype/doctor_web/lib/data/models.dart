@@ -21,13 +21,26 @@ List<Json> _list(Object? value) =>
 
 @immutable
 class Staff {
-  const Staff({required this.id, required this.name, required this.role});
+  const Staff({
+    required this.id,
+    required this.name,
+    required this.role,
+    this.mustChangePassword = false,
+  });
   final String id, name, role;
+
+  /// Signed in with a one-time password: the web shows only the change
+  /// password screen until a new one is set (bước 18).
+  final bool mustChangePassword;
+
+  /// The clinic admin manages accounts and sees the pilot numbers; no charts.
+  bool get isAdmin => role == 'admin';
 
   factory Staff.fromJson(Json j) => Staff(
     id: j['id']! as String,
     name: j['name']! as String,
     role: j['role'] as String? ?? 'doctor',
+    mustChangePassword: j['mustChangePassword'] as bool? ?? false,
   );
 }
 
@@ -214,9 +227,19 @@ class PatientDetail {
 
 @immutable
 class Consent {
-  const Consent({required this.state, this.grantedAt, this.expiresAt});
+  const Consent({
+    required this.state,
+    this.grantedAt,
+    this.expiresAt,
+    this.reason,
+    this.revokedAt,
+  });
   final ConsentState state;
   final DateTime? grantedAt, expiresAt;
+
+  /// Why a once-given consent no longer holds: 'revoked' or 'expired'.
+  final String? reason;
+  final DateTime? revokedAt;
 
   factory Consent.fromJson(Json? j) => j == null
       ? const Consent(state: ConsentState.none)
@@ -224,6 +247,8 @@ class Consent {
           state: ConsentState.values.byName(j['state']! as String),
           grantedAt: _date(j['grantedAt']),
           expiresAt: _date(j['expiresAt']),
+          reason: j['reason'] as String?,
+          revokedAt: _date(j['revokedAt']),
         );
 }
 

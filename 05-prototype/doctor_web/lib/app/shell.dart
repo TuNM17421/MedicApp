@@ -21,7 +21,21 @@ class AppShell extends ConsumerWidget {
     final session = ref.watch(sessionProvider).value;
     final wide = MediaQuery.sizeOf(context).width > 640;
     final location = GoRouterState.of(context).uri.path;
+    final admin = session?.staff.isAdmin ?? false;
+    final adminIndex = _adminPages.indexWhere((p) => p.$1 == location);
     return Scaffold(
+      // Phones have no rail: the admin switches pages at the bottom.
+      bottomNavigationBar: admin && !wide
+          ? NavigationBar(
+              height: 64,
+              selectedIndex: adminIndex < 0 ? 0 : adminIndex,
+              onDestinationSelected: (i) => context.go(_adminPages[i].$1),
+              destinations: [
+                for (final (_, icon, label) in _adminPages)
+                  NavigationDestination(icon: Icon(icon), label: label),
+              ],
+            )
+          : null,
       body: Column(
         children: [
           Container(
@@ -67,9 +81,20 @@ class AppShell extends ConsumerWidget {
                 if (session != null)
                   PopupMenuButton<String>(
                     tooltip: 'Tài khoản',
-                    onSelected: (_) =>
-                        ref.read(sessionProvider.notifier).logout(),
+                    onSelected: (value) => value == 'password'
+                        ? context.go(Routes.password)
+                        : ref.read(sessionProvider.notifier).logout(),
                     itemBuilder: (context) => const [
+                      PopupMenuItem(
+                        value: 'password',
+                        child: Row(
+                          children: [
+                            Icon(LucideIcons.keyRound, size: 16),
+                            SizedBox(width: 10),
+                            Text('Đổi mật khẩu'),
+                          ],
+                        ),
+                      ),
                       PopupMenuItem(
                         value: 'logout',
                         child: Row(
@@ -126,15 +151,25 @@ class AppShell extends ConsumerWidget {
                     ),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     child: Column(
+                      spacing: 4,
                       children: [
-                        _RailItem(
-                          icon: LucideIcons.listTodo,
-                          label: 'Hàng chờ',
-                          selected:
-                              location == Routes.worklist ||
-                              location.startsWith('/visit'),
-                          onTap: () => context.go(Routes.worklist),
-                        ),
+                        if (admin)
+                          for (final (route, icon, label) in _adminPages)
+                            _RailItem(
+                              icon: icon,
+                              label: label,
+                              selected: location == route,
+                              onTap: () => context.go(route),
+                            )
+                        else
+                          _RailItem(
+                            icon: LucideIcons.listTodo,
+                            label: 'Hàng chờ',
+                            selected:
+                                location == Routes.worklist ||
+                                location.startsWith('/visit'),
+                            onTap: () => context.go(Routes.worklist),
+                          ),
                       ],
                     ),
                   ),
@@ -147,6 +182,13 @@ class AppShell extends ConsumerWidget {
     );
   }
 }
+
+/// The admin's pages, in rail order.
+const _adminPages = [
+  (Routes.accounts, LucideIcons.usersRound, 'Tài khoản'),
+  (Routes.metrics, LucideIcons.chartColumn, 'Số liệu'),
+  (Routes.accessLog, LucideIcons.scrollText, 'Nhật ký'),
+];
 
 class _RailItem extends StatelessWidget {
   const _RailItem({

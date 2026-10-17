@@ -289,6 +289,22 @@ final chartHoa = {
   'lastVisit': null,
 };
 
+const catalog = {
+  'drugs': [
+    {
+      'name': 'Allopurinol',
+      'strength': '300mg',
+      'form': 'viên',
+      'route': 'Uống',
+    },
+    {'name': 'Colchicin', 'strength': '1mg', 'form': 'viên', 'route': 'Uống'},
+  ],
+  'icd10': [
+    ['M10', 'Gút'],
+    ['M17', 'Thoái hóa khớp gối'],
+  ],
+};
+
 const session = {
   'staff': {'id': 'd1', 'name': 'BS. Nguyễn Thu Hà', 'role': 'doctor'},
   'clinic': {
@@ -298,13 +314,185 @@ const session = {
   },
 };
 
+const adminSession = {
+  'staff': {
+    'id': 'pr-admin',
+    'name': 'Quản trị An Bình',
+    'role': 'admin',
+    'mustChangePassword': false,
+  },
+  'clinic': {
+    'id': 'c1',
+    'name': 'Phòng khám Đa khoa An Bình',
+    'phone': '0900 000 000',
+  },
+};
+
+Map<String, Object?> account(
+  String id,
+  String name,
+  String email, {
+  String role = 'doctor',
+  bool active = true,
+  bool mustChange = false,
+  String? lastLoginAt = '${today}T07:55:00+07:00',
+}) => {
+  'id': id,
+  'name': role == 'doctor' ? 'BS. $name' : name,
+  'fullName': name,
+  'title': role == 'doctor' ? 'BS.' : '',
+  'email': email,
+  'role': role,
+  'mustChangePassword': mustChange,
+  'active': active,
+  'locked': false,
+  'lastLoginAt': lastLoginAt,
+};
+
+/// Access log entry as the server shapes it.
+Map<String, Object?> logEntry(
+  int id,
+  String at,
+  String label, {
+  String kind = 'staff',
+  String name = 'BS. Nguyễn Thu Hà',
+  String? visitDate = today,
+}) => {
+  'id': id,
+  'at': at,
+  'actor': {'kind': kind, 'name': name},
+  'action': 'x',
+  'label': label,
+  'appointmentId': visitDate == null ? null : 'a-p2',
+  'visitDate': visitDate,
+};
+
+const _metricsRow = {
+  'visits': 8,
+  'withSummary': 4,
+  'summaries': 4,
+  'feedbackUp': 1,
+  'feedbackDown': 1,
+  'upRate': 0.5,
+  'sent': 3,
+  'received': 1,
+  'medianMinutes': 180,
+  'p90Minutes': 180,
+  'amended': 1,
+};
+
+final pilotMetrics = {
+  'from': historyDay,
+  'to': today,
+  'totals': _metricsRow,
+  'days': [
+    {
+      ..._metricsRow,
+      'date': historyDay,
+      'visits': 2,
+      'withSummary': 0,
+      'feedbackUp': 0,
+      'feedbackDown': 0,
+      'upRate': null,
+      'sent': 2,
+      'amended': 0,
+    },
+    {
+      ..._metricsRow,
+      'date': today,
+      'visits': 6,
+      'sent': 1,
+      'received': 0,
+      'medianMinutes': null,
+      'p90Minutes': null,
+    },
+  ],
+};
+
 /// A fake backend. [signedIn] starts the session; [calls] records requests.
+/// [admin] signs in as the clinic admin; [mustChange] as an account with a
+/// one-time password (bước 18).
 class FakeBackend {
-  FakeBackend({this.signedIn = true});
+  FakeBackend({
+    this.signedIn = true,
+    this.admin = false,
+    this.mustChange = false,
+  });
   bool signedIn;
+  bool admin;
+  bool mustChange;
   final calls = <String>[];
 
-  http.Response _json(Object body, [int status = 200]) => http.Response.bytes(
+  /// Accounts of the clinic as the admin sees them.
+  final staff = [
+    account(
+      'pr-admin',
+      'Quản trị An Bình',
+      'quantri@anbinh.test',
+      role: 'admin',
+    ),
+    account('pr-ha', 'Nguyễn Thu Hà', 'bs.ha@anbinh.test'),
+  ];
+
+  Map<String, Object?> get _session {
+    final base = admin ? adminSession : session;
+    return {
+      ...base,
+      'staff': {...base['staff']! as Map, 'mustChangePassword': mustChange},
+    };
+  }
+
+  Map<String, Object?> _issued(Map<String, Object?> s, String password) => {
+    'staff': s,
+    'temporaryPassword': password,
+  };
+
+  Map<String, Object?> _accessLog(int offset) => {
+    'patient': {'id': 'p2', 'code': '000482', 'name': 'Phạm Thị Lan'},
+    'total': 3,
+    'offset': offset,
+    'items': offset == 0
+        ? [
+            logEntry(
+              3,
+              '${today}T08:41:00+07:00',
+              'Xem nhật ký truy cập',
+              visitDate: null,
+            ),
+            logEntry(2, '${today}T08:40:00+07:00', 'Mở hồ sơ lượt khám'),
+          ]
+        : [
+            logEntry(
+              1,
+              '${today}T07:42:00+07:00',
+              'Đồng ý chia sẻ dữ liệu',
+              kind: 'patient',
+              name: 'Người bệnh',
+            ),
+          ],
+    'nextOffset': offset == 0 ? 2 : null,
+  };
+
+  /// Overrides anh Hòa's consent in his chart.
+  Map<String, Object?>? hoaConsent;
+
+  /// Bà Lan's result as the server holds it; null before the first draft.
+  Map<String, Object?>? result;
+
+  Map<String, Object?> _resultFrom(Map<String, Object?> body) => {
+    'id': 'r-p2-${result?['version'] ?? 1}',
+    'appointmentId': 'a-p2',
+    'version': result?['version'] ?? 1,
+    'status': 'draft',
+    'amendReason': result?['amendReason'],
+    'signedBy': null,
+    'signedAt': null,
+    'updatedAt': '${today}T08:45:00+07:00',
+    'claimCode': result?['claimCode'],
+    ...body,
+  };
+
+  http.Response _json(Object? body, [int status = 200]) => http.Response.bytes(
     utf8.encode(jsonEncode(body)),
     status,
     headers: {'content-type': 'application/json; charset=utf-8'},
@@ -324,7 +512,10 @@ class FakeBackend {
         }, 401);
       }
       signedIn = true;
-      return _json(session);
+      return _json(_session);
+    }
+    if (key == 'GET /v1/staff/session') {
+      return _json(signedIn ? _session : null);
     }
     if (!signedIn) {
       return _json({
@@ -334,12 +525,122 @@ class FakeBackend {
         },
       }, 401);
     }
+    if (key == 'POST /v1/staff/password') {
+      final body = jsonDecode(req.body) as Map<String, Object?>;
+      if (body['currentPassword'] == 'sai-mat-khau') {
+        return _json({
+          'error': {
+            'code': 'wrong_password',
+            'message': 'Mật khẩu hiện tại không đúng.',
+          },
+        }, 400);
+      }
+      mustChange = false;
+      return _json(_session);
+    }
+    if (mustChange && key != 'GET /v1/staff/me') {
+      return _json({
+        'error': {
+          'code': 'password_change_required',
+          'message': 'Cần đổi mật khẩu tạm trước khi tiếp tục.',
+        },
+      }, 403);
+    }
+    final adminOnly =
+        req.url.path.startsWith('/v1/clinic/staff') ||
+        req.url.path == '/v1/clinic/pilot-metrics';
+    final clinical =
+        !adminOnly &&
+        !req.url.path.contains('access-log') &&
+        !req.url.path.startsWith('/v1/staff');
+    if ((admin && clinical) || (!admin && adminOnly)) {
+      return _json({
+        'error': {'code': 'forbidden', 'message': 'Không có quyền.'},
+      }, 403);
+    }
+    if (key == 'POST /v1/clinic/staff') {
+      final body = jsonDecode(req.body) as Map<String, Object?>;
+      final s = account(
+        'pr-new',
+        body['fullName']! as String,
+        body['email']! as String,
+        role: body['role']! as String,
+        mustChange: true,
+        lastLoginAt: null,
+      );
+      staff.add(s);
+      return _json(_issued(s, 'k7mq-4xr2-9dpt'), 201);
+    }
+    final staffAction = RegExp(
+      r'^POST /v1/clinic/staff/([^/]+)/(deactivate|reactivate|reset-password)$',
+    ).firstMatch(key);
+    if (staffAction != null) {
+      final i = staff.indexWhere((s) => s['id'] == staffAction.group(1));
+      final s = staff[i] = {
+        ...staff[i],
+        if (staffAction.group(2) == 'deactivate') 'active': false,
+        if (staffAction.group(2) == 'reactivate') 'active': true,
+        if (staffAction.group(2) == 'reset-password')
+          'mustChangePassword': true,
+      };
+      return staffAction.group(2) == 'reset-password'
+          ? _json(_issued(s, 'z9yx-8wvt-7srq'))
+          : _json({'staff': s});
+    }
+    if (key == 'GET /v1/patients/p2/access-log') {
+      return _json(
+        _accessLog(int.parse(req.url.queryParameters['offset'] ?? '0')),
+      );
+    }
+    if (key == 'GET /v1/clinic/access-log') {
+      if (req.url.queryParameters['patientCode'] != '000482') {
+        return _json({
+          'error': {'code': 'not_found', 'message': 'Không tìm thấy.'},
+        }, 404);
+      }
+      return _json(
+        _accessLog(int.parse(req.url.queryParameters['offset'] ?? '0')),
+      );
+    }
+    if (key == 'PUT /v1/appointments/a-p2/result-draft') {
+      result = _resultFrom(jsonDecode(req.body) as Map<String, Object?>);
+      return _json(result!);
+    }
+    if (key == 'POST /v1/appointments/a-p2/result/send') {
+      result = {
+        ...result!,
+        'status': 'sent',
+        'signedBy': 'BS. Nguyễn Thu Hà',
+        'signedAt': '${today}T08:50:00+07:00',
+        'claimCode': 'K7MQ-4XR2-9D',
+      };
+      return _json(result!);
+    }
+    if (key == 'POST /v1/appointments/a-p2/result/amend') {
+      final reason = (jsonDecode(req.body) as Map)['reason'];
+      result = {
+        ...result!,
+        'id': 'r-p2-2',
+        'version': 2,
+        'status': 'draft',
+        'amendReason': reason,
+      };
+      return _json(result!, 201);
+    }
     return switch (key) {
-      'GET /v1/staff/me' => _json(session),
+      'GET /v1/clinic/catalog' => _json(catalog),
+      'GET /v1/appointments/a-p2/result' => _json(result),
+
+      'GET /v1/staff/me' => _json(_session),
+      'GET /v1/clinic/staff' => _json(staff),
+      'GET /v1/clinic/pilot-metrics' => _json(pilotMetrics),
       'POST /v1/staff/logout' => http.Response('', 204),
       'GET /v1/clinic/worklist' => _json(worklist),
       'GET /v1/appointments/a-p2/chart' => _json(chartLan),
-      'GET /v1/appointments/a-p3/chart' => _json(chartHoa),
+      'GET /v1/appointments/a-p3/chart' => _json({
+        ...chartHoa,
+        'consent': hoaConsent ?? chartHoa['consent'],
+      }),
       'GET /v1/patients/p2/history' => _json([_lastVisit]),
       'POST /v1/summaries/s-p2/feedback' => _json({
         'feedback': {'value': 'up'},

@@ -11,6 +11,7 @@ import '../../data/api.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../worklist/worklist_page.dart' show AdherenceMeter;
+import 'access_log.dart';
 import 'history_tab.dart';
 import 'result_tab.dart';
 import 'summary_tab.dart';
@@ -411,7 +412,17 @@ class _PatientBannerState extends ConsumerState<PatientBanner> {
                   ),
                 ),
             ]),
-          section('Chia sẻ dữ liệu', [_ConsentNote(d)]),
+          section('Chia sẻ dữ liệu', [
+            _ConsentNote(d),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => showAccessLogDialog(context, p.brief.id),
+                icon: const Icon(LucideIcons.scrollText, size: 16),
+                label: const Text('Nhật ký truy cập'),
+              ),
+            ),
+          ]),
           const SizedBox(height: 18),
           action,
         ],
@@ -433,8 +444,17 @@ class _ConsentNote extends StatelessWidget {
         'Đồng ý chia sẻ lúc ${fmtClock(d.consent.grantedAt!)} '
             '${fmtDay(d.consent.grantedAt!)}. Chỉ phòng khám của lượt khám '
             'này xem được.',
-      ConsentState.declined =>
-        'Người bệnh không chia sẻ dữ liệu cho lượt khám này.',
+      ConsentState.declined => switch ((
+        d.consent.reason,
+        d.consent.revokedAt,
+      )) {
+        ('revoked', final DateTime at) =>
+          'Người bệnh đã rút lại đồng ý chia sẻ lúc ${fmtClock(at)} '
+              '${fmtDay(at)}. Dữ liệu đã chia sẻ không còn hiện ở đây.',
+        ('expired', _) =>
+          'Đồng ý chia sẻ đã hết hạn. Dữ liệu đã chia sẻ không còn hiện ở đây.',
+        _ => 'Người bệnh không chia sẻ dữ liệu cho lượt khám này.',
+      },
       ConsentState.none => 'Người bệnh chưa trả lời câu hỏi trước khám.',
     };
     return Container(

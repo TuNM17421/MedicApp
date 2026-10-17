@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:medic_core/medic_core.dart';
@@ -6,6 +8,7 @@ import '../../../app/notifications.dart';
 import '../../../app/state/app_state.dart';
 import '../../auth/auth_controller.dart';
 import '../../records/application/records_providers.dart';
+import '../../sharing/application/sharing_providers.dart';
 
 import '../../visit_prep/reminder_scheduler.dart';
 import '../../visit_prep/visit_prep.dart';
@@ -76,15 +79,21 @@ class DoseLogController extends Notifier<Map<String, DoseLogEntry>> {
     );
   }
 
+  /// Sends new marks to clinics the person shares the dose log with.
+  void _share(Iterable<DoseLogEntry> entries) =>
+      ref.read(outboxProvider.notifier).queueDoses(entries);
+
   void taken(String key) {
     if (_entry(key, DoseMark.taken) case final entry?) {
       _save({...state, key: entry});
+      _share([entry]);
     }
   }
 
   void skipped(String key, SkipReason reason) {
     if (_entry(key, DoseMark.skipped, reason: reason) case final entry?) {
       _save({...state, key: entry});
+      _share([entry]);
     }
   }
 
@@ -116,7 +125,14 @@ class DoseLogController extends Notifier<Map<String, DoseLogEntry>> {
       await store.add([item.key], item.at);
     }
     final added = next.length - state.length;
-    if (added > 0 && ref.mounted) _save(next);
+    if (added > 0 && ref.mounted) {
+      final fresh = [
+        for (final MapEntry(:key, :value) in next.entries)
+          if (!state.containsKey(key)) value,
+      ];
+      _save(next);
+      _share(fresh);
+    }
     return added;
   }
 
@@ -126,7 +142,12 @@ class DoseLogController extends Notifier<Map<String, DoseLogEntry>> {
   Future<void> refresh() async {
     await drainPending();
     if (!ref.mounted) return;
-    ref
+    // Also the moment to resend marks that could not reach a clinic.
+    unawaited(ref.read(outboxProvider.notifier).flush());
+    // Through the container: the medication plan watches this log, and
+    // `ref.invalidate` refuses (in debug) to invalidate a dependent, which
+    // broke starting the app already signed in.
+    ref.container
       ..invalidate(medReminderPlanProvider)
       ..invalidate(reminderPlanProvider);
   }
