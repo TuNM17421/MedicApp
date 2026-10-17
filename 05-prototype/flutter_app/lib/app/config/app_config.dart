@@ -7,4 +7,9 @@ abstract final class AppConfig {
     'API_BASE_URL',
     defaultValue: 'http://127.0.0.1:8080',
   );
+
+  /// True only when the build passed `--dart-define=API_BASE_URL=...`.
+  /// Features that have an offline mock (claiming a visit result) use the
+  /// backend only then, so a plain `flutter run` still works without it.
+  static const hasApiBaseUrl = bool.hasEnvironment('API_BASE_URL');
 }

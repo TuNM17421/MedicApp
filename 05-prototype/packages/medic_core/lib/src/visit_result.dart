@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:meta/meta.dart';
 
 /// Times of day a dose can be taken, in the order a prescription lists them.
 enum DoseSlot {

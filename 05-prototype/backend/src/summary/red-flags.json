@@ -1,0 +1,69 @@
+{
+  "note": "DANH SÁCH MẪU, cần bác sĩ phòng khám đối tác duyệt trước khi dùng. Chỉ để nhắc bác sĩ đọc kỹ câu gốc, không phải công cụ phân luồng hay chẩn đoán. So khớp không phân biệt dấu (người bệnh hay gõ không dấu); 'except' là các cụm trùng chữ nhưng khác nghĩa (ví dụ 'ngạt mũi' khi gõ không dấu là 'ngat mui').",
+  "version": "2026-10-draft-1",
+  "reviewed": false,
+  "signs": [
+    {
+      "code": "chest_pain",
+      "label": "đau ngực",
+      "phrases": ["đau ngực", "tức ngực", "nặng ngực", "đau thắt ngực", "nhói ngực", "đau tim", "ép ngực", "đau lồng ngực"]
+    },
+    {
+      "code": "dyspnea",
+      "label": "khó thở",
+      "phrases": ["khó thở", "thở không nổi", "thở không ra hơi", "ngạt thở", "hụt hơi", "thở hụt", "ngộp thở", "thở rít"]
+    },
+    {
+      "code": "syncope",
+      "label": "ngất",
+      "phrases": ["ngất", "ngất xỉu", "xỉu", "bất tỉnh", "lịm đi", "mất ý thức"],
+      "except": ["ngạt mũi", "ngạt thở", "thơm ngát", "ngát hương", "xanh ngắt", "lạnh ngắt", "tím ngắt", "ngắt lời", "ngắt quãng", "ngắt điện"]
+    },
+    {
+      "code": "hemiparesis",
+      "label": "yếu liệt nửa người",
+      "phrases": ["yếu nửa người", "liệt nửa người", "yếu liệt nửa người", "yếu một bên", "liệt một bên", "tê nửa người", "méo miệng", "yếu tay chân một bên", "liệt tay", "liệt chân", "không nhấc được tay", "không nhấc nổi tay"]
+    },
+    {
+      "code": "speech",
+      "label": "nói khó",
+      "phrases": ["nói khó", "khó nói", "nói ngọng", "nói líu lưỡi", "nói không rõ", "nói lắp bắp", "không nói được", "cứng lưỡi"],
+      "except": ["khó nói ra", "khó nói quá", "hơi khó nói", "chuyện khó nói", "ngại nói"]
+    },
+    {
+      "code": "hematemesis",
+      "label": "nôn ra máu",
+      "phrases": ["nôn ra máu", "ói ra máu", "mửa ra máu", "nôn máu", "ói máu"]
+    },
+    {
+      "code": "hemoptysis",
+      "label": "ho ra máu",
+      "phrases": ["ho ra máu", "khạc ra máu", "ho máu"]
+    },
+    {
+      "code": "melena",
+      "label": "đi ngoài phân đen",
+      "phrases": ["phân đen", "đi ngoài phân đen", "đi cầu phân đen", "đại tiện phân đen", "đi ngoài ra máu", "đi cầu ra máu", "đi ngoài ra máu", "phân có máu", "đi ngoài ra máu tươi"]
+    },
+    {
+      "code": "seizure",
+      "label": "sốt cao co giật",
+      "phrases": ["co giật", "sốt cao co giật", "lên cơn giật", "giật kinh phong", "động kinh"]
+    },
+    {
+      "code": "suicidal",
+      "label": "có ý định tự tử",
+      "phrases": ["tự tử", "tự sát", "muốn chết", "không muốn sống", "chẳng muốn sống", "kết thúc cuộc đời", "tự làm hại", "tự hại bản thân", "chết cho xong", "chết quách"]
+    },
+    {
+      "code": "severe_headache",
+      "label": "đau đầu dữ dội",
+      "phrases": ["đau đầu dữ dội", "đau đầu như búa bổ", "đau đầu như muốn nổ", "đau đầu dữ dội nhất", "nhức đầu dữ dội"]
+    },
+    {
+      "code": "confusion",
+      "label": "lú lẫn đột ngột",
+      "phrases": ["lú lẫn", "mê sảng", "lơ mơ", "không nhận ra người nhà", "gọi không tỉnh"]
+    }
+  ]
+}

@@ -1,20 +1,25 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:medic_core/medic_core.dart';
 
+import '../../../app/config/app_config.dart';
 import '../../../app/state/app_state.dart';
 import '../../auth/auth_controller.dart';
 import '../../booking/application/booking_providers.dart';
 import '../data/doctor_portal.dart';
-import '../domain/visit_result.dart';
 
+/// The clinic backend when the build names one (API_BASE_URL), else the
+/// offline mock so the demo works without a server.
 final doctorPortalProvider = Provider<DoctorPortal>(
-  (ref) => const MockDoctorPortal(),
+  (ref) => AppConfig.hasApiBaseUrl
+      ? HttpDoctorPortal(baseUrl: AppConfig.apiBaseUrl)
+      : const MockDoctorPortal(),
 );
 
 class ResultsState {
   const ResultsState({this.results = const [], this.fetching = const {}});
   final List<VisitResult> results;
 
-  /// Visit ids whose result is being asked from the doctor's system.
+  /// Visit ids whose result is being claimed from the doctor's system.
   final Set<String> fetching;
 
   VisitResult? forVisit(String visitId) =>
@@ -39,15 +44,36 @@ class VisitResultsController extends Notifier<ResultsState> {
     );
   }
 
-  /// Asks the doctor's system for [visitId]'s result and keeps it.
-  Future<VisitResult?> fetch(String visitId) async {
-    if (state.fetching.contains(visitId)) return null;
+  /// Keeps a result fetched from the clinic for a signed-in visit, replacing
+  /// an older version of it.
+  void put(VisitResult result) {
+    final results = List<VisitResult>.unmodifiable([
+      result,
+      ...state.results.where((item) => item.visitId != result.visitId),
+    ]);
+    state = ResultsState(results: results, fetching: state.fetching);
+    ref
+        .read(authSessionProvider.notifier)
+        .updateAccount((account) => account.copyWith(results: results));
+  }
+
+  /// Claims [visitId]'s result with the code printed on the prescription
+  /// and keeps it. Throws [ResultClaimException] with a message to show.
+  Future<VisitResult> claim(String visitId, String code) async {
+    if (state.fetching.contains(visitId)) {
+      throw const ResultClaimException('busy', 'Đang nhận kết quả, chờ chút.');
+    }
     final record = ref
         .read(appointmentsProvider)
         .records
         .where((record) => record.visit.id == visitId)
         .firstOrNull;
-    if (record == null) return null;
+    if (record == null) {
+      throw const ResultClaimException(
+        'no_visit',
+        'Không tìm thấy lượt khám này trong app.',
+      );
+    }
     final patient = ref
         .read(profileCatalogProvider)
         .where((profile) => profile.id == record.visit.patientId)
@@ -59,8 +85,8 @@ class VisitResultsController extends Notifier<ResultsState> {
     try {
       final result = await ref
           .read(doctorPortalProvider)
-          .resultFor(record.visit, patient);
-      if (!ref.mounted || result == null) return result;
+          .claim(code, visit: record.visit, patient: patient);
+      if (!ref.mounted) return result;
       final results = List<VisitResult>.unmodifiable([
         result,
         ...state.results.where((item) => item.visitId != visitId),

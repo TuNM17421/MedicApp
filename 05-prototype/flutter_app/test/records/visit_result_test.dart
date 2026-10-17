@@ -13,10 +13,10 @@ import 'package:medic_app/features/booking/domain/booking_models.dart';
 import 'package:medic_app/features/consent/health_consent.dart';
 import 'package:medic_app/features/records/application/records_providers.dart';
 import 'package:medic_app/features/records/data/doctor_portal.dart';
-import 'package:medic_app/features/records/domain/visit_result.dart';
 import 'package:medic_app/features/visit_prep/reminder_scheduler.dart';
 import 'package:medic_app/features/visit_prep/visit_prep.dart';
 import 'package:medic_app/main.dart';
+import 'package:medic_core/medic_core.dart';
 
 import '../visit_prep/reminder_planner_test.dart' show FakeScheduler;
 import '../visit_prep/visit_prep_test.dart' show visit, receipt;
@@ -124,7 +124,7 @@ void main() {
     c
         .read(appointmentsProvider.notifier)
         .upsert(AppointmentRecord(_motherVisit, receipt));
-    await c.read(visitResultsProvider.notifier).fetch('V7');
+    await c.read(visitResultsProvider.notifier).claim('V7', 'K7MQ-4XR2-9D');
     expect(c.read(visitResultsProvider).forVisit('V7'), isNotNull);
 
     auth.signOut();
@@ -138,78 +138,99 @@ void main() {
     expect(c.read(visitResultsProvider).forVisit('V7')!.items, hasLength(2));
   });
 
-  testWidgets('doctor sends the result; both views show the prescription', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(412, 915);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-    final vault = MemoryVault();
-    final c = ProviderContainer(
-      overrides: [
-        bookingTodayProvider.overrideWithValue(DateTime(2026, 10, 14)),
-        prepClockProvider.overrideWithValue(() => DateTime(2026, 10, 14, 10)),
-        doctorPortalProvider.overrideWithValue(
-          const MockDoctorPortal(latency: Duration.zero),
-        ),
-        localVaultProvider.overrideWithValue(vault),
-        reminderSchedulerProvider.overrideWithValue(FakeScheduler()),
-      ],
-    );
-    addTearDown(() async {
-      await tester.pumpWidget(const SizedBox.shrink());
-      c.dispose();
-    });
-    await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: c,
-        child: MedicApp(
-          builder: (context, child) => MediaQuery(
-            data: MediaQuery.of(context).copyWith(disableAnimations: true),
-            child: child!,
+  testWidgets(
+    'claim code brings the result; both views show the prescription',
+    (tester) async {
+      tester.view.physicalSize = const Size(412, 915);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final vault = MemoryVault();
+      final c = ProviderContainer(
+        overrides: [
+          bookingTodayProvider.overrideWithValue(DateTime(2026, 10, 14)),
+          prepClockProvider.overrideWithValue(() => DateTime(2026, 10, 14, 10)),
+          doctorPortalProvider.overrideWithValue(
+            const MockDoctorPortal(latency: Duration.zero),
+          ),
+          localVaultProvider.overrideWithValue(vault),
+          reminderSchedulerProvider.overrideWithValue(FakeScheduler()),
+        ],
+      );
+      addTearDown(() async {
+        await tester.pumpWidget(const SizedBox.shrink());
+        c.dispose();
+      });
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: c,
+          child: MedicApp(
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(disableAnimations: true),
+              child: child!,
+            ),
           ),
         ),
-      ),
-    );
-    final auth = c.read(authSessionProvider.notifier);
-    auth.signIn(demoPhone, demoPassword);
-    auth.setConsent(
-      HealthConsent(version: healthConsentVersion, acceptedAt: DateTime(2026)),
-    );
-    c
-        .read(appointmentsProvider.notifier)
-        .upsert(AppointmentRecord(_motherVisit, receipt));
-    c.read(appRouterProvider).push(AppRoutes.appointment('V7'));
-    await tester.pumpAndSettle();
+      );
+      final auth = c.read(authSessionProvider.notifier);
+      auth.signIn(demoPhone, demoPassword);
+      auth.setConsent(
+        HealthConsent(
+          version: healthConsentVersion,
+          acceptedAt: DateTime(2026),
+        ),
+      );
+      c
+          .read(appointmentsProvider.notifier)
+          .upsert(AppointmentRecord(_motherVisit, receipt));
+      c.read(appRouterProvider).push(AppRoutes.appointment('V7'));
+      await tester.pumpAndSettle();
 
-    final simulate = find.byKey(const Key('visit-result-simulate'));
-    await tester.scrollUntilVisible(
-      simulate,
-      200,
-      scrollable: find.byType(Scrollable).last,
-    );
-    await Scrollable.ensureVisible(tester.element(simulate), alignment: 0.5);
-    await tester.pumpAndSettle();
-    await tester.tap(simulate);
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 10));
-    expect(c.read(visitResultsProvider).forVisit('V7'), isNotNull);
-    await tester.pumpAndSettle();
-    expect(find.text('Đã nhận kết quả khám.'), findsOneWidget);
+      final claim = find.byKey(const Key('visit-result-claim'));
+      await tester.scrollUntilVisible(
+        claim,
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await Scrollable.ensureVisible(tester.element(claim), alignment: 0.5);
+      await tester.pumpAndSettle();
+      expect(find.text('Nhập mã nhận kết quả'), findsOneWidget);
+      await tester.tap(claim);
+      await tester.pumpAndSettle();
+      expect(find.text('Mã in cuối đơn thuốc'), findsOneWidget);
 
-    await tester.tap(find.byKey(const Key('visit-result-open')));
-    await tester.pumpAndSettle();
-    expect(find.text('Allopurinol 300mg'), findsOneWidget);
-    expect(find.text('Sáng 1 viên, sau ăn'), findsOneWidget);
+      final field = find.byKey(const Key('claim-code-field'));
+      await tester.enterText(field, 'k7mq');
+      await tester.tap(find.byKey(const Key('claim-code-submit')));
+      await tester.pumpAndSettle();
+      expect(
+        find.textContaining('Mã gồm 10 chữ và số, in cuối đơn thuốc'),
+        findsOneWidget,
+      );
+      expect(c.read(visitResultsProvider).forVisit('V7'), isNull);
 
-    await tester.tap(find.text('Bản đơn thuốc'));
-    await tester.pumpAndSettle();
-    expect(find.text('ĐƠN THUỐC'), findsOneWidget);
-    expect(find.text('1. Allopurinol 300mg'), findsOneWidget);
+      await tester.enterText(field, 'k7mq4xr29d');
+      await tester.pump();
+      expect(tester.widget<TextField>(field).controller!.text, 'K7MQ-4XR2-9D');
+      await tester.tap(find.byKey(const Key('claim-code-submit')));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 10));
+      expect(c.read(visitResultsProvider).forVisit('V7'), isNotNull);
+      await tester.pumpAndSettle();
+      expect(find.text('Đã nhận kết quả khám.'), findsOneWidget);
 
-    final saved = VaultSnapshot.accounts(await vault.read()).single;
-    expect(saved.appointments.single.visit.id, 'V7');
-    expect(saved.results.single.items, hasLength(2));
-  });
+      // The result page opens on its own after a successful claim.
+      expect(find.text('Allopurinol 300mg'), findsOneWidget);
+      expect(find.text('Sáng 1 viên, sau ăn'), findsOneWidget);
+
+      await tester.tap(find.text('Bản đơn thuốc'));
+      await tester.pumpAndSettle();
+      expect(find.text('ĐƠN THUỐC'), findsOneWidget);
+      expect(find.text('1. Allopurinol 300mg'), findsOneWidget);
+
+      final saved = VaultSnapshot.accounts(await vault.read()).single;
+      expect(saved.appointments.single.visit.id, 'V7');
+      expect(saved.results.single.items, hasLength(2));
+    },
+  );
 }

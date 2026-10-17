@@ -14,6 +14,10 @@ import 'booking_format.dart';
 import '../../visit_prep/visit_prep.dart' show visitStart;
 import '../../visit_prep/visit_prep_widgets.dart';
 import '../../records/presentation/visit_result_pages.dart';
+import '../../sharing/application/sharing_providers.dart';
+import '../../sharing/domain/sharing_models.dart';
+import '../../sharing/presentation/clinic_sharing_pages.dart';
+import '../../visit_prep/previsit_questions.dart';
 
 class AppointmentsPage extends ConsumerStatefulWidget {
   const AppointmentsPage({super.key});
@@ -29,6 +33,8 @@ class _AppointmentsPageState extends ConsumerState<AppointmentsPage> {
   @override
   Widget build(BuildContext context) {
     final all = ref.watch(appointmentsProvider).records;
+    final clinic = ref.watch(serverAppointmentsProvider);
+    final now = ref.watch(sharingClockProvider)();
     final records = [
       for (final record in all)
         if (_day == null || isSameDay(record.visit.date, _day)) record,
@@ -68,6 +74,8 @@ class _AppointmentsPageState extends ConsumerState<AppointmentsPage> {
               ),
             ],
           ),
+        if (clinic.error case final error?)
+          AppStatusBanner(status: AppStatus.warning, message: error),
         if (all.isEmpty)
           const AppEmptyState(
             title: 'Chưa có lịch hẹn',
@@ -97,8 +105,12 @@ class _AppointmentsPageState extends ConsumerState<AppointmentsPage> {
             for (final record in group.records)
               AppLinkCard(
                 title: record.visit.patientName,
-                subtitle:
+                subtitle: switch (clinic.byId(record.visit.id)) {
+                  final ServerAppointment item =>
+                    '${item.clinic.name}\n${bookingDate(record.visit.date)} · ${record.visit.time}\n${sharingLabel(item.consent, now)}',
+                  null =>
                     '${record.receipt.status.label}\n${bookingDate(record.visit.date)} · ${record.visit.time}',
+                },
                 icon: AppIcons.calendar,
                 onTap: () =>
                     context.push(AppRoutes.appointment(record.visit.id)),
@@ -323,6 +335,10 @@ class AppointmentRecordView extends ConsumerWidget {
     }
     final visit = record.visit;
     final receipt = record.receipt;
+    final clinic = ref.watch(serverAppointmentProvider(id));
+    if (clinic != null) {
+      return _ClinicAppointmentView(record: record, appointment: clinic);
+    }
     final status = switch (receipt.status) {
       PaymentStatus.confirmed => AppStatus.success,
       PaymentStatus.failed => AppStatus.error,
@@ -424,6 +440,72 @@ class AppointmentRecordView extends ConsumerWidget {
             ),
           ],
         ],
+      ],
+    );
+  }
+}
+
+/// An appointment the clinic holds for the signed-in phone (bước 16): no
+/// payment, a result fetched without a code, questions before the visit and
+/// the per-visit sharing consent.
+class _ClinicAppointmentView extends StatelessWidget {
+  const _ClinicAppointmentView({
+    required this.record,
+    required this.appointment,
+  });
+  final AppointmentRecord record;
+  final ServerAppointment appointment;
+
+  static const _status = {
+    'booked': 'Đã đặt lịch',
+    'arrived': 'Đã đến phòng khám',
+    'in_progress': 'Đang khám',
+    'done': 'Đã khám xong',
+    'cancelled': 'Đã hủy',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final visit = record.visit;
+    final cancelled = appointment.cancelled;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppTicketCard(
+          title: _status[appointment.status] ?? 'Lịch khám',
+          status: cancelled ? AppStatus.error : AppStatus.success,
+          reference: appointment.clinic.name,
+          details: [
+            if (visit.patientName.isNotEmpty)
+              (label: 'Người khám', value: visit.patientName),
+            if (appointment.kind.isNotEmpty)
+              (label: 'Hình thức', value: appointment.kind),
+            (
+              label: 'Ngày và giờ hẹn',
+              value: '${bookingDate(visit.date)} · ${visit.time}',
+            ),
+            (
+              label: 'Nơi khám',
+              value: appointment.clinic.phone.isEmpty
+                  ? appointment.clinic.name
+                  : '${appointment.clinic.name}\nĐiện thoại ${appointment.clinic.phone}',
+            ),
+            if (appointment.specialty.isNotEmpty)
+              (label: 'Chuyên khoa', value: appointment.specialty),
+          ],
+        ),
+        const SizedBox(height: 16),
+        if (!cancelled) ...[
+          VisitResultSection(visitId: visit.id),
+          PreVisitQuestionsSection(visitId: visit.id),
+          ClinicSharingSection(appointmentId: visit.id),
+          VisitRemindersSection(visitId: visit.id),
+        ] else
+          const AppStatusBanner(
+            status: AppStatus.error,
+            message:
+                'Lịch khám này đã hủy. Liên hệ phòng khám nếu cần đặt lại.',
+          ),
       ],
     );
   }

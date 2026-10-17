@@ -1,16 +1,23 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:medic_core/medic_core.dart';
 
 import '../../app/state/app_state.dart';
 import '../../core/storage/local_vault.dart';
 import '../booking/domain/booking_models.dart';
 import '../consent/health_consent.dart';
-import '../meds/domain/medication.dart';
-import '../records/domain/visit_result.dart';
+import '../sharing/application/sharing_providers.dart';
+import '../sharing/data/patient_api.dart';
+import '../sharing/domain/outbox.dart';
+import '../sharing/domain/sharing_models.dart';
 
-/// Prototype-only accounts. Nothing is sent to a server. An account stays in
-/// memory and disappears when the app closes, unless its holder agreed to
-/// keep its health data on this device ([consent]); then it is saved in the
-/// encrypted vault.
+/// Accounts kept on the phone. Offline (no API_BASE_URL) they are
+/// prototype-only, signed in with a password. With a backend the holder signs
+/// in with a one-time code and [session] holds the clinic token (bước 16).
+/// An account stays in memory and disappears when the app closes, unless its
+/// holder agreed to keep its health data on this device ([consent]); then it
+/// is saved in the encrypted vault, token and upload queue included.
 class MockAccount {
   const MockAccount({
     required this.phone,
@@ -20,6 +27,10 @@ class MockAccount {
     this.appointments = const [],
     this.results = const [],
     this.doseLog = const [],
+    this.session,
+    this.serverAppointments = const [],
+    this.intake = const {},
+    this.outbox = const [],
   });
   final String phone;
   final String password;
@@ -35,12 +46,28 @@ class MockAccount {
   /// Doses marked taken or skipped, oldest first.
   final List<DoseLogEntry> doseLog;
 
+  /// Clinic sign-in, null when signed in offline or signed out.
+  final PatientSession? session;
+
+  /// Appointments the clinic holds for this phone, as last fetched.
+  final List<ServerAppointment> serverAppointments;
+
+  /// Answers to the questions before a visit, by visit id.
+  final Map<String, List<IntakeAnswer>> intake;
+
+  /// Uploads waiting for the network, oldest first.
+  final List<OutboxItem> outbox;
+
   MockAccount copyWith({
     List<PreviewProfile>? profiles,
     HealthConsent? Function()? consent,
     List<AppointmentRecord>? appointments,
     List<VisitResult>? results,
     List<DoseLogEntry>? doseLog,
+    PatientSession? Function()? session,
+    List<ServerAppointment>? serverAppointments,
+    Map<String, List<IntakeAnswer>>? intake,
+    List<OutboxItem>? outbox,
   }) => MockAccount(
     phone: phone,
     password: password,
@@ -49,6 +76,10 @@ class MockAccount {
     appointments: appointments ?? this.appointments,
     results: results ?? this.results,
     doseLog: doseLog ?? this.doseLog,
+    session: session == null ? this.session : session(),
+    serverAppointments: serverAppointments ?? this.serverAppointments,
+    intake: intake ?? this.intake,
+    outbox: outbox ?? this.outbox,
   );
 
   MockAccount withProfiles(List<PreviewProfile> value) =>
@@ -65,6 +96,15 @@ class MockAccount {
     'appointments': [for (final record in appointments) record.toJson()],
     'results': [for (final result in results) result.toJson()],
     'doseLog': [for (final entry in doseLog) entry.toJson()],
+    'session': session?.toJson(),
+    'serverAppointments': [
+      for (final appointment in serverAppointments) appointment.toJson(),
+    ],
+    'intake': {
+      for (final MapEntry(:key, :value) in intake.entries)
+        key: [for (final answer in value) answer.toJson()],
+    },
+    'outbox': [for (final item in outbox) item.toJson()],
   };
 
   factory MockAccount.fromJson(Map<String, Object?> json) => MockAccount(
@@ -89,6 +129,26 @@ class MockAccount {
     doseLog: List.unmodifiable([
       for (final entry in json['doseLog'] as List<Object?>? ?? const [])
         DoseLogEntry.fromJson(entry! as Map<String, Object?>),
+    ]),
+    session: switch (json['session']) {
+      final Map<String, Object?> value => PatientSession.fromJson(value),
+      _ => null,
+    },
+    serverAppointments: List.unmodifiable([
+      for (final item in json['serverAppointments'] as List<Object?>? ?? [])
+        ServerAppointment.fromJson(item! as Map<String, Object?>),
+    ]),
+    intake: Map.unmodifiable({
+      for (final MapEntry(:key, :value)
+          in (json['intake'] as Map<String, Object?>? ?? const {}).entries)
+        key: List<IntakeAnswer>.unmodifiable([
+          for (final answer in value! as List<Object?>)
+            IntakeAnswer.fromJson(answer! as Map<String, Object?>),
+        ]),
+    }),
+    outbox: List.unmodifiable([
+      for (final item in json['outbox'] as List<Object?>? ?? const [])
+        OutboxItem.fromJson(item! as Map<String, Object?>),
     ]),
   );
 }
@@ -157,9 +217,19 @@ class AuthFailure extends AuthResult {
   const AuthFailure(this.message, {this.field});
   final String message;
 
-  /// `phone` or `password` when the message belongs under one field.
+  /// `phone`, `password` or `code` when the message belongs under one field.
   final String? field;
 }
+
+/// The clinic sent a one-time code to [phone].
+class OtpSent extends AuthResult {
+  const OtpSent(this.phone, this.challenge);
+  final String phone;
+  final OtpChallenge challenge;
+}
+
+/// One-time sign-in codes are 6 digits.
+const otpLength = 6;
 
 /// The signed-in phone number, or null when signed out.
 final authSessionProvider = NotifierProvider<AuthController, String?>(
@@ -169,10 +239,79 @@ final authSessionProvider = NotifierProvider<AuthController, String?>(
 class AuthController extends Notifier<String?> {
   /// Restores the session saved with a consented account, so its holder does
   /// not have to sign in again after reopening the app.
+  /// With a clinic backend, only an account whose clinic session is still
+  /// valid stays signed in.
   @override
   String? build() {
     final phone = VaultSnapshot.session(ref.read(vaultSnapshotProvider));
-    return ref.read(mockAccountStoreProvider).containsKey(phone) ? phone : null;
+    final account = ref.read(mockAccountStoreProvider)[phone];
+    if (account == null) return null;
+    if (ref.read(patientApiProvider) != null &&
+        !(account.session?.validAt(DateTime.now()) ?? false)) {
+      return null;
+    }
+    return phone;
+  }
+
+  /// Asks the clinic to send a sign-in code (bước 16). Returns [OtpSent] or
+  /// [AuthFailure].
+  Future<AuthResult> requestOtp(String phoneInput) async {
+    final phone = normalizePhone(phoneInput);
+    if (phone == null) {
+      return AuthFailure(validatePhone(phoneInput)!, field: 'phone');
+    }
+    final api = ref.read(patientApiProvider);
+    if (api == null) {
+      return const AuthFailure('Bản thử này chưa nối với phòng khám.');
+    }
+    try {
+      return OtpSent(phone, await api.requestOtp(phone));
+    } on PatientApiException catch (failure) {
+      return AuthFailure(
+        failure.message,
+        field: failure.code == 'bad_phone' ? 'phone' : null,
+      );
+    }
+  }
+
+  /// Signs in with the code the clinic sent. A phone seen for the first time
+  /// gets a new account on this device.
+  Future<AuthResult> verifyOtp(String phone, String code) async {
+    final digits = code.replaceAll(RegExp(r'\s'), '');
+    if (!RegExp('^\\d{$otpLength}\$').hasMatch(digits)) {
+      return const AuthFailure('Mã gồm 6 chữ số.', field: 'code');
+    }
+    final api = ref.read(patientApiProvider);
+    if (api == null) {
+      return const AuthFailure('Bản thử này chưa nối với phòng khám.');
+    }
+    try {
+      final session = await api.createSession(phone, digits);
+      if (!ref.mounted) return const AuthSuccess();
+      final store = ref.read(mockAccountStoreProvider.notifier);
+      final account =
+          ref.read(mockAccountStoreProvider)[phone] ??
+          MockAccount(phone: phone, password: '');
+      store.save(account.copyWith(session: () => session));
+      state = phone;
+      return const AuthSuccess();
+    } on PatientApiException catch (failure) {
+      return AuthFailure(
+        failure.message,
+        field: switch (failure.code) {
+          'bad_code' => 'code',
+          'bad_phone' => 'phone',
+          _ => null,
+        },
+      );
+    }
+  }
+
+  /// The clinic no longer accepts the token: sign out without asking it.
+  void sessionExpired() {
+    updateAccount((account) => account.copyWith(session: () => null));
+    state = null;
+    ref.invalidate(notificationFeedProvider);
   }
 
   MockAccount? get account =>
@@ -218,6 +357,17 @@ class AuthController extends Notifier<String?> {
   }
 
   void signOut() {
+    final session = account?.session;
+    if (session != null) {
+      final api = ref.read(patientApiProvider);
+      // Best effort: the token is forgotten here whatever the network says.
+      if (api != null) {
+        unawaited(
+          api.deleteSession(session.token).then((_) {}, onError: (_) {}),
+        );
+      }
+      updateAccount((account) => account.copyWith(session: () => null));
+    }
     state = null;
     // Another account must not see this account's notices.
     ref.invalidate(notificationFeedProvider);
