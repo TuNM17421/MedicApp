@@ -354,11 +354,19 @@ class _ClinicSharingPageState extends ConsumerState<ClinicSharingPage> {
                     'Bất kỳ lúc nào, ngay trên trang này. Phòng khám sẽ không '
                     'còn thấy từ lần mở hồ sơ tiếp theo.',
               ),
+              (
+                label: 'Tóm tắt tự động',
+                value:
+                    'Phòng khám có thể dùng dịch vụ AI, có thể đặt ở nước '
+                    'ngoài, để tóm tắt câu trả lời trước khám cho bác sĩ. Chỉ '
+                    'gửi câu hỏi và câu trả lời, không kèm tên, số điện thoại '
+                    'hay số thẻ BHYT.',
+              ),
             ],
           ),
           const AppStatusBanner(
             message:
-                'Chỉ phòng khám này thấy, và chỉ cho lượt khám này. Việc này '
+                'Chỉ phòng khám này xem, và chỉ cho lượt khám này. Việc này '
                 'khác với "Lưu dữ liệu sức khỏe" trên điện thoại.',
           ),
           AppSurface(

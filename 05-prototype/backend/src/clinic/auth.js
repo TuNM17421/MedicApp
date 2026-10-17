@@ -7,6 +7,8 @@ export const IDLE_MS = 30 * 60_000;
 export const ABSOLUTE_MS = 12 * 3600_000;
 export const MAX_FAILED = 5;
 export const LOCK_MS = 15 * 60_000;
+export const MIN_PASSWORD = 10;
+export const MAX_PASSWORD = 256;
 
 const KEY_LEN = 32;
 const PARAMS = { N: 16384, r: 8, p: 1 };
@@ -34,6 +36,33 @@ export async function verifyPassword(password, stored) {
   const expected = Buffer.from(hash, 'base64url');
   const key = await derive(String(password), Buffer.from(salt, 'base64url'), { N: +N, r: +r, p: +p });
   return key.length === expected.length && timingSafeEqual(key, expected);
+}
+
+/**
+ * Bước 18 password rule: at least 10 characters, at most 256, not the email
+ * (ignoring case and spaces). Returns a Vietnamese reason, or null when ok.
+ */
+export function passwordProblem(password, email = '') {
+  if (typeof password !== 'string' || password.length < MIN_PASSWORD) return `Mật khẩu cần ít nhất ${MIN_PASSWORD} ký tự.`;
+  if (password.length > MAX_PASSWORD) return 'Mật khẩu quá dài.';
+  const norm = (v) => String(v).trim().toLowerCase();
+  if (email && norm(password) === norm(email)) return 'Mật khẩu không được trùng email.';
+  return null;
+}
+
+// Crockford base32 without look-alikes: easy to read out and type.
+const TEMP_ALPHABET = '23456789abcdefghjkmnpqrstvwxyz';
+
+/** One-time password for a new or reset account, e.g. "k7mq-4xr2-9dpt" (14 characters). */
+export function temporaryPassword() {
+  const out = [];
+  while (out.length < 12) {
+    for (const b of randomBytes(16)) {
+      // 240 = 8 × 30: reject the tail so every character is equally likely.
+      if (b < 240 && out.length < 12) out.push(TEMP_ALPHABET[b % 30]);
+    }
+  }
+  return `${out.slice(0, 4).join('')}-${out.slice(4, 8).join('')}-${out.slice(8).join('')}`;
 }
 
 /** Sessions keyed by a random 32-byte token: 30 min sliding, 12 h at most. */
@@ -71,6 +100,17 @@ export function createSessionStore({ now = () => Date.now() } = {}) {
     },
     delete(token) {
       sessions.delete(token);
+    },
+    /** Ends every session of [staffId] except [keep]; returns how many ended. */
+    endFor(staffId, keep = null) {
+      let n = 0;
+      for (const [token, s] of sessions) {
+        if (s.staffId === staffId && token !== keep) {
+          sessions.delete(token);
+          n++;
+        }
+      }
+      return n;
     },
     close() {
       clearInterval(sweep);

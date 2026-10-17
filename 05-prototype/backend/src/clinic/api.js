@@ -1,14 +1,19 @@
 // Doctor web API (CLINIC-API.md): staff sign-in, worklist, chart, summary
-// feedback, arrive/start, visit history, result drafts and sending (bước 15)
-// and the patient's claim by code. Every query is scoped to the
-// signed-in doctor's clinic; another clinic's ids answer 404. Logs carry
-// event names and codes only, never names, symptoms or tokens.
+// feedback, arrive/start, visit history, result drafts and sending (bước 15),
+// the patient's claim by code, and (bước 18) own password, accounts, access
+// log and pilot numbers for the clinic admin. Every query is scoped to the
+// signed-in staff's clinic; another clinic's ids answer 404. Clinical data is
+// for doctors only; the admin role manages accounts and sees no charts. Logs
+// carry event names and codes only, never names, symptoms or tokens.
 import { HttpError, notFound, readJson, sendJson } from '../http.js';
 import {
-  LOCK_MS, MAX_FAILED, clearCookie, createSessionStore, readCookie, sessionCookie, verifyPassword,
+  LOCK_MS, MAX_FAILED, clearCookie, createSessionStore, hashPassword, passwordProblem, readCookie, sessionCookie,
+  verifyPassword,
 } from './auth.js';
+import { createAdminApi } from './admin.js';
 import { readFileSync } from 'node:fs';
 
+import { createSummaryWorker } from '../summary/worker.js';
 import { createPatientApi } from './patient.js';
 
 import {
@@ -33,7 +38,13 @@ const json = (text, fallback) => {
   }
 };
 
-const staffJson = (p) => ({ id: p.id, name: `${p.title} ${p.full_name}`.trim(), role: p.role });
+const staffJson = (p) => ({
+  id: p.id,
+  name: `${p.title} ${p.full_name}`.trim(),
+  role: p.role,
+  mustChangePassword: Boolean(p.must_change_password),
+});
+const forbidden = () => new HttpError(403, 'forbidden', 'Tài khoản của bạn không có quyền dùng chức năng này.');
 const clinicJson = (c) => ({ id: c.id, name: c.name, phone: c.phone });
 const maskInsurance = (code) => (code ? `•••• ${code.slice(-4)}` : null);
 
@@ -70,9 +81,14 @@ export function visitResultJson(a, r) {
   };
 }
 
-export function createClinicApi({ db, config, log }) {
+/**
+ * [summary]: options for the bước 17 summary worker (tests pass
+ * `summarise` and `debounceMs`).
+ */
+export function createClinicApi({ db, config, log, summary = {} }) {
   const store = createSessionStore();
-  const patient = createPatientApi({ db, config, log });
+  const summaries = createSummaryWorker({ db, config, log, ...summary });
+  const patient = createPatientApi({ db, config, log, onIntake: (id) => summaries.schedule(id) });
   const q = (sql) => db.prepare(sql);
 
   const stmt = {
@@ -80,7 +96,10 @@ export function createClinicApi({ db, config, log }) {
     staffById: q('SELECT * FROM practitioner WHERE id = ?'),
     clinic: q('SELECT * FROM clinic WHERE id = ?'),
     loginFailed: q('UPDATE practitioner SET failed_logins = ?, locked_until = ? WHERE id = ?'),
-    loginOk: q('UPDATE practitioner SET failed_logins = 0, locked_until = NULL WHERE id = ?'),
+    loginOk: q('UPDATE practitioner SET failed_logins = 0, locked_until = NULL, last_login_at = ? WHERE id = ?'),
+    passwordOk: q('UPDATE practitioner SET failed_logins = 0, locked_until = NULL WHERE id = ?'),
+    setPassword: q(`UPDATE practitioner SET password_hash = ?, must_change_password = 0, password_changed_at = ?
+      WHERE id = ?`),
     audit: q(`INSERT INTO audit_event (at, actor, action, patient_id, appointment_id, detail, ip)
       VALUES (?, ?, ?, ?, ?, ?, ?)`),
     day: q(`SELECT a.*, p.code, p.full_name, p.birth_date, p.gender FROM appointment a
@@ -90,7 +109,7 @@ export function createClinicApi({ db, config, log }) {
       p.insurance_code, p.allergy, p.conditions FROM appointment a
       JOIN patient p ON p.id = a.patient_id WHERE a.id = ? AND a.clinic_id = ?`),
     consent: q('SELECT * FROM consent WHERE appointment_id = ? ORDER BY granted_at DESC, rowid DESC LIMIT 1'),
-    summary: q('SELECT * FROM visit_summary WHERE appointment_id = ? ORDER BY created_at DESC, id DESC LIMIT 1'),
+    summary: q('SELECT * FROM visit_summary WHERE appointment_id = ? ORDER BY created_at DESC, rowid DESC LIMIT 1'),
     summaryById: q(`SELECT s.*, a.patient_id, a.clinic_id FROM visit_summary s
       JOIN appointment a ON a.id = s.appointment_id WHERE s.id = ? AND a.clinic_id = ?`),
     feedback: q('UPDATE visit_summary SET feedback = ?, feedback_by = ?, feedback_at = ? WHERE id = ?'),
@@ -135,12 +154,49 @@ export function createClinicApi({ db, config, log }) {
     stmt.audit.run(localIso(), staff.id, action, patientId, appointmentId, JSON.stringify(detail), req.socket.remoteAddress ?? '');
   }
 
-  function requireStaff(req) {
-    const session = store.get(readCookie(req));
+  /**
+   * The signed-in staff. A deactivated account is signed out on its next
+   * request. Until a one-time password is replaced, only `me`, `logout` and
+   * `password` answer ([pending] true); the rest is 403 password_change_required.
+   */
+  function requireStaff(req, { pending = false } = {}) {
+    const token = readCookie(req);
+    const session = store.get(token);
     if (!session) throw unauthenticated();
     const staff = stmt.staffById.get(session.staffId);
-    if (!staff || staff.clinic_id !== session.clinicId) throw unauthenticated();
+    if (!staff || staff.clinic_id !== session.clinicId || !staff.active) {
+      store.delete(token);
+      throw unauthenticated();
+    }
+    if (staff.must_change_password && !pending) {
+      throw new HttpError(403, 'password_change_required', 'Cần đổi mật khẩu tạm trước khi tiếp tục.');
+    }
     return staff;
+  }
+
+  /** Clinical endpoints: doctors only. */
+  function requireDoctor(staff) {
+    if (staff.role !== 'doctor') throw forbidden();
+    return staff;
+  }
+
+  const admin = createAdminApi({ db, log, store, audit, staffJson });
+
+  /**
+   * Checks [password] against the account and applies the lockout rule
+   * (5 wrong in a row: locked 15 minutes). 'ok', 'bad' or 'locked'.
+   */
+  async function checkPassword(staff, password) {
+    const nowMs = Date.now();
+    if (staff.locked_until && Date.parse(staff.locked_until) > nowMs) return 'locked';
+    if (await verifyPassword(password, staff.password_hash)) return 'ok';
+    const failed = (staff.locked_until ? 0 : staff.failed_logins) + 1;
+    if (failed >= MAX_FAILED) {
+      stmt.loginFailed.run(0, localIso(nowMs + LOCK_MS), staff.id);
+      return 'locked';
+    }
+    stmt.loginFailed.run(failed, null, staff.id);
+    return 'bad';
   }
 
   // ---- read models -------------------------------------------------------
@@ -287,28 +343,55 @@ export function createClinicApi({ db, config, log }) {
       log('staff_login', { result: 'bad_credentials' });
       throw bad();
     }
-    const nowMs = Date.now();
-    if (staff.locked_until && Date.parse(staff.locked_until) > nowMs) {
-      log('staff_login', { result: 'locked' });
-      throw locked();
+    const check = await checkPassword(staff, password);
+    if (check !== 'ok') {
+      log('staff_login', { result: check === 'locked' ? 'locked' : 'bad_credentials' });
+      throw check === 'locked' ? locked() : bad();
     }
-    if (!(await verifyPassword(password, staff.password_hash))) {
-      const failed = (staff.locked_until ? 0 : staff.failed_logins) + 1;
-      if (failed >= MAX_FAILED) {
-        stmt.loginFailed.run(0, localIso(nowMs + LOCK_MS), staff.id);
-        log('staff_login', { result: 'locked' });
-        throw locked();
-      }
-      stmt.loginFailed.run(failed, null, staff.id);
-      log('staff_login', { result: 'bad_credentials' });
-      throw bad();
+    // Only after the right password, so the answer does not reveal accounts.
+    if (!staff.active) {
+      log('staff_login', { result: 'disabled' });
+      throw new HttpError(403, 'account_disabled', 'Tài khoản đã bị khóa. Vui lòng liên hệ quản trị phòng khám.');
     }
-    stmt.loginOk.run(staff.id);
+    stmt.loginOk.run(localIso(), staff.id);
     const token = store.create(staff);
-    log('staff_login', { result: 'ok' });
+    log('staff_login', { result: 'ok', mustChange: Boolean(staff.must_change_password) });
     return sendJson(res, 200, { staff: staffJson(staff), clinic: clinicJson(stmt.clinic.get(staff.clinic_id)) }, {
       'set-cookie': sessionCookie(token, { secure: config.https }),
     });
+  }
+
+  /**
+   * POST /v1/staff/password { currentPassword, newPassword }. Wrong current
+   * passwords count toward the lockout; a lockout ends the account's sessions.
+   * Other sessions of the account end; this one stays.
+   */
+  async function changePassword(req, res) {
+    const staff = requireStaff(req, { pending: true });
+    const body = await readJson(req);
+    const current = typeof body.currentPassword === 'string' ? body.currentPassword : '';
+    const next = typeof body.newPassword === 'string' ? body.newPassword : '';
+    const problem = passwordProblem(next, staff.email);
+    if (problem) throw new HttpError(422, 'weak_password', problem, ['newPassword']);
+    if (!current || current.length > 256) throw new HttpError(400, 'wrong_password', 'Mật khẩu hiện tại không đúng.', ['currentPassword']);
+    const check = await checkPassword(staff, current);
+    if (check === 'locked') {
+      store.endFor(staff.id);
+      log('staff_password', { result: 'locked' });
+      throw new HttpError(423, 'locked', 'Tài khoản tạm khóa 15 phút vì nhập sai nhiều lần.');
+    }
+    if (check === 'bad') {
+      log('staff_password', { result: 'wrong_password' });
+      throw new HttpError(400, 'wrong_password', 'Mật khẩu hiện tại không đúng.', ['currentPassword']);
+    }
+    if (next === current) throw new HttpError(422, 'weak_password', 'Mật khẩu mới cần khác mật khẩu hiện tại.', ['newPassword']);
+    stmt.passwordOk.run(staff.id);
+    stmt.setPassword.run(await hashPassword(next), localIso(), staff.id);
+    const ended = store.endFor(staff.id, readCookie(req));
+    audit(req, staff, 'staff.password_change', { detail: { sessionsEnded: ended, wasTemporary: Boolean(staff.must_change_password) } });
+    log('staff_password', { result: 'ok' });
+    const fresh = stmt.staffById.get(staff.id);
+    return sendJson(res, 200, { staff: staffJson(fresh), clinic: clinicJson(stmt.clinic.get(staff.clinic_id)) });
   }
 
   function worklist(req, res, staff, url) {
@@ -556,8 +639,20 @@ export function createClinicApi({ db, config, log }) {
         res.writeHead(204, { 'set-cookie': clearCookie({ secure: config.https }), 'cache-control': 'no-store' });
         return res.end();
       }
+      if (m === 'POST' && id === 'password') return changePassword(req, res);
+      // Bước 18: like `me`, but 200 null when signed out, so the web's first
+      // check does not print a 401 in the browser console.
+      if (m === 'GET' && id === 'session') {
+        let staff = null;
+        try {
+          staff = requireStaff(req, { pending: true });
+        } catch (error) {
+          if (!(error instanceof HttpError) || error.status !== 401) throw error;
+        }
+        return sendJson(res, 200, staff ? { staff: staffJson(staff), clinic: clinicJson(stmt.clinic.get(staff.clinic_id)) } : null);
+      }
       if (m === 'GET' && id === 'me') {
-        const staff = requireStaff(req);
+        const staff = requireStaff(req, { pending: true });
         return sendJson(res, 200, { staff: staffJson(staff), clinic: clinicJson(stmt.clinic.get(staff.clinic_id)) });
       }
       throw notFound();
@@ -567,6 +662,23 @@ export function createClinicApi({ db, config, log }) {
       throw notFound();
     }
     const staff = requireStaff(req);
+    // Bước 18: admin pages, and the access log (doctor or admin).
+    if (area === 'clinic' && id === 'staff') {
+      if (parts.length === 3 && m === 'GET') return admin.listStaff(req, res, staff);
+      if (parts.length === 3 && m === 'POST') return admin.createStaff(req, res, staff);
+      if (parts.length === 5 && m === 'POST') {
+        if (parts[4] === 'deactivate') return admin.setActive(req, res, staff, sub, false);
+        if (parts[4] === 'reactivate') return admin.setActive(req, res, staff, sub, true);
+        if (parts[4] === 'reset-password') return admin.resetPassword(req, res, staff, sub);
+      }
+      throw notFound();
+    }
+    if (m === 'GET' && area === 'clinic' && id === 'pilot-metrics' && parts.length === 3) return admin.pilotMetrics(req, res, staff, url);
+    if (m === 'GET' && area === 'clinic' && id === 'access-log' && parts.length === 3) return admin.accessLogByCode(req, res, staff, url);
+    if (m === 'GET' && area === 'patients' && sub === 'access-log' && parts.length === 4) {
+      return admin.accessLogById(req, res, staff, id, url);
+    }
+    requireDoctor(staff);
     if (m === 'GET' && area === 'clinic' && id === 'worklist' && parts.length === 3) return worklist(req, res, staff, url);
     if (m === 'GET' && area === 'clinic' && id === 'catalog' && parts.length === 3) {
       return sendJson(res, 200, { drugs: clinicCatalog.drugs, icd10: clinicCatalog.icd10 });
@@ -590,9 +702,11 @@ export function createClinicApi({ db, config, log }) {
     handle,
     sessions: store,
     patient,
+    summaries,
     close: () => {
       store.close();
       patient.close();
+      summaries.close();
       clearInterval(claimSweep);
     },
   };

@@ -10,11 +10,12 @@ Future<FakeBackend> pumpApp(
   WidgetTester tester, {
   bool signedIn = true,
   Size size = const Size(1440, 1000),
+  FakeBackend? backend,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.reset);
-  final backend = FakeBackend(signedIn: signedIn);
+  backend ??= FakeBackend(signedIn: signedIn);
   await tester.pumpWidget(
     ProviderScope(
       overrides: [apiProvider.overrideWithValue(backend.api)],

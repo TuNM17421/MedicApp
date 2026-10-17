@@ -12,6 +12,7 @@ import 'visit_prep.dart';
 /// doctor's summary quotes. Ids are stable so a new answer replaces the
 /// clinic's copy instead of adding one.
 const preVisitQuestions = [
+  (id: 'pre_visit.chief', text: 'Lần này bạn đi khám vì điều gì?'),
   (id: 'pre_visit.course', text: 'Bệnh nặng hơn hay nhẹ hơn so với trước?'),
   (id: 'pre_visit.self_meds', text: 'Bạn đã tự dùng thuốc gì chưa?'),
   (id: 'pre_visit.ask', text: 'Bạn muốn hỏi bác sĩ điều gì?'),

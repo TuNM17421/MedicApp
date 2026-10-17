@@ -1,0 +1,270 @@
+{
+  "note": "Bộ đánh giá tóm tắt trước khám (bước 17): 30 hội thoại mẫu do nhóm dự án soạn, không phải dữ liệu người bệnh thật. expectFlags: mã dấu hiệu (src/summary/red-flags.json) phải được gắn cờ; negated: mã có nhắc tới nhưng bị phủ định, không được gắn cờ. Mọi mã không nằm trong expectFlags cũng không được xuất hiện.",
+  "version": 1,
+  "cases": [
+    {
+      "id": "c01", "title": "Tái khám tăng huyết áp, ổn định",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Tái khám huyết áp, sáng nay đo 138 trên 86." },
+        { "id": "q2", "channel": "pre_visit", "question": "Có triệu chứng gì khác không?", "answer": "Không đau đầu, không chóng mặt gì." },
+        { "id": "q3", "channel": "pre_visit", "question": "Muốn hỏi bác sĩ điều gì?", "answer": "Có giảm thuốc được không bác sĩ." }
+      ],
+      "expectFlags": [], "negated": []
+    },
+    {
+      "id": "c02", "title": "Đau gối, gút, tự uống panadol",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Dạo này cái gối bên phải đau quá, tối nằm thấy sưng lên, cũng được tuần rồi." },
+        { "id": "q2", "channel": "pre_visit", "question": "Nặng hơn hay nhẹ hơn?", "answer": "Hai hôm nay đau hơn, đi chợ phải nghỉ mấy lần." },
+        { "id": "q3", "channel": "pre_visit", "question": "Đã tự dùng thuốc gì?", "answer": "Có uống panadol, đỡ được chút." },
+        { "id": "q4", "channel": "pre_visit", "question": "Muốn hỏi bác sĩ điều gì?", "answer": "Thuốc mỡ máu có phải uống mãi không, với cái gối này có phải do gút không." }
+      ],
+      "expectFlags": [], "negated": []
+    },
+    {
+      "id": "c03", "title": "Mệt, thở dốc, tức ngực khi gắng sức",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Dạo này em hay mệt, leo cầu thang là thở dốc, chắc 3 tuần rồi." },
+        { "id": "q2", "channel": "pre_visit", "question": "Có triệu chứng khác không?", "answer": "Không sốt ạ. Có lúc leo cầu thang thấy tức ngực, ngồi nghỉ thì hết." },
+        { "id": "q3", "channel": "pre_visit", "question": "Muốn hỏi bác sĩ điều gì?", "answer": "Em có cần thử máu không ạ." }
+      ],
+      "expectFlags": ["chest_pain"], "negated": []
+    },
+    {
+      "id": "c04", "title": "Đau thượng vị, tự mua thuốc dạ dày",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Ăn xong là đau bụng trên rốn, hay ợ chua, cũng 2 tháng nay." },
+        { "id": "q2", "channel": "pre_visit", "question": "Diễn biến thế nào?", "answer": "Ăn cay với cà phê là đau hơn. Có ra hiệu thuốc mua thuốc dạ dày uống 1 tuần." },
+        { "id": "q3", "channel": "pre_visit", "question": "Có triệu chứng khác không?", "answer": "Không nôn ra máu, đi ngoài bình thường, không thấy phân đen." },
+        { "id": "q4", "channel": "pre_visit", "question": "Muốn hỏi bác sĩ điều gì?", "answer": "Chị có phải nội soi không bác sĩ." }
+      ],
+      "expectFlags": [], "negated": ["hematemesis", "melena"]
+    },
+    {
+      "id": "c05", "title": "Đái tháo đường type 2 tái khám, đường huyết tại nhà",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Tái khám tiểu đường, lấy thuốc tháng này." },
+        { "id": "q2", "channel": "pre_visit", "question": "Đường huyết đo ở nhà thế nào?", "answer": "Sáng đói đo được 7,8, có hôm lên 9." },
+        { "id": "q3", "channel": "pre_visit", "question": "Đã tự dùng thuốc gì?", "answer": "Vẫn uống metformin sáng tối, có hôm quên buổi tối." },
+        { "id": "q4", "channel": "pre_visit", "question": "Muốn hỏi bác sĩ điều gì?", "answer": "Tôi ăn chuối được không, với có cần tiêm insulin không." }
+      ],
+      "expectFlags": [], "negated": []
+    },
+    {
+      "id": "c06", "title": "Người cao tuổi, cách nói dân dã, chóng mặt",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Bà dạo này hay chóng mặt, đứng lên ngồi xuống là tối sầm mặt mũi." },
+        { "id": "q2", "channel": "pre_visit", "question": "Có bị ngất hay ngã không?", "answer": "Chưa bao giờ ngất, có lần suýt ngã phải vịn vào tường." },
+        { "id": "q3", "channel": "pre_visit", "question": "Đã tự dùng thuốc gì?", "answer": "Con gái mua cho hộp bổ não, uống được mươi hôm." }
+      ],
+      "expectFlags": [], "negated": ["syncope"]
+    },
+    {
+      "id": "c07", "title": "Ngất thật sự khi đang đứng",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Sáng hôm kia đang đứng nấu cơm thì bị ngất, nằm một lúc mới tỉnh." },
+        { "id": "q2", "channel": "pre_visit", "question": "Có triệu chứng khác không?", "answer": "Trước đó thấy hồi hộp, vã mồ hôi. Không đau ngực." },
+        { "id": "q3", "channel": "pre_visit", "question": "Muốn hỏi bác sĩ điều gì?", "answer": "Có phải bị tim không bác sĩ?" }
+      ],
+      "expectFlags": ["syncope"], "negated": ["chest_pain"]
+    },
+    {
+      "id": "c08", "title": "Ho, sốt nhẹ, tự uống kháng sinh",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Ho có đờm 5 ngày, sốt nhẹ về chiều." },
+        { "id": "q2", "channel": "pre_visit", "question": "Đã tự dùng thuốc gì?", "answer": "Tự mua amoxicillin uống 3 ngày rồi, với uống thêm efferalgan khi sốt." },
+        { "id": "q3", "channel": "pre_visit", "question": "Có triệu chứng khác không?", "answer": "Không khó thở, không ho ra máu." }
+      ],
+      "expectFlags": [], "negated": ["dyspnea", "hemoptysis"]
+    },
+    {
+      "id": "c09", "title": "Đột quỵ nghi ngờ: yếu nửa người, nói khó (không dấu)",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Bo toi sang nay day thay yeu nua nguoi ben trai, noi kho, meo mieng." },
+        { "id": "q2", "channel": "pre_visit", "question": "Bắt đầu từ khi nào?", "answer": "Tu luc 6 gio sang." }
+      ],
+      "expectFlags": ["hemiparesis", "speech"], "negated": []
+    },
+    {
+      "id": "c10", "title": "Đi ngoài phân đen sau uống thuốc giảm đau",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Mấy hôm nay đi ngoài phân đen như bã cà phê, người mệt." },
+        { "id": "q2", "channel": "pre_visit", "question": "Đã tự dùng thuốc gì?", "answer": "Đau lưng nên uống ibuprofen gần 2 tuần nay." },
+        { "id": "q3", "channel": "pre_visit", "question": "Có triệu chứng khác không?", "answer": "Không nôn ra máu." }
+      ],
+      "expectFlags": ["melena"], "negated": ["hematemesis"]
+    },
+    {
+      "id": "c11", "title": "Trẻ sốt cao co giật (phụ huynh khai)",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Cháu sốt cao 39 độ từ tối qua, nửa đêm có lên cơn co giật khoảng 1 phút." },
+        { "id": "q2", "channel": "pre_visit", "question": "Đã tự dùng thuốc gì?", "answer": "Cho cháu uống hapacol 250 khi sốt." },
+        { "id": "q3", "channel": "pre_visit", "question": "Muốn hỏi bác sĩ điều gì?", "answer": "Cháu có bị lại không, có cần chụp gì không." }
+      ],
+      "expectFlags": ["seizure"], "negated": []
+    },
+    {
+      "id": "c12", "title": "Trầm cảm, ý nghĩ không muốn sống",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Mất ngủ kéo dài, buồn chán cả tháng nay." },
+        { "id": "q2", "channel": "pre_visit", "question": "Có điều gì khác muốn chia sẻ?", "answer": "Có những đêm em nghĩ không muốn sống nữa." }
+      ],
+      "expectFlags": ["suicidal"], "negated": []
+    },
+    {
+      "id": "c13", "title": "Lo âu, phủ định ý định tự tử",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Hay lo lắng, tim đập nhanh khi đi làm." },
+        { "id": "q2", "channel": "pre_visit", "question": "Có điều gì khác muốn chia sẻ?", "answer": "Em không có ý định tự tử đâu, chỉ là căng thẳng công việc." },
+        { "id": "q3", "channel": "pre_visit", "question": "Muốn hỏi bác sĩ điều gì?", "answer": "Có cần uống thuốc ngủ không ạ?" }
+      ],
+      "expectFlags": [], "negated": ["suicidal"]
+    },
+    {
+      "id": "c14", "title": "Hen phế quản: khó thở về đêm",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Hen suyễn tái khám, dạo này trở trời hay khó thở về đêm." },
+        { "id": "q2", "channel": "pre_visit", "question": "Đã tự dùng thuốc gì?", "answer": "Xịt ventolin 3 đến 4 lần mỗi đêm." },
+        { "id": "q3", "channel": "pre_visit", "question": "Muốn hỏi bác sĩ điều gì?", "answer": "Có thuốc dự phòng nào không ạ?" }
+      ],
+      "expectFlags": ["dyspnea"], "negated": []
+    },
+    {
+      "id": "c15", "title": "Viêm mũi: ngạt mũi (không phải ngất)",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Bị ngạt mũi, sổ mũi 1 tuần, hắt hơi nhiều buổi sáng." },
+        { "id": "q2", "channel": "pre_visit", "question": "Đã tự dùng thuốc gì?", "answer": "Uống loratadin mua ở hiệu thuốc, đỡ ít." },
+        { "id": "q3", "channel": "pre_visit", "question": "Có triệu chứng khác không?", "answer": "bi ngat mui ve dem, khong sot" }
+      ],
+      "expectFlags": [], "negated": []
+    },
+    {
+      "id": "c16", "title": "Rối loạn lipid máu, hỏi về thuốc",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Lấy kết quả mỡ máu và tái khám." },
+        { "id": "q2", "channel": "pre_visit", "question": "Đã tự dùng thuốc gì?", "answer": "Đang uống atorvastatin 10 mg buổi tối, thỉnh thoảng đau mỏi cơ." },
+        { "id": "q3", "channel": "pre_visit", "question": "Muốn hỏi bác sĩ điều gì?", "answer": "Đau cơ có phải do thuốc không, có đổi thuốc được không?" }
+      ],
+      "expectFlags": [], "negated": []
+    },
+    {
+      "id": "c17", "title": "Đau đầu dữ dội đột ngột",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Chiều qua tự nhiên đau đầu dữ dội, như búa bổ, nôn 2 lần." },
+        { "id": "q2", "channel": "pre_visit", "question": "Đã tự dùng thuốc gì?", "answer": "Uống panadol không đỡ." }
+      ],
+      "expectFlags": ["severe_headache"], "negated": []
+    },
+    {
+      "id": "c18", "title": "Tiêu chảy cấp, phủ định máu",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Đi ngoài lỏng 6 lần từ hôm qua sau khi ăn hải sản." },
+        { "id": "q2", "channel": "pre_visit", "question": "Có triệu chứng khác không?", "answer": "Đau quặn bụng, không sốt, phân không có máu." },
+        { "id": "q3", "channel": "pre_visit", "question": "Đã tự dùng thuốc gì?", "answer": "Uống oresol với smecta." }
+      ],
+      "expectFlags": [], "negated": []
+    },
+    {
+      "id": "c19", "title": "Đau ngực khi gõ không dấu",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "dau nguc trai lan ra tay tu toi qua" },
+        { "id": "q2", "channel": "pre_visit", "question": "Có triệu chứng khác không?", "answer": "co va mo hoi, hoi kho tho" }
+      ],
+      "expectFlags": ["chest_pain", "dyspnea"], "negated": []
+    },
+    {
+      "id": "c20", "title": "Phủ định không dấu, nhiều triệu chứng",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Kham suc khoe dinh ky, dao nay hay moi vai gay." },
+        { "id": "q2", "channel": "pre_visit", "question": "Có triệu chứng khác không?", "answer": "ko dau nguc, ko kho tho, chua bao gio ngat" }
+      ],
+      "expectFlags": [], "negated": ["chest_pain", "dyspnea", "syncope"]
+    },
+    {
+      "id": "c21", "title": "Có phủ định nhưng sau đó có dấu hiệu thật",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Ho kéo dài 1 tháng, sút cân." },
+        { "id": "q2", "channel": "pre_visit", "question": "Có triệu chứng khác không?", "answer": "Không sốt nhưng mấy hôm nay ho ra máu lẫn đờm." }
+      ],
+      "expectFlags": ["hemoptysis"], "negated": []
+    },
+    {
+      "id": "c22", "title": "Suy tim: khó thở khi nằm, phù chân",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Phù hai chân, nằm xuống là khó thở phải kê cao gối." },
+        { "id": "q2", "channel": "pre_visit", "question": "Đã tự dùng thuốc gì?", "answer": "Vẫn uống furosemid buổi sáng, bisoprolol buổi tối." },
+        { "id": "q3", "channel": "pre_visit", "question": "Muốn hỏi bác sĩ điều gì?", "answer": "Có phải tăng liều thuốc lợi tiểu không?" }
+      ],
+      "expectFlags": ["dyspnea"], "negated": []
+    },
+    {
+      "id": "c23", "title": "Mẩn ngứa sau ăn, không khó thở",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Nổi mẩn ngứa khắp người sau khi ăn tôm tối qua." },
+        { "id": "q2", "channel": "pre_visit", "question": "Có triệu chứng khác không?", "answer": "Không thấy khó thở hay sưng môi." },
+        { "id": "q3", "channel": "pre_visit", "question": "Đã tự dùng thuốc gì?", "answer": "Uống 1 viên cetirizin." }
+      ],
+      "expectFlags": [], "negated": ["dyspnea"]
+    },
+    {
+      "id": "c24", "title": "Đau lưng cơ học, chỉ có câu hỏi",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Đau thắt lưng sau khi bê đồ nặng, 4 hôm nay." },
+        { "id": "q2", "channel": "pre_visit", "question": "", "answer": "Có cần chụp phim không bác sĩ?" },
+        { "id": "q3", "channel": "pre_visit", "question": "", "answer": "Có nên đi tập vật lý trị liệu không?" }
+      ],
+      "expectFlags": [], "negated": []
+    },
+    {
+      "id": "c25", "title": "Người cao tuổi lú lẫn (con khai hộ)",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Mẹ tôi 2 hôm nay lú lẫn, không nhận ra người nhà, ăn uống kém." },
+        { "id": "q2", "channel": "pre_visit", "question": "Có triệu chứng khác không?", "answer": "Có sốt nhẹ, tiểu buốt." }
+      ],
+      "expectFlags": ["confusion"], "negated": []
+    },
+    {
+      "id": "c26", "title": "Mất ngủ, câu khó nói (không phải nói khó)",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Mất ngủ, mỗi đêm chỉ ngủ được 3 tiếng." },
+        { "id": "q2", "channel": "pre_visit", "question": "Có điều gì khác muốn chia sẻ?", "answer": "Có chuyện gia đình hơi khó nói, gặp bác sĩ em kể." }
+      ],
+      "expectFlags": [], "negated": []
+    },
+    {
+      "id": "c27", "title": "Gút cấp, tự uống colchicin",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Sưng đau ngón chân cái sau bữa nhậu, 2 ngày nay." },
+        { "id": "q2", "channel": "pre_visit", "question": "Đã tự dùng thuốc gì?", "answer": "Còn colchicin đơn cũ nên uống 2 viên một ngày." },
+        { "id": "q3", "channel": "pre_visit", "question": "Muốn hỏi bác sĩ điều gì?", "answer": "Có cần kiêng bia hẳn không?" }
+      ],
+      "expectFlags": [], "negated": []
+    },
+    {
+      "id": "c28", "title": "Tăng huyết áp quên thuốc, không đau đầu dữ dội",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Huyết áp hôm qua đo 165 trên 100, hơi nhức đầu." },
+        { "id": "q2", "channel": "pre_visit", "question": "Đã tự dùng thuốc gì?", "answer": "Hết amlodipin từ tuần trước chưa mua lại." },
+        { "id": "q3", "channel": "pre_visit", "question": "Có triệu chứng khác không?", "answer": "Không đau đầu dữ dội, không yếu tay chân một bên." }
+      ],
+      "expectFlags": [], "negated": ["severe_headache", "hemiparesis"]
+    },
+    {
+      "id": "c29", "title": "Nôn ra máu sau uống rượu",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Tối qua uống rượu xong nôn ra máu tươi 2 lần." },
+        { "id": "q2", "channel": "pre_visit", "question": "Có triệu chứng khác không?", "answer": "Không ngất, hơi choáng." }
+      ],
+      "expectFlags": ["hematemesis"], "negated": ["syncope"]
+    },
+    {
+      "id": "c30", "title": "Khám thai định kỳ, câu hỏi về thuốc",
+      "answers": [
+        { "id": "q1", "channel": "booking", "question": "", "answer": "Khám thai tuần 24, hay chuột rút chân về đêm." },
+        { "id": "q2", "channel": "pre_visit", "question": "Đã tự dùng thuốc gì?", "answer": "Đang uống sắt và canxi bác sĩ sản kê." },
+        { "id": "q3", "channel": "pre_visit", "question": "Muốn hỏi bác sĩ điều gì?", "answer": "Đau đầu thì uống paracetamol được không ạ?" }
+      ],
+      "expectFlags": [], "negated": []
+    }
+  ]
+}
