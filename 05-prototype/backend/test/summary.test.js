@@ -207,7 +207,8 @@ test('openai: lỗi mạng thử lại một lần, lỗi key không thử lại
 
 test('cấu hình CLINIC_AI_SUMMARY', () => {
   assert.equal(readConfig({}).summaryMode, 'mock');
-  assert.equal(readConfig({ OPENAI_API_KEY: 'sk-x' }).summaryMode, 'openai');
+  assert.equal(readConfig({ OPENAI_API_KEY: 'sk-x' }).summaryMode, 'mock');
+  assert.equal(readConfig({ OPENAI_API_KEY: 'sk-x', CLINIC_AI_SUMMARY: 'openai' }).summaryMode, 'openai');
   assert.equal(readConfig({ OPENAI_API_KEY: 'sk-x', CLINIC_AI_SUMMARY: 'mock' }).summaryMode, 'mock');
   assert.equal(readConfig({ CLINIC_AI_SUMMARY: 'off' }).summaryMode, 'off');
   assert.throws(() => readConfig({ CLINIC_AI_SUMMARY: 'openai' }), /OPENAI_API_KEY/);

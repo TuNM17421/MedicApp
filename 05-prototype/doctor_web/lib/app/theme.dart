@@ -154,6 +154,9 @@ ThemeData buildTheme(Brightness brightness) {
     brightness: brightness,
     colorScheme: scheme,
     fontFamily: 'BeVietnamPro',
+    // Glyphs Be Vietnam Pro lacks (✓) come from a bundled font, never from
+    // a font CDN (bước 18 CSP).
+    fontFamilyFallback: const ['DejaVuCheck'],
     scaffoldBackgroundColor: c.bg,
     extensions: [c],
     visualDensity: VisualDensity.standard,

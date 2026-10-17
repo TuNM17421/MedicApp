@@ -8,6 +8,7 @@
 //
 // Each person gets the demo phone '0912' + their code (bước 16 sign-in);
 // with DEMO_OTP=000000 in .env the server's sign-in code is fixed too.
+// The admin quantri@anbinh.test has the same DEMO_PASSWORD (bước 18).
 //
 // Dev only. The file is deleted and recreated.
 import { existsSync, realpathSync, rmSync } from 'node:fs';
@@ -24,6 +25,9 @@ export const DEMO_EMAIL = 'bs.ha@anbinh.test';
 export const DEMO_PASSWORD = 'medicapp-demo';
 export const CLINIC_ID = 'c-anbinh';
 export const DOCTOR_ID = 'pr-ha';
+// Bước 18: the clinic's admin creates and locks doctor accounts; no charts.
+export const ADMIN_EMAIL = 'quantri@anbinh.test';
+export const ADMIN_ID = 'pr-admin';
 
 // The prototype's TODAY: its "dd/mm" labels are read as offsets from it.
 const PROTO_TODAY = '2026-11-19';
@@ -152,13 +156,15 @@ export async function seedClinic(db, { today = clinicToday(), password = DEMO_PA
   if (!p1Claim) throw new Error('SEED_CLAIM_CODE phải gồm 10 ký tự Crockford base32, ví dụ K7MQ-4XR2-9D.');
   const passwordHash = await hashPassword(password);
   const historyDay = addDays(today, HISTORY_OFFSET);
-  const ids = { claimCodes: {}, phones: {}, clinicId: CLINIC_ID, doctorId: DOCTOR_ID, today, historyDay, appointments: {}, historyAppointments: {}, summaries: {} };
+  const ids = { claimCodes: {}, phones: {}, clinicId: CLINIC_ID, doctorId: DOCTOR_ID, adminId: ADMIN_ID, today, historyDay, appointments: {}, historyAppointments: {}, summaries: {} };
 
   transaction(db, () => {
     const run = (sql, ...args) => db.prepare(sql).run(...args);
     run('INSERT INTO clinic (id, name, phone, address) VALUES (?, ?, ?, ?)', CLINIC_ID, 'Phòng khám Đa khoa An Bình', '0900 000 000', '');
     run(`INSERT INTO practitioner (id, clinic_id, full_name, title, role, email, password_hash, created_at)
       VALUES (?, ?, ?, 'BS.', 'doctor', ?, ?, ?)`, DOCTOR_ID, CLINIC_ID, 'Nguyễn Thu Hà', DEMO_EMAIL, passwordHash, at(addDays(today, -365), '08:00'));
+    run(`INSERT INTO practitioner (id, clinic_id, full_name, title, role, email, password_hash, created_at)
+      VALUES (?, ?, ?, '', 'admin', ?, ?, ?)`, ADMIN_ID, CLINIC_ID, 'Quản trị An Bình', ADMIN_EMAIL, passwordHash, at(addDays(today, -365), '08:00'));
 
     const appointment = (id, patientId, startsAt, p, status) => run(
       `INSERT INTO appointment (id, clinic_id, patient_id, practitioner_id, starts_at, specialty, kind, status)
@@ -285,7 +291,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   db.close();
   // Demo data only: the claim code and the phones are printed for the app demo.
   console.log(JSON.stringify({
-    event: 'seeded', today, email: DEMO_EMAIL, patients: PATIENTS.length, claimCodeP1: ids.claimCodes.p1,
+    event: 'seeded', today, email: DEMO_EMAIL, adminEmail: ADMIN_EMAIL, patients: PATIENTS.length, claimCodeP1: ids.claimCodes.p1,
     patientPhones: Object.fromEntries(PATIENTS.map((p) => [p.code, ids.phones[p.id]])),
     demoOtp: config.demoOtp ?? (config.patientOtpMode === 'dev' ? 'devCode (random, in the server log)' : 'off'),
   }));

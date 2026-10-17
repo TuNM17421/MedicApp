@@ -41,6 +41,14 @@ function int(env, name, fallback, { min = 1, max = Number.MAX_SAFE_INTEGER } = {
   return value;
 }
 
+function bool(env, name, fallback) {
+  const raw = (env[name] ?? '').trim().toLowerCase();
+  if (!raw) return fallback;
+  if (['1', 'true', 'yes'].includes(raw)) return true;
+  if (['0', 'false', 'no'].includes(raw)) return false;
+  throw new Error(`${name} chỉ nhận 1 hoặc 0.`);
+}
+
 /**
  * Builds the validated configuration. The API key is kept in a closure-free
  * field that is never serialised: `describe()` is the only view that leaves
@@ -73,7 +81,8 @@ export function readConfig(env = process.env) {
   const demoOtp = (env.DEMO_OTP ?? '').trim();
   if (demoOtp && !/^\d{6}$/.test(demoOtp)) throw new Error('DEMO_OTP phải gồm 6 chữ số.');
   const otpPepper = (env.PATIENT_OTP_PEPPER ?? '').trim();
-  // Bước 17: pre-visit summary. auto (default): openai with a key, else mock.
+  // Bước 17: pre-visit summary. auto (default) stays on mock even with a key:
+  // patient answers go to OpenAI only when CLINIC_AI_SUMMARY=openai is set.
   const summaryRequested = ((env.CLINIC_AI_SUMMARY ?? '').trim().toLowerCase()) || 'auto';
   if (!['auto', 'off', 'mock', 'openai'].includes(summaryRequested)) {
     throw new Error('CLINIC_AI_SUMMARY chỉ nhận auto, off, mock hoặc openai.');
@@ -81,7 +90,7 @@ export function readConfig(env = process.env) {
   if (summaryRequested === 'openai' && !apiKey) {
     throw new Error('CLINIC_AI_SUMMARY=openai cần OPENAI_API_KEY trong backend/.env.');
   }
-  const summaryMode = summaryRequested === 'auto' ? (apiKey ? 'openai' : 'mock') : summaryRequested;
+  const summaryMode = summaryRequested === 'auto' ? 'mock' : summaryRequested;
   if (production && !otpPepper) throw new Error('NODE_ENV=production cần PATIENT_OTP_PEPPER.');
   const config = {
     mode,
@@ -115,6 +124,11 @@ export function readConfig(env = process.env) {
     // burst of uploads makes one summary.
     summaryMode,
     summaryDebounceMs: int(env, 'SUMMARY_DEBOUNCE_MS', 3000, { min: 0, max: 600_000 }),
+    // Bước 18: daily backup in the server process (npm run backup by hand).
+    backupEnabled: bool(env, 'BACKUP_ENABLED', true),
+    backupDir: path(env, 'BACKUP_DIR', 'data/backups'),
+    backupKeep: int(env, 'BACKUP_KEEP', 14, { max: 365 }),
+    backupHour: int(env, 'BACKUP_HOUR', 2, { min: 0, max: 23 }),
   };
   Object.defineProperty(config, 'apiKey', { value: apiKey, enumerable: false });
   // Server secret mixed into code hashes; the default is for dev only.

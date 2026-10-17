@@ -1,6 +1,6 @@
 # API phòng khám (web bác sĩ)
 
-Hợp đồng giữa backend, `doctor_web` và app người bệnh. Bước 14 có phần xem; bước 15 thêm kê đơn và gửi kết quả; bước 16 thêm phía người bệnh (đăng nhập bằng số điện thoại, đồng ý chia sẻ, gửi dữ liệu từ app).
+Hợp đồng giữa backend, `doctor_web` và app người bệnh. Bước 14 có phần xem; bước 15 thêm kê đơn và gửi kết quả; bước 16 thêm phía người bệnh (đăng nhập bằng số điện thoại, đồng ý chia sẻ, gửi dữ liệu từ app); bước 18 thêm tài khoản do quản trị cấp, nhật ký truy cập, số liệu chạy thử, sao lưu và header bảo mật ([Quản trị và vận hành](#quản-trị-và-vận-hành-bước-18)).
 
 Mọi phản hồi là JSON UTF-8, `cache-control: no-store`. Lỗi có dạng `{ "error": { "code", "message" } }`, message tiếng Việt, không có stack trace. Ngày có dạng `yyyy-MM-dd`, thời điểm là ISO-8601 có múi giờ, luôn theo giờ phòng khám `+07:00` (ví dụ `2026-10-16T08:30:00+07:00`). Phía Dart cần `DateTime.parse(...).toLocal()` trước khi đưa vào `medic_core` (máy bác sĩ ở múi giờ Việt Nam), nếu không `dayOf` sẽ lấy ngày theo UTC.
 
@@ -16,13 +16,15 @@ Bản build phục vụ ở `GET /doctor/*` từ `DOCTOR_WEB_DIR` (mặc định
 
 | Giao diện | Thân | Trả về |
 | --- | --- | --- |
-| `POST /v1/staff/login` | `{ email, password }` | `200 { staff, clinic }` và đặt cookie. Sai: `401 bad_credentials`. Lần sai thứ 5 liên tiếp khóa 15 phút và trả `423 locked`; trong thời gian khóa, cả mật khẩu đúng cũng nhận `423`. |
+| `POST /v1/staff/login` | `{ email, password }` | `200 { staff, clinic }` và đặt cookie. Sai: `401 bad_credentials`. Lần sai thứ 5 liên tiếp khóa 15 phút và trả `423 locked`; trong thời gian khóa, cả mật khẩu đúng cũng nhận `423`. Tài khoản đã bị quản trị khóa: `403 account_disabled` (chỉ khi mật khẩu đúng). |
 | `POST /v1/staff/logout` | | `204`, xóa cookie |
 | `GET /v1/staff/me` | | `200 { staff, clinic }`, hoặc `401 unauthenticated` |
+| `GET /v1/staff/session` | | Như `me`, nhưng chưa đăng nhập thì `200 null` (web dùng khi mở trang, để console không có lỗi 401) |
+| `POST /v1/staff/password` | `{ currentPassword, newPassword }` | `200 { staff, clinic }`. Xem bước 18. |
 
-`staff = { id, name: "BS. Nguyễn Thu Hà", role }`, `clinic = { id, name, phone }`.
+`staff = { id, name: "BS. Nguyễn Thu Hà", role: "doctor" | "admin", mustChangePassword }`, `clinic = { id, name, phone }`.
 
-Mọi giao diện dưới đây cần phiên hợp lệ (`401 unauthenticated`) và chỉ trả dữ liệu thuộc phòng khám của bác sĩ (khác phòng khám: `404 not_found`).
+Mọi giao diện dưới đây cần phiên hợp lệ (`401 unauthenticated`) và chỉ trả dữ liệu thuộc phòng khám của bác sĩ (khác phòng khám: `404 not_found`). Hàng chờ, hồ sơ, kết quả, lịch sử, danh mục và đánh giá tóm tắt chỉ dành cho vai trò `doctor`; tài khoản `admin` nhận `403 forbidden` (bước 18).
 
 ## Hàng chờ
 
@@ -238,7 +240,7 @@ Khi bác sĩ gửi kết quả (`POST /v1/appointments/:id/result/send`), mỗi 
 - `expiresAt` = giờ khám + 30 ngày; nếu thời điểm đó đã qua (lượt khám cũ) thì bây giờ + 30 ngày.
 - Lượt khám đã hủy: `409 bad_state`.
 - Rút lại thì lần tải tiếp theo của web bác sĩ không còn thấy tóm tắt, câu trả lời, thuốc và nhật ký liều, thuốc tự dùng (hồ sơ và hàng chờ, xem `consent.reason`). Lịch sử khám và kết quả do phòng khám tự ghi vẫn hiện. Hết hạn cũng vậy.
-- Bước này **chưa xóa** dữ liệu đã gửi khi rút lại: các dòng vẫn nằm trong cơ sở dữ liệu nhưng bị ẩn. Yêu cầu xóa dữ liệu là việc của bước 18.
+- Bước này **chưa xóa** dữ liệu đã gửi khi rút lại: các dòng vẫn nằm trong cơ sở dữ liệu nhưng bị ẩn. Bước 18 có test chứng minh dữ liệu đã rút không bao giờ trả về; xóa hẳn theo yêu cầu người bệnh vẫn chưa làm.
 
 ### Gửi dữ liệu từ app
 
@@ -292,7 +294,7 @@ Tóm tắt trong `summary` của hồ sơ (`GET /v1/appointments/:id/chart`) và
 
 | Giá trị | Hành vi |
 | --- | --- |
-| `auto` (mặc định) | `openai` khi có `OPENAI_API_KEY`, nếu không `mock` |
+| `auto` (mặc định) | Như `mock`, kể cả khi có `OPENAI_API_KEY`: câu trả lời chỉ gửi OpenAI khi đặt rõ `openai` |
 | `off` | Không tạo tóm tắt. Hồ sơ vẫn trả bản cũ nếu có |
 | `mock` | Quy tắc cố định, không gọi model: mỗi câu trả lời vào một mục theo câu hỏi (câu "muốn hỏi bác sĩ" → `questions`; thuốc tự dùng, diễn biến → `course`; lúc đặt lịch → `chief`), lấy tối đa 2 câu đầu của mỗi mục, cắt gọn ở cuối câu. `mode` là `mock`, web hiện "Mô phỏng AI" |
 | `openai` | Responses API như Smart Scheduling: `OPENAI_MODEL`, `OPENAI_REASONING_EFFORT`, Structured Outputs (`strict: true`), `store: false`, `MAX_OUTPUT_TOKENS`, timeout `MODEL_TIMEOUT_MS`, lỗi mạng/timeout thử lại một lần, không đổi sang model khác. Cần key, thiếu key thì server không khởi động |
@@ -322,6 +324,89 @@ Bộ kiểm tra chạy cả ở chế độ `mock`.
 
 ### Đánh giá
 
-`npm run eval:summary` chạy 30 hội thoại mẫu tiếng Việt (`eval/summary-cases.json`: bệnh mạn tái khám, bệnh cấp, người cao tuổi, tự dùng thuốc, gõ không dấu, có dấu hiệu nguy hiểm, có câu phủ định, chỉ có câu hỏi) qua đúng pipeline của server, in bảng và thoát mã 1 nếu có ca không đạt. Tiêu chí: 100% câu được giữ có nguồn hợp lệ; không câu nào có số hay tên thuốc ngoài câu được trích; bắt đủ mọi cờ mong đợi, không cờ nào trên câu phủ định hay thừa. Chế độ `openai` khi `CLINIC_AI_SUMMARY` ra `openai` (có key), nếu không `mock`; `npm run eval:summary -- --mock` ép `mock`.
+`npm run eval:summary` chạy 30 hội thoại mẫu tiếng Việt (`eval/summary-cases.json`: bệnh mạn tái khám, bệnh cấp, người cao tuổi, tự dùng thuốc, gõ không dấu, có dấu hiệu nguy hiểm, có câu phủ định, chỉ có câu hỏi) qua đúng pipeline của server, in bảng và thoát mã 1 nếu có ca không đạt. Tiêu chí: 100% câu được giữ có nguồn hợp lệ; không câu nào có số hay tên thuốc ngoài câu được trích; bắt đủ mọi cờ mong đợi, không cờ nào trên câu phủ định hay thừa. Chế độ `openai` khi đặt `CLINIC_AI_SUMMARY=openai` (có key), nếu không `mock`; `npm run eval:summary -- --mock` ép `mock`.
 
 **Chưa kiểm chứng:** chưa chạy với OpenAI bằng key thật (chất lượng câu chữ, tỷ lệ bị bộ kiểm tra bỏ, độ trễ, chi phí). Danh sách dấu hiệu và tên thuốc là bản mẫu.
+
+
+## Quản trị và vận hành (bước 18)
+
+### Vai trò và tài khoản
+
+- `practitioner.role` là `doctor` hoặc `admin`. Quản trị (`admin`) cấp và khóa tài khoản, xem số liệu chạy thử và nhật ký truy cập; **không** xem hàng chờ, hồ sơ, kết quả (`403 forbidden`). Bác sĩ gọi giao diện quản trị cũng nhận `403 forbidden`. Một người vừa là bác sĩ vừa quản trị thì có hai tài khoản.
+- Seed tạo quản trị `quantri@anbinh.test`, cùng mật khẩu `DEMO_PASSWORD` (mặc định `medicapp-demo`).
+- Mật khẩu: tối thiểu 10 ký tự, tối đa 256, không trùng email (bỏ qua hoa thường, khoảng trắng), mật khẩu mới khác mật khẩu hiện tại. Lưu bằng scrypt (N=16384, r=8, p=1, muối 16 byte). Sai 5 lần liên tiếp khóa 15 phút. Phiên 30 phút không thao tác, tối đa 12 giờ (giữ như bước 14).
+- **Mật khẩu tạm**: 12 ký tự chữ thường và số dễ đọc, dạng `k7mq-4xr2-9dpt` (khoảng 59 bit), chỉ trả **một lần** trong phản hồi tạo hoặc đặt lại, không ghi log. Tài khoản có mật khẩu tạm có `mustChangePassword: true`; trước khi đổi, mọi giao diện trừ `me`, `session`, `logout`, `password` trả `403 password_change_required`. Web chỉ hiện màn đổi mật khẩu.
+- Khóa tài khoản (`deactivate`) kết thúc mọi phiên của người đó ngay; yêu cầu tiếp theo nhận `401`. Đặt lại mật khẩu cũng kết thúc phiên và gỡ khóa do nhập sai.
+
+| Giao diện | Ai | Thân | Trả về |
+| --- | --- | --- | --- |
+| `POST /v1/staff/password` | người đã đăng nhập (kể cả đang có mật khẩu tạm) | `{ currentPassword, newPassword }` | `200 { staff, clinic }`. Mật khẩu yếu: `422 weak_password` (`fields: ["newPassword"]`, message nói lý do). Sai mật khẩu hiện tại: `400 wrong_password`, tính vào số lần sai; lần thứ 5 khóa 15 phút, kết thúc mọi phiên, trả `423 locked`. Đổi xong, các phiên khác của tài khoản kết thúc, phiên này giữ nguyên. Audit `staff.password_change`. |
+| `GET /v1/clinic/staff` | admin | | `200 [StaffAccount]`. Audit `staff.list`. |
+| `POST /v1/clinic/staff` | admin | `{ email, fullName, role: "doctor" \| "admin", title?, licenseNo? }` | `201 { staff: StaffAccount, temporaryPassword }`. `title` mặc định `BS.` cho bác sĩ, rỗng cho quản trị. Sai: `422 bad_staff` kèm `fields`; email đã có (ở bất kỳ phòng khám nào): `409 email_taken`. Audit `staff.create`. |
+| `POST /v1/clinic/staff/:id/deactivate` | admin | | `200 { staff }`. Tự khóa mình: `409 self`. Audit `staff.deactivate` (kèm số phiên đã kết thúc). |
+| `POST /v1/clinic/staff/:id/reactivate` | admin | | `200 { staff }`. Audit `staff.reactivate`. |
+| `POST /v1/clinic/staff/:id/reset-password` | admin | | `200 { staff, temporaryPassword }`. Với chính mình: `409 self` (dùng `POST /v1/staff/password`). Audit `staff.reset_password`. |
+
+`StaffAccount = { id, name, role, mustChangePassword, fullName, title, email, licenseNo, active, locked (đang bị khóa do nhập sai), createdAt, lastLoginAt | null }`. Tài khoản của phòng khám khác: `404 not_found`.
+
+### Nhật ký truy cập
+
+Đọc từ `audit_event` của người bệnh: ai, làm gì, lúc nào, lượt khám nào.
+
+- `GET /v1/patients/:id/access-log?limit=50&offset=0` (bác sĩ hoặc quản trị của phòng khám).
+- `GET /v1/clinic/access-log?patientCode=000482&limit=&offset=` (cùng dạng; quản trị không có hàng chờ nên tra theo mã người bệnh).
+
+```json
+{
+  "patient": { "id": "p2", "code": "000482", "name": "Phạm Thị Lan" },
+  "total": 12, "offset": 0, "nextOffset": 2,
+  "items": [
+    { "id": 41, "at": "2026-10-16T08:41:00+07:00",
+      "actor": { "kind": "staff", "name": "BS. Nguyễn Thu Hà", "role": "doctor" },
+      "action": "chart.view", "label": "Mở hồ sơ lượt khám",
+      "appointmentId": "a-p2-20261016", "visitDate": "2026-10-16" }
+  ]
+}
+```
+
+- Mới nhất trước. `limit` 1–100 (mặc định 50), `offset` ≥ 0; sai: `400 bad_page`. `nextOffset` là `null` ở trang cuối.
+- `actor.kind`: `staff` (tên hiển thị và vai trò), `patient` ("Người bệnh"), `system` ("Hệ thống", ví dụ tạo tóm tắt).
+- `label` là câu tiếng Việt theo `action` (`ACTION_LABELS` trong `src/clinic/admin.js`), ví dụ `consent.revoke` → "Rút lại đồng ý chia sẻ", `result.claim` → "Nhận kết quả bằng mã".
+- Không trả `detail` hay IP của bản ghi audit (không lộ nội dung, phạm vi, số câu trả lời).
+- Mỗi lần xem nhật ký ghi `audit_event` `access_log.view`, nên người xem cũng hiện trong nhật ký.
+
+### Số liệu chạy thử
+
+`GET /v1/clinic/pilot-metrics?from=yyyy-MM-dd&to=yyyy-MM-dd` (admin). Mặc định 30 ngày đến hôm nay; tối đa 366 ngày; sai: `400 bad_range`. Audit `pilot_metrics.view`.
+
+```json
+{ "from": "2026-09-17", "to": "2026-10-16",
+  "totals": { "visits": 8, "withSummary": 4, "summaries": 4, "feedbackUp": 1, "feedbackDown": 1, "upRate": 0.5,
+              "sent": 3, "received": 1, "medianMinutes": 180, "p90Minutes": 180, "amended": 1 },
+  "days": [ { "date": "2026-10-16", "...": "cùng các trường" } ] }
+```
+
+Cách tính (theo plan: số lượt có tóm tắt, tỷ lệ bác sĩ bấm Đúng, thời gian từ lúc khám xong đến lúc người bệnh nhận kết quả, số đơn phải sửa sau khi gửi):
+
+- **Lượt khám**: lịch hẹn của phòng khám có giờ khám trong khoảng ngày, trừ lượt đã hủy. `days` chỉ có ngày có lượt khám, theo ngày khám.
+- **Có tóm tắt** (`withSummary`): lượt có ít nhất một dòng `visit_summary`. `summaries` là số bản tóm tắt.
+- **Tỷ lệ Đúng** (`upRate`): `feedbackUp / (feedbackUp + feedbackDown)` trên các bản tóm tắt đã được đánh giá; `null` khi chưa có đánh giá. Mỗi bản tính đánh giá cuối cùng.
+- **Khám xong** = lần ký gửi kết quả đầu tiên của lượt khám (`min(visit_result.signed_at)`). Ở hệ thống này gửi kết quả cũng chuyển lượt khám sang `done`, và không có nút "kết thúc khám" riêng, nên đây là mốc duy nhất đáng tin. **Người bệnh nhận** = `audit_event` đầu tiên `result.claim` (nhập mã) hoặc `result.view` (xem trong app) của lượt khám từ mốc đó. `sent` là số lượt đã gửi, `received` số lượt đã nhận; `medianMinutes`, `p90Minutes` (phút, percentile theo hạng gần nhất) chỉ tính trên lượt đã nhận, `null` khi chưa có.
+- **Đơn phải sửa** (`amended`): lượt có bản kết quả đã gửi rồi bị thay bằng bản sửa đã gửi (có dòng `status = 'amended'`). Bản sửa đang nháp chưa tính.
+
+### Bảo mật HTTP
+
+- Mọi phản hồi có `x-content-type-options: nosniff`, `x-frame-options: DENY`, `referrer-policy: no-referrer`, `cross-origin-opener-policy: same-origin`, `cross-origin-resource-policy: same-origin`, `permissions-policy` tắt camera, micro, vị trí. API (JSON) có `cache-control: no-store` và `content-security-policy: default-src 'none'; frame-ancestors 'none'`.
+- Web bác sĩ (`/doctor/*`): `cache-control: no-cache` và CSP chỉ cho phép cùng origin: `script-src 'self' 'wasm-unsafe-eval' 'sha256-…'` (CanvasKit biên dịch WebAssembly; không có `unsafe-eval` cho JavaScript; hash là đúng một script inline gói `printing` thêm để in đơn, test tính lại hash), `style-src 'self' 'unsafe-inline'` (Flutter đặt style inline), `connect-src 'self'`, `img-src 'self' data: blob:`, `frame-src 'self' blob:` (xem trước bản in PDF), `object-src 'none'`, `frame-ancestors 'none'`. Không tải gì từ CDN: CanvasKit gói trong bản build, dấu ✓ lấy từ font kèm theo; ký tự lạ (chữ Hán, emoji) hiện ô trống thay vì tải font Noto từ Google.
+- `HTTPS=1` (server đứng sau reverse proxy có TLS): thêm `strict-transport-security: max-age=31536000; includeSubDomains` và cookie `Secure`.
+- Thân yêu cầu tối đa 16 KiB (gửi dữ liệu từ app 512 KiB, `413 too_large`), WebSocket 256 KiB mỗi khung; header phải xong trong 20 giây, cả yêu cầu trong 60 giây.
+
+### Tách phòng khám và đồng ý (plan §8)
+
+`test/isolation.test.js` dựng phòng khám thứ hai có bác sĩ, quản trị, người bệnh đã chia sẻ đủ và kết quả đã gửi, rồi chứng minh: bác sĩ phòng khám A nhận `404` với mọi tài nguyên của B (hồ sơ, kết quả, nháp, gửi, sửa, đến khám, bắt đầu, lịch sử, nhật ký theo id và theo mã, đánh giá tóm tắt) và ngược lại, hàng chờ không có lượt của B; quản trị A không thấy, không khóa, không đặt lại tài khoản B, số liệu chỉ đếm lượt của mình; token người bệnh chỉ thấy lượt khám của số điện thoại mình (5 giao diện của lượt người khác đều `404`, nhật ký liều cho thuốc của người khác bị bỏ qua); sau khi rút đồng ý hoặc hết hạn, hồ sơ, hàng chờ, nhật ký truy cập không còn câu trả lời, tóm tắt, thuốc tự dùng, nhật ký liều, và đánh giá tóm tắt trả `404`. Không tìm thấy chỗ rò rỉ nào cần sửa.
+
+### Sao lưu và phục hồi
+
+Xem [README](README.md#sao-lưu-và-phục-hồi-bước-18).
+

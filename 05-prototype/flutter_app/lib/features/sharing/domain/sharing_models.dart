@@ -29,7 +29,7 @@ enum ShareScope {
 }
 
 /// Version of the sharing page's wording, sent with every consent.
-const sharingWordingVersion = 1;
+const sharingWordingVersion = 2;
 
 /// Days a consent lasts after the visit, as the backend computes it.
 const sharingDays = 30;
