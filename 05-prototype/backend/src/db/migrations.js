@@ -159,4 +159,54 @@ export const migrations = [
   );
   CREATE INDEX audit_patient ON audit_event (patient_id, at);
   `,
+  // Bước 15: code the person types in the app to fetch the sent result of
+  // this visit (no patient accounts yet). Stored without dashes.
+  `
+  ALTER TABLE appointment ADD COLUMN claim_code TEXT;
+  ALTER TABLE appointment ADD COLUMN claim_expires_at TEXT;
+  CREATE UNIQUE INDEX appointment_claim_code ON appointment (claim_code);
+  `,
+  // Bước 16: patient sign-in by phone and one-time code. phone is normalised
+  // '0xxxxxxxxx'; one phone may belong to patients of several clinics, and a
+  // session is per phone. Codes and tokens are stored hashed only.
+  `
+  ALTER TABLE patient ADD COLUMN phone TEXT;
+  CREATE UNIQUE INDEX patient_clinic_phone ON patient (clinic_id, phone) WHERE phone IS NOT NULL;
+  CREATE INDEX patient_phone ON patient (phone);
+
+  -- At most one live code per phone; a new request replaces it.
+  CREATE TABLE patient_otp (
+    phone TEXT PRIMARY KEY,
+    code_hash TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    attempts INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL
+  );
+
+  CREATE TABLE patient_session (
+    token_hash TEXT PRIMARY KEY,
+    phone TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    revoked_at TEXT
+  );
+  CREATE INDEX patient_session_phone ON patient_session (phone);
+  `,
+  // Bước 17: fingerprint of the intake answers a summary was made from, so
+  // re-sending the same answers does not add an identical summary.
+  `
+  ALTER TABLE visit_summary ADD COLUMN input_hash TEXT;
+  CREATE INDEX visit_summary_appointment ON visit_summary (appointment_id, created_at);
+  `,
+  // Bước 18: accounts managed by the clinic's admin. A new or reset account
+  // has a one-time password and must choose its own before anything else;
+  // a deactivated account cannot sign in and its sessions end at once.
+  `
+  ALTER TABLE practitioner ADD COLUMN active INTEGER NOT NULL DEFAULT 1;
+  ALTER TABLE practitioner ADD COLUMN must_change_password INTEGER NOT NULL DEFAULT 0;
+  ALTER TABLE practitioner ADD COLUMN password_changed_at TEXT;
+  ALTER TABLE practitioner ADD COLUMN last_login_at TEXT;
+  CREATE INDEX audit_appointment ON audit_event (appointment_id, at);
+  CREATE INDEX audit_action ON audit_event (action, at);
+  `,
 ];

@@ -22,6 +22,8 @@ Trình tự hiện tại: đã triển khai nền giao diện và khung điều 
 
 Xem [hướng dẫn chạy app](flutter_app/README.md) và [cài/gỡ môi trường](../scripts/README.md). Commit `pubspec.lock` của ứng dụng; không commit SDK, file build hoặc bí mật.
 
+- [Web bác sĩ bước 14](doctor_web/README.md): Hàng chờ, tóm tắt trước khám, tuân thủ thuốc 30 ngày, lịch sử khám; chạy cùng [backend](backend/README.md#web-bác-sĩ). Package dùng chung: [medic_core](packages/medic_core/README.md).
+
 - [Luồng đặt lịch bước 3](flutter_app/BOOKING.md): Chọn thông tin, sửa lựa chọn, thanh toán giả lập và lịch hẹn.
 
 - [Smart Scheduling hội thoại streaming v2](smart-scheduling-conversation.md): Luồng Smart hiện hành, thay cho bước xác nhận transcript riêng của nghiên cứu v1.

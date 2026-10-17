@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../app/router/app_routes.dart';
 import '../../app/theme/app_theme.dart';
 import '../../core/widgets/app_widgets.dart';
+import '../sharing/application/sharing_providers.dart';
 import 'auth_controller.dart';
 
 /// Header, scrolling content and one large action pinned at the bottom.
@@ -59,11 +60,12 @@ class FormPageScaffold extends StatelessWidget {
   );
 }
 
-class WelcomePage extends StatelessWidget {
+class WelcomePage extends ConsumerWidget {
   const WelcomePage({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final otp = ref.watch(patientApiProvider) != null;
     final text = Theme.of(context).textTheme;
     return Scaffold(
       body: SingleChildScrollView(
@@ -105,17 +107,27 @@ class WelcomePage extends StatelessWidget {
                     text: 'Quản lý hồ sơ và lịch khám của cả nhà',
                   ),
                   const SizedBox(height: 24),
-                  FilledButton(
-                    key: const Key('welcome-sign-up'),
-                    onPressed: () => context.push(AppRoutes.signUp),
-                    child: const Text('Tạo tài khoản mới'),
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton(
-                    key: const Key('welcome-sign-in'),
-                    onPressed: () => context.push(AppRoutes.signIn),
-                    child: const Text('Tôi đã có tài khoản'),
-                  ),
+                  if (otp)
+                    // With the clinic, the phone number is the account: one
+                    // way in for new and returning people.
+                    FilledButton(
+                      key: const Key('welcome-sign-in'),
+                      onPressed: () => context.push(AppRoutes.signIn),
+                      child: const Text('Bắt đầu bằng số điện thoại'),
+                    )
+                  else ...[
+                    FilledButton(
+                      key: const Key('welcome-sign-up'),
+                      onPressed: () => context.push(AppRoutes.signUp),
+                      child: const Text('Tạo tài khoản mới'),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton(
+                      key: const Key('welcome-sign-in'),
+                      onPressed: () => context.push(AppRoutes.signIn),
+                      child: const Text('Tôi đã có tài khoản'),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -178,68 +190,72 @@ class _SignInPageState extends ConsumerState<SignInPage> {
   }
 
   @override
-  Widget build(BuildContext context) => FormPageScaffold(
-    header: AppPageHeader(
-      title: 'Đăng nhập',
-      onBack: () => AppRoutes.backOr(context, AppRoutes.welcome),
-    ),
-    actionLabel: 'Đăng nhập',
-    onAction: _submit,
-    children: [
-      Form(
-        key: _form,
-        child: Column(
+  Widget build(BuildContext context) => ref.watch(patientApiProvider) != null
+      ? const OtpSignInPage()
+      : FormPageScaffold(
+          header: AppPageHeader(
+            title: 'Đăng nhập',
+            onBack: () => AppRoutes.backOr(context, AppRoutes.welcome),
+          ),
+          actionLabel: 'Đăng nhập',
+          onAction: _submit,
           children: [
-            PhoneField(
-              controller: _phone,
-              errorText: _failure?.field == 'phone' ? _failure!.message : null,
+            Form(
+              key: _form,
+              child: Column(
+                children: [
+                  PhoneField(
+                    controller: _phone,
+                    errorText: _failure?.field == 'phone'
+                        ? _failure!.message
+                        : null,
+                  ),
+                  const SizedBox(height: 20),
+                  PasswordField(
+                    key: const Key('sign-in-password'),
+                    controller: _password,
+                    label: 'Mật khẩu',
+                    errorText: _failure?.field == 'password'
+                        ? _failure!.message
+                        : null,
+                    validator: (value) => value == null || value.isEmpty
+                        ? 'Vui lòng nhập mật khẩu.'
+                        : null,
+                    onSubmitted: (_) => _submit(),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 20),
-            PasswordField(
-              key: const Key('sign-in-password'),
-              controller: _password,
-              label: 'Mật khẩu',
-              errorText: _failure?.field == 'password'
-                  ? _failure!.message
-                  : null,
-              validator: (value) => value == null || value.isEmpty
-                  ? 'Vui lòng nhập mật khẩu.'
-                  : null,
-              onSubmitted: (_) => _submit(),
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text(
+                  'Chưa có tài khoản?',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                TextButton(
+                  onPressed: () => context.pushReplacement(AppRoutes.signUp),
+                  child: const Text('Tạo tài khoản mới'),
+                ),
+              ],
+            ),
+            const AppStatusBanner(
+              title: 'Bản thử nghiệm',
+              message:
+                  'Tài khoản chỉ lưu trên điện thoại này và mất khi tắt app. '
+                  'Tài khoản mẫu: 0912 345 678, mật khẩu 123456.',
+            ),
+            TextButton(
+              key: const Key('sign-in-demo'),
+              onPressed: () {
+                _phone.text = formatPhone(demoPhone);
+                _password.text = demoPassword;
+                setState(() => _failure = null);
+              },
+              child: const Text('Điền tài khoản mẫu'),
             ),
           ],
-        ),
-      ),
-      Wrap(
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          Text(
-            'Chưa có tài khoản?',
-            style: Theme.of(context).textTheme.bodyLarge,
-          ),
-          TextButton(
-            onPressed: () => context.pushReplacement(AppRoutes.signUp),
-            child: const Text('Tạo tài khoản mới'),
-          ),
-        ],
-      ),
-      const AppStatusBanner(
-        title: 'Bản thử nghiệm',
-        message:
-            'Tài khoản chỉ lưu trên điện thoại này và mất khi tắt app. '
-            'Tài khoản mẫu: 0912 345 678, mật khẩu 123456.',
-      ),
-      TextButton(
-        key: const Key('sign-in-demo'),
-        onPressed: () {
-          _phone.text = formatPhone(demoPhone);
-          _password.text = demoPassword;
-          setState(() => _failure = null);
-        },
-        child: const Text('Điền tài khoản mẫu'),
-      ),
-    ],
-  );
+        );
 }
 
 class SignUpPage extends ConsumerStatefulWidget {
@@ -274,67 +290,235 @@ class _SignUpPageState extends ConsumerState<SignUpPage> {
   }
 
   @override
-  Widget build(BuildContext context) => FormPageScaffold(
-    header: AppFlowHeader(
-      step: 1,
-      totalSteps: 2,
-      title: 'Tạo tài khoản',
-      onBack: () => AppRoutes.backOr(context, AppRoutes.welcome),
-    ),
-    actionLabel: 'Tiếp tục',
-    onAction: _submit,
-    children: [
-      Text(
-        'Bạn sẽ dùng số điện thoại và mật khẩu này để đăng nhập.',
-        style: Theme.of(context).textTheme.bodyLarge,
-      ),
-      Form(
-        key: _form,
-        child: Column(
+  Widget build(BuildContext context) => ref.watch(patientApiProvider) != null
+      ? const OtpSignInPage()
+      : FormPageScaffold(
+          header: AppFlowHeader(
+            step: 1,
+            totalSteps: 2,
+            title: 'Tạo tài khoản',
+            onBack: () => AppRoutes.backOr(context, AppRoutes.welcome),
+          ),
+          actionLabel: 'Tiếp tục',
+          onAction: _submit,
           children: [
-            PhoneField(
+            Text(
+              'Bạn sẽ dùng số điện thoại và mật khẩu này để đăng nhập.',
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            Form(
+              key: _form,
+              child: Column(
+                children: [
+                  PhoneField(
+                    controller: _phone,
+                    errorText: _failure?.field == 'phone'
+                        ? _failure!.message
+                        : null,
+                  ),
+                  const SizedBox(height: 20),
+                  PasswordField(
+                    key: const Key('sign-up-password'),
+                    controller: _password,
+                    label: 'Mật khẩu',
+                    helperText: 'Ít nhất 6 ký tự, dễ nhớ với bạn.',
+                    errorText: _failure?.field == 'password'
+                        ? _failure!.message
+                        : null,
+                    validator: validateNewPassword,
+                  ),
+                  const SizedBox(height: 20),
+                  PasswordField(
+                    key: const Key('sign-up-confirm'),
+                    controller: _confirm,
+                    label: 'Nhập lại mật khẩu',
+                    validator: (value) => value != _password.text
+                        ? 'Hai mật khẩu chưa giống nhau.'
+                        : null,
+                    onSubmitted: (_) => _submit(),
+                  ),
+                ],
+              ),
+            ),
+            Wrap(
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                Text(
+                  'Đã có tài khoản?',
+                  style: Theme.of(context).textTheme.bodyLarge,
+                ),
+                TextButton(
+                  onPressed: () => context.pushReplacement(AppRoutes.signIn),
+                  child: const Text('Đăng nhập'),
+                ),
+              ],
+            ),
+          ],
+        );
+}
+
+/// Sign-in with the clinic (bước 16): phone number, then the 6-digit code
+/// the clinic sends. A development server also returns the code, shown as
+/// "Mã thử" so demos work without SMS.
+class OtpSignInPage extends ConsumerStatefulWidget {
+  const OtpSignInPage({super.key});
+
+  @override
+  ConsumerState<OtpSignInPage> createState() => _OtpSignInPageState();
+}
+
+class _OtpSignInPageState extends ConsumerState<OtpSignInPage> {
+  final _form = GlobalKey<FormState>();
+  final _phone = TextEditingController();
+  final _code = TextEditingController();
+  OtpSent? _sent;
+  AuthFailure? _failure;
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _phone.dispose();
+    _code.dispose();
+    super.dispose();
+  }
+
+  Future<void> _requestCode() async {
+    setState(() => _failure = null);
+    if (_sent == null && !_form.currentState!.validate()) return;
+    setState(() => _busy = true);
+    final result = await ref
+        .read(authSessionProvider.notifier)
+        .requestOtp(_sent?.phone ?? _phone.text);
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      switch (result) {
+        case OtpSent():
+          _sent = result;
+          _code.clear();
+        case AuthFailure():
+          _failure = result;
+        case AuthSuccess():
+          break;
+      }
+    });
+  }
+
+  Future<void> _verify() async {
+    final sent = _sent!;
+    setState(() {
+      _failure = null;
+      _busy = true;
+    });
+    final result = await ref
+        .read(authSessionProvider.notifier)
+        .verifyOtp(sent.phone, _code.text);
+    // On success the router leaves this page by itself.
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      if (result is AuthFailure) _failure = result;
+    });
+  }
+
+  void _changePhone() => setState(() {
+    _sent = null;
+    _failure = null;
+    _code.clear();
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final sent = _sent;
+    final general = _failure?.field == null ? _failure?.message : null;
+    return FormPageScaffold(
+      header: AppPageHeader(
+        title: 'Đăng nhập',
+        onBack: sent != null
+            ? _changePhone
+            : () => AppRoutes.backOr(context, AppRoutes.welcome),
+      ),
+      actionLabel: _busy
+          ? 'Đang xử lý…'
+          : sent == null
+          ? 'Gửi mã'
+          : 'Đăng nhập',
+      onAction: _busy ? null : (sent == null ? _requestCode : _verify),
+      children: [
+        if (sent == null) ...[
+          Text(
+            'Nhập số điện thoại bạn đã dùng khi đặt khám. Phòng khám sẽ gửi '
+            'một mã 6 số để đăng nhập.',
+            style: text.bodyLarge,
+          ),
+          Form(
+            key: _form,
+            child: PhoneField(
               controller: _phone,
               errorText: _failure?.field == 'phone' ? _failure!.message : null,
             ),
-            const SizedBox(height: 20),
-            PasswordField(
-              key: const Key('sign-up-password'),
-              controller: _password,
-              label: 'Mật khẩu',
-              helperText: 'Ít nhất 6 ký tự, dễ nhớ với bạn.',
-              errorText: _failure?.field == 'password'
-                  ? _failure!.message
-                  : null,
-              validator: validateNewPassword,
-            ),
-            const SizedBox(height: 20),
-            PasswordField(
-              key: const Key('sign-up-confirm'),
-              controller: _confirm,
-              label: 'Nhập lại mật khẩu',
-              validator: (value) => value != _password.text
-                  ? 'Hai mật khẩu chưa giống nhau.'
-                  : null,
-              onSubmitted: (_) => _submit(),
-            ),
-          ],
-        ),
-      ),
-      Wrap(
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          Text(
-            'Đã có tài khoản?',
-            style: Theme.of(context).textTheme.bodyLarge,
           ),
-          TextButton(
-            onPressed: () => context.pushReplacement(AppRoutes.signIn),
-            child: const Text('Đăng nhập'),
+        ] else ...[
+          Text(
+            'Mã 6 số đã gửi tới ${formatPhone(sent.phone)}. Mã dùng được '
+            'trong ${(sent.challenge.expiresIn / 60).ceil()} phút.',
+            style: text.bodyLarge,
+          ),
+          TextField(
+            key: const Key('otp-code'),
+            controller: _code,
+            autofocus: true,
+            keyboardType: TextInputType.number,
+            textInputAction: TextInputAction.done,
+            autofillHints: const [AutofillHints.oneTimeCode],
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+              LengthLimitingTextInputFormatter(otpLength),
+            ],
+            onSubmitted: (_) => _busy ? null : _verify(),
+            style: text.headlineSmall?.copyWith(letterSpacing: 6),
+            decoration: InputDecoration(
+              labelText: 'Mã đăng nhập',
+              hintText: '6 chữ số',
+              errorText: _failure?.field == 'code' ? _failure!.message : null,
+              errorMaxLines: 3,
+              floatingLabelBehavior: FloatingLabelBehavior.always,
+              prefixIcon: const AppIcon(AppIcons.lock),
+            ),
+          ),
+          if (sent.challenge.devCode case final code?)
+            AppStatusBanner(
+              key: const Key('otp-dev-code'),
+              title: 'Bản thử',
+              message: 'Chưa gửi tin nhắn thật. Mã thử: $code',
+            ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: [
+              TextButton(
+                key: const Key('otp-resend'),
+                onPressed: _busy ? null : _requestCode,
+                child: const Text('Gửi lại mã'),
+              ),
+              TextButton(
+                key: const Key('otp-change-phone'),
+                onPressed: _busy ? null : _changePhone,
+                child: const Text('Đổi số điện thoại'),
+              ),
+            ],
           ),
         ],
-      ),
-    ],
-  );
+        if (general != null)
+          AppStatusBanner(
+            status: AppStatus.error,
+            message: general,
+            liveRegion: true,
+          ),
+      ],
+    );
+  }
 }
 
 class PhoneField extends StatelessWidget {
