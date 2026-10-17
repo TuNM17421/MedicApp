@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/state/app_state.dart';
 import '../../auth/auth_controller.dart';
+import '../../sharing/application/sharing_providers.dart';
+import '../../sharing/domain/sharing_models.dart';
 import '../data/booking_catalog.dart';
 import '../data/booking_repository.dart';
 import '../domain/booking_models.dart';
@@ -47,14 +49,35 @@ final appointmentsProvider =
 class AppointmentsController extends Notifier<AppointmentLedger> {
   /// Each account sees only its own appointments; they are kept with the
   /// account, so they reach the encrypted vault once its holder consented.
+  /// With a clinic sign-in, the clinic's appointments for this phone are
+  /// listed too (bước 16); only the app's own bookings are saved here.
   @override
   AppointmentLedger build() {
     final phone = ref.watch(authSessionProvider);
     final saved = phone == null
         ? const <AppointmentRecord>[]
         : ref.read(mockAccountStoreProvider)[phone]?.appointments ?? const [];
-    return AppointmentLedger(records: saved);
+    final clinic = ref.watch(
+      serverAppointmentsProvider.select((state) => state.items),
+    );
+    if (clinic.isEmpty) return AppointmentLedger(records: saved);
+    final account = phone == null
+        ? null
+        : ref.read(mockAccountStoreProvider)[phone];
+    final patientId = selfProfileId(account?.profiles ?? const []);
+    final ids = {for (final item in clinic) item.id};
+    return AppointmentLedger(
+      records: List.unmodifiable([
+        for (final item in clinic)
+          clinicRecord(item, patientId: patientId, phone: phone ?? ''),
+        for (final record in saved)
+          if (!ids.contains(record.visit.id)) record,
+      ]),
+    );
   }
+
+  bool _isClinic(String id) =>
+      ref.read(serverAppointmentsProvider).byId(id) != null;
 
   void upsert(AppointmentRecord record) {
     state = AppointmentLedger(
@@ -65,7 +88,10 @@ class AppointmentsController extends Notifier<AppointmentLedger> {
       checking: state.checking,
       errors: Map.unmodifiable({...state.errors}..remove(record.visit.id)),
     );
-    final records = state.records;
+    final records = [
+      for (final item in state.records)
+        if (!_isClinic(item.visit.id)) item,
+    ];
     ref
         .read(authSessionProvider.notifier)
         .updateAccount((account) => account.copyWith(appointments: records));
@@ -117,6 +143,43 @@ class AppointmentsController extends Notifier<AppointmentLedger> {
       }
     }
   }
+}
+
+/// A clinic appointment shown like the app's own bookings, so the list,
+/// calendar, reminders and result pages work for it unchanged.
+AppointmentRecord clinicRecord(
+  ServerAppointment item, {
+  required String patientId,
+  required String phone,
+}) {
+  final start = item.start;
+  return AppointmentRecord(
+    VisitSummary(
+      id: item.id,
+      patientName: item.patientName,
+      type: item.kind.contains('BHYT')
+          ? VisitType.insurance
+          : VisitType.service,
+      facilityName: item.clinic.name,
+      address: item.clinic.phone.isEmpty
+          ? ''
+          : 'Điện thoại ${item.clinic.phone}',
+      departmentName: item.specialty,
+      doctorName: '',
+      date: DateTime(start.year, start.month, start.day),
+      time: item.time,
+      fee: 0,
+      method: PayMethod.atHospital,
+      contactName: item.patientName,
+      contactPhone: phone,
+      note: '',
+      patientId: patientId.isEmpty ? null : patientId,
+    ),
+    PaymentReceipt(
+      status: item.cancelled ? PaymentStatus.failed : PaymentStatus.confirmed,
+      method: PayMethod.atHospital,
+    ),
+  );
 }
 
 class BookingSession {

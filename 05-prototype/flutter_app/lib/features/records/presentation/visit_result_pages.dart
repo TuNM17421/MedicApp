@@ -9,6 +9,7 @@ import '../../../app/theme/app_theme.dart';
 import '../../../core/widgets/app_motion.dart';
 import '../../../core/widgets/app_widgets.dart';
 import '../../auth/auth_controller.dart';
+import '../../sharing/application/sharing_providers.dart';
 import '../application/records_providers.dart';
 import '../data/doctor_portal.dart';
 import '../domain/claim_code.dart';
@@ -44,8 +45,11 @@ class VisitResultSection extends ConsumerWidget {
         ),
       );
     }
-    final offline = ref.watch(doctorPortalProvider) is MockDoctorPortal;
     final text = Theme.of(context).textTheme;
+    if (ref.watch(serverAppointmentProvider(visitId)) != null) {
+      return _ClinicResultPending(visitId: visitId);
+    }
+    final offline = ref.watch(doctorPortalProvider) is MockDoctorPortal;
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: AppSurface(
@@ -104,6 +108,54 @@ class VisitResultSection extends ConsumerWidget {
       ..clearSnackBars()
       ..showSnackBar(const SnackBar(content: Text('Đã nhận kết quả khám.')));
     context.push(AppRoutes.visitResult(visitId));
+  }
+}
+
+/// A clinic appointment of the signed-in phone: the result arrives by
+/// itself once the clinic sends it, no code needed.
+class _ClinicResultPending extends ConsumerWidget {
+  const _ClinicResultPending({required this.visitId});
+  final String visitId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final text = Theme.of(context).textTheme;
+    final loading = ref.watch(
+      serverAppointmentsProvider.select((state) => state.loading),
+    );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: AppSurface(
+        key: const Key('visit-result-pending'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const AppIconTile(icon: AppIcons.result, tone: AppTone.success),
+                const SizedBox(width: 12),
+                Expanded(child: Text('Kết quả khám', style: text.titleMedium)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'Phòng khám sẽ gửi chẩn đoán và đơn thuốc vào đây sau buổi '
+              'khám, không cần nhập mã.',
+              style: text.bodyLarge,
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton(
+              key: const Key('visit-result-reload'),
+              onPressed: loading
+                  ? null
+                  : () =>
+                        ref.read(serverAppointmentsProvider.notifier).refresh(),
+              child: Text(loading ? 'Đang tải…' : 'Tải lại'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

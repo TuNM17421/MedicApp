@@ -12,7 +12,7 @@ import { createOpenAIExtractor } from './extractors/openai.js';
 import { createSessionState, handleUserValue, handleUtterance, reply } from './orchestrator.js';
 import { createOpenAIStt, unavailableStt } from './stt.js';
 import { CLINIC_PREFIXES, createClinicApi } from './clinic/api.js';
-import { SECURITY_HEADERS, serveDoctorWeb } from './clinic/static.js';
+import { SECURITY_HEADERS, baseHeaders, serveDoctorWeb } from './clinic/static.js';
 import { HttpError, readJson, sendJson } from './http.js';
 
 /** Technical log only: never key, transcript, symptoms, profiles or tokens. */
@@ -40,9 +40,9 @@ function parseContext(body) {
   };
 }
 
-export function createApp({ config, extractor, stt, log = createLogger(), db = null }) {
+export function createApp({ config, extractor, stt, log = createLogger(), db = null, summary = {} }) {
   const sessions = new Map();
-  const clinic = db ? createClinicApi({ db, config, log }) : null;
+  const clinic = db ? createClinicApi({ db, config, log, summary }) : null;
 
   const sweep = setInterval(() => {
     const now = Date.now();
@@ -82,7 +82,7 @@ export function createApp({ config, extractor, stt, log = createLogger(), db = n
     if (req.method !== 'OPTIONS') return false;
     res.writeHead(204, {
       'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'access-control-allow-headers': 'content-type',
+      'access-control-allow-headers': 'content-type, authorization',
       'access-control-max-age': '600',
     });
     res.end();
@@ -162,7 +162,11 @@ export function createApp({ config, extractor, stt, log = createLogger(), db = n
     throw new HttpError(404, 'not_found', 'Không tìm thấy.');
   }
 
+  const headers = baseHeaders(config);
   const server = createServer((req, res) => {
+    // Security headers and no-store on every answer; the web build and
+    // redirects override cache-control and CSP where they need to.
+    for (const [name, value] of Object.entries(headers)) res.setHeader(name, value);
     route(req, res).catch((error) => {
       const status = error instanceof HttpError ? error.status : 500;
       if (status === 500) log('http_error', { name: error.name });
@@ -176,6 +180,10 @@ export function createApp({ config, extractor, stt, log = createLogger(), db = n
       });
     });
   });
+
+  // Slow clients may not hold a connection open forever (bodies are at most 512 KiB).
+  server.headersTimeout = 20_000;
+  server.requestTimeout = 60_000;
 
   const wss = new WebSocketServer({ noServer: true, maxPayload: 256 * 1024 });
   server.on('upgrade', (req, socket, head) => {
@@ -219,9 +227,16 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const db = openDatabase(config.clinicDb);
   if (!db.prepare('SELECT count(*) AS n FROM practitioner').get().n) log('clinic_db_empty', { hint: 'npm run seed' });
   const server = createApp({ config, ...createDefaultDeps(config, log), log, db });
+  // Bước 18: one backup a day at BACKUP_HOUR (clinic time) into BACKUP_DIR.
+  if (config.backupEnabled && config.clinicDb !== ':memory:') {
+    const { scheduleBackups } = await import('./ops/backup.js');
+    const backups = scheduleBackups({ db, config, log });
+    server.on('close', () => backups.stop());
+  }
   server.listen(config.port, config.host, () => {
     log('listening', { host: config.host, port: config.port, ...describe(config) });
     log('doctor_web', { url: `http://${config.host}:${config.port}/doctor/` });
     if (config.mode === 'mock') log('mock_mode', { note: 'Mô phỏng AI: chưa gọi OpenAI, chưa nhận giọng.' });
+    log('summary_mode', { mode: config.summaryMode });
   });
 }

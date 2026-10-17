@@ -44,6 +44,19 @@ class VisitResultsController extends Notifier<ResultsState> {
     );
   }
 
+  /// Keeps a result fetched from the clinic for a signed-in visit, replacing
+  /// an older version of it.
+  void put(VisitResult result) {
+    final results = List<VisitResult>.unmodifiable([
+      result,
+      ...state.results.where((item) => item.visitId != result.visitId),
+    ]);
+    state = ResultsState(results: results, fetching: state.fetching);
+    ref
+        .read(authSessionProvider.notifier)
+        .updateAccount((account) => account.copyWith(results: results));
+  }
+
   /// Claims [visitId]'s result with the code printed on the prescription
   /// and keeps it. Throws [ResultClaimException] with a message to show.
   Future<VisitResult> claim(String visitId, String code) async {
