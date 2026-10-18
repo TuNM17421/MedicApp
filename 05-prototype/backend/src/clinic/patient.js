@@ -61,7 +61,7 @@ const consentRequired = () => new HttpError(403, 'consent_required', 'Bạn chư
 const badUpload = (fields) => new HttpError(400, 'bad_upload', 'Dữ liệu gửi lên không hợp lệ.', fields);
 
 /** Fixed-window counters keyed by string. */
-function createLimiter(windowMs, max) {
+export function createLimiter(windowMs, max) {
   const hits = new Map();
   const sweep = setInterval(() => {
     const t = Date.now();
