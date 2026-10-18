@@ -7,6 +7,7 @@ import '../../app/state/app_state.dart';
 import '../../core/storage/local_vault.dart';
 import '../booking/domain/booking_models.dart';
 import '../consent/health_consent.dart';
+import '../family/domain/family_models.dart';
 import '../sharing/application/sharing_providers.dart';
 import '../sharing/data/patient_api.dart';
 import '../sharing/domain/outbox.dart';
@@ -31,6 +32,7 @@ class MockAccount {
     this.serverAppointments = const [],
     this.intake = const {},
     this.outbox = const [],
+    this.links = const [],
   });
   final String phone;
   final String password;
@@ -58,6 +60,9 @@ class MockAccount {
   /// Uploads waiting for the network, oldest first.
   final List<OutboxItem> outbox;
 
+  /// Family profiles linked with another phone (Liên kết hai máy).
+  final List<FamilyLink> links;
+
   MockAccount copyWith({
     List<PreviewProfile>? profiles,
     HealthConsent? Function()? consent,
@@ -68,6 +73,7 @@ class MockAccount {
     List<ServerAppointment>? serverAppointments,
     Map<String, List<IntakeAnswer>>? intake,
     List<OutboxItem>? outbox,
+    List<FamilyLink>? links,
   }) => MockAccount(
     phone: phone,
     password: password,
@@ -80,6 +86,7 @@ class MockAccount {
     serverAppointments: serverAppointments ?? this.serverAppointments,
     intake: intake ?? this.intake,
     outbox: outbox ?? this.outbox,
+    links: links ?? this.links,
   );
 
   MockAccount withProfiles(List<PreviewProfile> value) =>
@@ -105,6 +112,7 @@ class MockAccount {
         key: [for (final answer in value) answer.toJson()],
     },
     'outbox': [for (final item in outbox) item.toJson()],
+    'links': [for (final link in links) link.toJson()],
   };
 
   factory MockAccount.fromJson(Map<String, Object?> json) => MockAccount(
@@ -149,6 +157,10 @@ class MockAccount {
     outbox: List.unmodifiable([
       for (final item in json['outbox'] as List<Object?>? ?? const [])
         OutboxItem.fromJson(item! as Map<String, Object?>),
+    ]),
+    links: List.unmodifiable([
+      for (final link in json['links'] as List<Object?>? ?? const [])
+        FamilyLink.fromJson(link! as Map<String, Object?>),
     ]),
   );
 }

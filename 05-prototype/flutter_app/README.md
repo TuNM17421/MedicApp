@@ -1,5 +1,7 @@
 # MedicApp — Khung app Flutter Android
 
+**Liên kết hai máy:** Liên kết hồ sơ của người thân với điện thoại của chính người đó bằng mã QR. Lịch hẹn hiện ở cả hai máy, chuông thuốc chỉ kêu ở máy người uống, và người chăm sóc nhận tin khi người thân lỡ liều. Cần backend local. Xem [Liên kết hai máy](LIEN-KET-HAI-MAY.md).
+
 **Bước 4:** Đã thêm chuyển động nhẹ, loading skeleton, giảm chuyển động và cải thiện cỡ chữ lớn cho luồng đặt lịch. Xem [chi tiết UI/UX](UI-UX.md).
 
 **Bước 9:** Có icon và màn mở app riêng, hình minh họa, lịch tháng ở trang Lịch hẹn và chuyển động nhẹ (tắt khi giảm chuyển động). Xem [bước 9](LAM-DEP-UI.md).

@@ -59,6 +59,9 @@ test('the owner makes a code; the member claims it once and both see the link', 
   assert.match(made.body.invite.code, /^[A-Z2-9]{4}-[A-Z2-9]{4}$/);
   const id = made.body.link.id;
 
+  const peek = await req('/v1/family/peek', { method: 'POST', body: { code: made.body.invite.code } });
+  assert.deepEqual(peek.body, { ownerName: 'Phạm Văn Hòa', profile: MOTHER });
+
   // Lower case and without the dash still works.
   const code = made.body.invite.code.toLowerCase().replace('-', '');
   assert.equal(normalizeInviteCode(code), made.body.invite.code.replace('-', ''));
@@ -69,6 +72,7 @@ test('the owner makes a code; the member claims it once and both see the link', 
   assert.deepEqual(claim.body.link.profile, MOTHER);
   assert.equal(claim.body.link.shareMissed, true);
 
+  assert.equal((await req('/v1/family/peek', { method: 'POST', body: { code } })).status, 404);
   const again = await req('/v1/family/claim', { method: 'POST', body: { code, memberName: 'Người khác' } });
   assert.equal(again.status, 404);
   assert.equal(again.body.error.code, 'bad_code');

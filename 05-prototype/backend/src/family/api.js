@@ -193,6 +193,17 @@ export function createFamilyApi({ db, log, now = () => Date.now() }) {
     return sendJson(res, 200, { invite: atomically(() => invite(id)) });
   }
 
+  /** Who is asking, before the member agrees; does not use up the code. */
+  async function peek(req, res) {
+    if (!claims.hit(ipOf(req))) throw rateLimited();
+    const body = await readJson(req);
+    const code = normalizeInviteCode(body.code);
+    const row = code ? stmt.invite.get(sha256(code)) : null;
+    const link = row && row.expires_at > localIso(now()) ? stmt.link.get(row.link_id) : null;
+    if (!link || link.member_token_hash || link.ended_at) throw badCode();
+    return sendJson(res, 200, { ownerName: link.owner_name, profile: json(link.profile, {}) });
+  }
+
   async function claim(req, res) {
     if (!claims.hit(ipOf(req))) throw rateLimited();
     const body = await readJson(req);
@@ -334,6 +345,7 @@ export function createFamilyApi({ db, log, now = () => Date.now() }) {
     const m = req.method;
     if (area === 'links' && parts.length === 3 && m === 'POST') return create(req, res);
     if (area === 'claim' && parts.length === 3 && m === 'POST') return claim(req, res);
+    if (area === 'peek' && parts.length === 3 && m === 'POST') return peek(req, res);
     if (area === 'links' && parts.length === 4) {
       if (m === 'GET') return view(req, res, id);
       if (m === 'DELETE') return unlink(req, res, id);

@@ -11,6 +11,7 @@ import '../../features/booking/presentation/appointment_pages.dart';
 import '../../features/booking/presentation/booking_demo_page.dart';
 import '../../features/design_preview/design_preview_page.dart';
 import '../../features/smart/presentation/smart_page.dart';
+import '../../features/family/presentation/family_pages.dart';
 import '../../features/home/home_page.dart';
 import '../../features/meds/data/med_reminder_scheduler.dart';
 import '../../features/meds/presentation/med_alarm_page.dart';
@@ -149,6 +150,14 @@ GoRouter createAppRouter({
                     path: ':id',
                     builder: (_, state) =>
                         ProfileDetailPage(id: state.pathParameters['id']!),
+                    routes: [
+                      _route(
+                        path: 'link',
+                        builder: (_, state) => FamilyInvitePage(
+                          profileId: state.pathParameters['id']!,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -174,6 +183,12 @@ GoRouter createAppRouter({
               _route(
                 path: AppRoutes.account,
                 builder: (_, _) => const AccountPage(),
+                routes: [
+                  _route(
+                    path: 'link',
+                    builder: (_, _) => const FamilyJoinPage(),
+                  ),
+                ],
               ),
             ],
           ),

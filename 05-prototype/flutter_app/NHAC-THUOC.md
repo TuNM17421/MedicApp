@@ -54,7 +54,7 @@ Nhật ký liều (`doseLog`) lưu trong tài khoản, cùng chỗ với lịch 
 
 ## Chưa làm
 
-- Người thân nhận cảnh báo khi lỡ liều và tóm tắt hằng tuần: bước 13–14, sau khi có liên kết hồ sơ giữa hai điện thoại.
+- Tóm tắt hằng tuần cho người thân. Cảnh báo lỡ liều đã có ở [Liên kết hai máy](LIEN-KET-HAI-MAY.md): khi hồ sơ đã liên kết, chuông chỉ kêu ở máy của người uống.
 - Tự chỉnh giờ uống theo thói quen từng người (hiện dùng giờ cố định của từng buổi).
 
 ## Code và test

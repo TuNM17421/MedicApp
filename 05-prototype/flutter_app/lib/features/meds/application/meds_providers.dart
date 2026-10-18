@@ -7,6 +7,7 @@ import 'package:medic_core/medic_core.dart';
 import '../../../app/notifications.dart';
 import '../../../app/state/app_state.dart';
 import '../../auth/auth_controller.dart';
+import '../../family/application/family_providers.dart';
 import '../../records/application/records_providers.dart';
 import '../../sharing/application/sharing_providers.dart';
 
@@ -15,11 +16,15 @@ import '../../visit_prep/visit_prep.dart';
 import '../data/med_reminder_scheduler.dart';
 import '../domain/med_reminder_planner.dart';
 
-/// Every medicine from the signed-in account's prescriptions.
-final medicationCoursesProvider = Provider<List<MedicationCourse>>(
-  (ref) =>
-      List.unmodifiable(coursesFrom(ref.watch(visitResultsProvider).results)),
-);
+/// Every medicine from the signed-in account's prescriptions, except those
+/// of family profiles linked with their own phone: that phone reminds them.
+final medicationCoursesProvider = Provider<List<MedicationCourse>>((ref) {
+  final away = ref.watch(medsOnOtherPhoneProvider);
+  return List.unmodifiable([
+    for (final course in coursesFrom(ref.watch(visitResultsProvider).results))
+      if (!away.contains(course.profileId)) course,
+  ]);
+});
 
 final pendingDoseStoreProvider = Provider<PendingDoseStore>(
   (ref) => SecurePendingDoseStore(),
