@@ -130,6 +130,15 @@ class HomePage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 12),
                 AppLinkCard(
+                  key: const Key('home-facility-map'),
+                  title: 'Cơ sở khám gần bạn',
+                  subtitle: 'Xem bệnh viện, phòng khám trên bản đồ',
+                  icon: AppIcons.map,
+                  tone: AppTone.sky,
+                  onTap: () => context.push(AppRoutes.facilityMap),
+                ),
+                const SizedBox(height: 12),
+                AppLinkCard(
                   title: 'Trợ giúp',
                   icon: AppIcons.help,
                   tone: AppTone.peach,

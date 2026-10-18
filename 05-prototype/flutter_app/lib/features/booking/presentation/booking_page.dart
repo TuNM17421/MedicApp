@@ -8,6 +8,8 @@ import '../../../app/theme/app_theme.dart';
 import '../../../core/widgets/app_widgets.dart';
 import '../../../core/widgets/app_motion.dart';
 import '../application/booking_providers.dart';
+import '../../facilities/application/nearby_providers.dart';
+import '../../facilities/presentation/nearby_suggestion.dart';
 import '../data/booking_catalog.dart';
 import '../domain/booking_models.dart';
 import 'appointment_pages.dart';
@@ -209,12 +211,28 @@ class _BookingPageState extends ConsumerState<BookingPage> {
           ),
         ];
       case BookingStage.facility:
+        final position = ref.watch(nearbyProvider).position;
+        final ranked = position == null
+            ? null
+            : facilitiesByDistance(position, BookingCatalog.facilities);
         return [
-          for (final facility in BookingCatalog.facilities) ...[
+          NearbySuggestion(
+            draft: draft,
+            onChoose: actions.chooseFacility,
+            onOpenMap: () => context.push(AppRoutes.facilityMapFromBooking),
+          ),
+          for (final (:facility, :km)
+              in ranked ??
+                  [
+                    for (final facility in BookingCatalog.facilities)
+                      (facility: facility, km: null),
+                  ]) ...[
             AppChoiceCard(
               key: ValueKey('facility-${facility.id}'),
               title: facility.name,
-              description: facility.address,
+              description: km == null
+                  ? facility.address
+                  : '${formatDistance(km)} · ${facility.address}',
               icon: AppIcons.hospital,
               selected: draft.facilityId == facility.id,
               enabled:

@@ -10,6 +10,7 @@ import '../../features/consent/health_consent_page.dart';
 import '../../features/booking/presentation/appointment_pages.dart';
 import '../../features/booking/presentation/booking_demo_page.dart';
 import '../../features/design_preview/design_preview_page.dart';
+import '../../features/facilities/presentation/facility_map_page.dart';
 import '../../features/smart/presentation/smart_page.dart';
 import '../../features/home/home_page.dart';
 import '../../features/meds/presentation/today_meds_page.dart';
@@ -199,6 +200,12 @@ GoRouter createAppRouter({
       _route(
         path: AppRoutes.smart,
         builder: (_, state) => SmartPage(
+          fromBooking: state.uri.queryParameters['from'] == 'booking',
+        ),
+      ),
+      _route(
+        path: AppRoutes.facilityMap,
+        builder: (_, state) => FacilityMapPage(
           fromBooking: state.uri.queryParameters['from'] == 'booking',
         ),
       ),

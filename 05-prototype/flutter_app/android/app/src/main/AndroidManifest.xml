@@ -2,6 +2,9 @@
     <!-- Smart Scheduling: requested only when the user taps the microphone. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Nearby facilities: approximate location only, requested when the user
+         taps "Dùng vị trí hiện tại" while choosing where to book. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <!-- Notifications are local only. RECEIVE_BOOT_COMPLETED lets scheduled
          reminders survive a restart. SCHEDULE_EXACT_ALARM lets medication
          reminders ring on the minute once the user allows it from Thuốc hôm

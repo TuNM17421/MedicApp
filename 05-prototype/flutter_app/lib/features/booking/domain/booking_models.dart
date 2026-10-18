@@ -1,3 +1,5 @@
+import 'package:latlong2/latlong.dart';
+
 enum VisitType { insurance, service }
 
 enum DoctorMode { any, named }
@@ -75,12 +77,16 @@ class Facility {
     this.fee,
     this.acceptsInsurance,
     this.payAtHospital,
-    this.departments,
-  );
+    this.departments, {
+    required this.location,
+  });
   final String id, name, address;
   final int fee;
   final bool acceptsInsurance, payAtHospital;
   final List<String> departments;
+
+  /// Map position. Distance to the phone is computed on the device only.
+  final LatLng location;
 }
 
 class Department {
