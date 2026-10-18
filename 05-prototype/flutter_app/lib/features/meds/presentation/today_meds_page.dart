@@ -53,21 +53,12 @@ class TodayMedsPage extends ConsumerStatefulWidget {
 class _TodayMedsPageState extends ConsumerState<TodayMedsPage>
     with _MinuteTick {
   @override
-  void initState() {
-    super.initState();
-    Future.microtask(() {
-      if (mounted) ref.read(ringOnTimeProvider.notifier).check();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     final now = ref.watch(prepClockProvider)();
     final courses = ref.watch(medicationCoursesProvider);
     final log = ref.watch(doseLogProvider);
     final profiles = ref.watch(profileCatalogProvider);
     final today = dosesOn(now, courses, log, now);
-    final ringOnTime = ref.watch(ringOnTimeProvider);
     PreviewProfile? profile(String id) =>
         profiles.where((p) => p.id == id).firstOrNull;
 
@@ -92,13 +83,6 @@ class _TodayMedsPageState extends ConsumerState<TodayMedsPage>
           else ...[
             _DaySummary(doses: today, now: now),
             const _AlarmCard(),
-            if (ringOnTime == false)
-              _RingOnTimeCard(
-                onAllow: () async {
-                  await ref.read(ringOnTimeProvider.notifier).allow();
-                  await ref.read(ringOnTimeProvider.notifier).check();
-                },
-              ),
             for (final course in low)
               _LowStockCard(
                 course: course,
@@ -194,10 +178,8 @@ class _AlarmCard extends ConsumerWidget {
       builder: (context) => AlertDialog(
         title: const Text('Bật chuông báo uống thuốc?'),
         content: const Text(
-          'Đến giờ uống, điện thoại đổ chuông như đồng hồ báo thức, kể cả '
-          'khi để im lặng, cho đến khi bạn bấm Đã uống hoặc Nhắc lại.\n\n'
-          'Điện thoại sẽ hỏi bạn cho phép "Báo thức và lời nhắc" và hiện '
-          'lời nhắc trên màn hình khóa.',
+          'Đến giờ uống, điện thoại sẽ kêu như báo thức, kể cả khi để im '
+          'lặng. Hãy cho phép "Báo thức và lời nhắc" ở bước tiếp theo.',
           style: TextStyle(fontSize: 18),
         ),
         actions: [
@@ -217,12 +199,8 @@ class _AlarmCard extends ConsumerWidget {
     final access = await ref.read(medAlarmProvider.notifier).turnOn();
     if (!context.mounted) return;
     final message = !access.onTime
-        ? 'Chưa bật được chuông vì điện thoại chưa cho phép "Báo thức và '
-              'lời nhắc". Lời nhắc vẫn đến như thông báo thường.'
-        : access.fullScreen
-        ? 'Đã bật chuông báo uống thuốc.'
-        : 'Đã bật chuông. Khi khóa máy, lời nhắc hiện ở thanh thông báo '
-              'thay vì cả màn hình.';
+        ? 'Chưa bật được chuông. Lời nhắc vẫn hiện như thông báo.'
+        : 'Đã bật chuông báo uống thuốc.';
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
       ..showSnackBar(SnackBar(content: Text(message)));
@@ -246,9 +224,7 @@ class _AlarmCard extends ConsumerWidget {
                   Text('Chuông báo uống thuốc', style: text.titleMedium),
                   const SizedBox(height: 4),
                   Text(
-                    on
-                        ? 'Đang bật: đổ chuông như báo thức đến khi bạn trả lời.'
-                        : 'Đang tắt: chỉ hiện thông báo đến giờ uống.',
+                    on ? 'Kêu như báo thức' : 'Chỉ hiện thông báo',
                     style: text.bodyMedium,
                   ),
                 ],
@@ -266,31 +242,6 @@ class _AlarmCard extends ConsumerWidget {
       ),
     );
   }
-}
-
-class _RingOnTimeCard extends StatelessWidget {
-  const _RingOnTimeCard({required this.onAllow});
-  final VoidCallback onAllow;
-
-  @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      const AppStatusBanner(
-        status: AppStatus.warning,
-        title: 'Lời nhắc có thể đến trễ vài phút',
-        message:
-            'Điện thoại đang tiết kiệm pin nên có thể báo muộn. Cho phép '
-            '"Báo thức và lời nhắc" để nhắc đúng giờ.',
-      ),
-      const SizedBox(height: 8),
-      OutlinedButton(
-        key: const Key('meds-ring-on-time'),
-        onPressed: onAllow,
-        child: const Text('Bật nhắc đúng giờ'),
-      ),
-    ],
-  );
 }
 
 class _LowStockCard extends StatelessWidget {

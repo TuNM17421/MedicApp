@@ -85,6 +85,17 @@ class NotificationHub {
   Future<bool> requestFullScreen() async =>
       await _android?.requestFullScreenIntentPermission() ?? true;
 
+  /// Removes the shown notifications whose payload passes [test], which
+  /// stops an alarm that is still ringing.
+  Future<void> cancelShown(bool Function(String? payload) test) async {
+    await ready();
+    for (final shown in await plugin.getActiveNotifications()) {
+      if (shown.id case final id? when test(shown.payload)) {
+        await plugin.cancel(id: id);
+      }
+    }
+  }
+
   /// Cancels the scheduled and shown notifications whose id is in
   /// [start, end).
   Future<void> cancelRange(int start, int end) async {

@@ -212,13 +212,10 @@ class MedAlarm extends Notifier<bool> {
   /// alarms are allowed; otherwise reminders stay plain notifications.
   Future<AlarmAccess> turnOn() async {
     final access = await ref.read(medReminderSchedulerProvider).allowAlarm();
-    if (!ref.mounted) return access;
-    if (access.onTime) {
+    if (ref.mounted && access.onTime) {
       state = true;
       await ref.read(medAlarmSettingProvider).write(true);
     }
-    // The exact-alarm page may have been opened on the way.
-    if (ref.mounted) await ref.read(ringOnTimeProvider.notifier).check();
     return access;
   }
 
@@ -226,20 +223,4 @@ class MedAlarm extends Notifier<bool> {
     state = false;
     await ref.read(medAlarmSettingProvider).write(false);
   }
-}
-
-/// Whether reminders ring on the minute; null until checked.
-final ringOnTimeProvider = NotifierProvider<RingOnTime, bool?>(RingOnTime.new);
-
-class RingOnTime extends Notifier<bool?> {
-  @override
-  bool? build() => null;
-
-  Future<void> check() async {
-    final value = await ref.read(medReminderSchedulerProvider).canRingOnTime();
-    if (ref.mounted) state = value;
-  }
-
-  Future<void> allow() =>
-      ref.read(medReminderSchedulerProvider).allowRingOnTime();
 }

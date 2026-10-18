@@ -8,6 +8,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../../../app/theme/app_theme.dart';
 import '../../../core/notifications/notification_hub.dart';
+import '../../visit_prep/reminder_planner.dart' show ReminderLine;
 import '../domain/med_reminder_planner.dart';
 
 /// Doses marked "Đã uống" from a notification button. The button runs in a
@@ -127,6 +128,7 @@ class MedPayload {
     this.followUpId,
     this.withActions = true,
     this.ring = false,
+    this.lines = const [],
   });
   final List<String> keys;
   final String title, summary, header, html;
@@ -138,6 +140,9 @@ class MedPayload {
   /// Rings like an alarm clock instead of a plain notification, and keeps
   /// ringing when snoozed.
   final bool ring;
+
+  /// One line per medicine, for the ringing screen.
+  final List<ReminderLine> lines;
 
   static const prefix = 'med:';
 
@@ -152,6 +157,9 @@ class MedPayload {
         'f': followUpId,
         'a': withActions,
         'r': ring,
+        'l': [
+          for (final line in lines) [line.label, line.text],
+        ],
       });
 
   static MedPayload? decode(String? payload) {
@@ -167,6 +175,11 @@ class MedPayload {
       followUpId: json['f'] as int?,
       withActions: json['a'] as bool? ?? true,
       ring: json['r'] as bool? ?? false,
+      lines: [
+        for (final line in (json['l'] as List<Object?>? ?? const []))
+          if (line case [final String label, final String text])
+            ReminderLine(label, text),
+      ],
     );
   }
 }
@@ -319,11 +332,11 @@ abstract interface class MedReminderScheduler {
   /// and, best effort, covering the lock screen.
   Future<AlarmAccess> allowAlarm();
 
-  /// Whether reminders ring on the minute (exact alarms allowed).
-  Future<bool> canRingOnTime();
+  /// Stops a ringing alarm about any of [keys].
+  Future<void> stopRinging(List<String> keys);
 
-  /// Opens the system page that allows exact alarms.
-  Future<void> allowRingOnTime();
+  /// What "Nhắc lại sau 10 phút" does on the notification.
+  Future<void> snooze(MedPayload payload, DateTime now);
 }
 
 class LocalMedReminderScheduler implements MedReminderScheduler {
@@ -362,6 +375,7 @@ class LocalMedReminderScheduler implements MedReminderScheduler {
           followUpId: followUp,
           withActions: reminder.kind != MedReminderKind.lowStock,
           ring: alarm && reminder.kind == MedReminderKind.dose,
+          lines: reminder.lines,
         );
         await hub.plugin.zonedSchedule(
           id: ids[reminder.key]!,
@@ -384,11 +398,35 @@ class LocalMedReminderScheduler implements MedReminderScheduler {
   }
 
   @override
-  Future<bool> canRingOnTime() async {
+  Future<void> stopRinging(List<String> keys) async {
     try {
-      return await hub.canScheduleExact();
+      await hub.cancelShown(
+        (shown) => MedPayload.decode(shown)?.keys.any(keys.contains) ?? false,
+      );
     } on MissingPluginException {
-      return true;
+      return;
+    }
+  }
+
+  @override
+  Future<void> snooze(MedPayload payload, DateTime now) async {
+    try {
+      await hub.ready();
+      await handleMedAction(
+        NotificationResponse(
+          notificationResponseType:
+              NotificationResponseType.selectedNotificationAction,
+          actionId: MedActions.snooze,
+          payload: payload.encode(),
+        ),
+        plugin: hub.plugin,
+        // Snoozing records nothing.
+        store: MemoryPendingDoseStore(),
+        now: now,
+        mode: await hub.scheduleMode(),
+      );
+    } on MissingPluginException {
+      return;
     }
   }
 
@@ -405,15 +443,6 @@ class LocalMedReminderScheduler implements MedReminderScheduler {
       return (onTime: true, fullScreen: await hub.requestFullScreen());
     } on MissingPluginException {
       return (onTime: true, fullScreen: true);
-    }
-  }
-
-  @override
-  Future<void> allowRingOnTime() async {
-    try {
-      await hub.requestExact();
-    } on MissingPluginException {
-      return;
     }
   }
 }

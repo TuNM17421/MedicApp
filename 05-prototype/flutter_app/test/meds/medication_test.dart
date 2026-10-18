@@ -13,6 +13,8 @@ import 'package:medic_app/features/meds/application/meds_providers.dart';
 import 'package:medic_app/features/meds/data/med_reminder_scheduler.dart';
 import 'package:medic_app/features/meds/domain/med_reminder_planner.dart';
 import 'package:medic_app/features/records/application/records_providers.dart';
+import 'package:medic_app/features/visit_prep/reminder_planner.dart'
+    show ReminderLine;
 import 'package:medic_app/features/visit_prep/reminder_scheduler.dart';
 import 'package:medic_app/features/visit_prep/visit_prep.dart';
 import 'package:medic_app/main.dart';
@@ -24,7 +26,6 @@ import '../visit_prep/reminder_planner_test.dart' show FakeScheduler;
 class FakeMedScheduler implements MedReminderScheduler {
   final calls = <List<MedReminder>>[];
   final rings = <bool>[];
-  bool onTime = true;
 
   /// What the phone allows when the alarm is turned on.
   AlarmAccess access = (onTime: true, fullScreen: true);
@@ -40,16 +41,13 @@ class FakeMedScheduler implements MedReminderScheduler {
   }
 
   @override
-  Future<AlarmAccess> allowAlarm() async {
-    if (access.onTime) onTime = true;
-    return access;
-  }
+  Future<AlarmAccess> allowAlarm() async => access;
 
   @override
-  Future<bool> canRingOnTime() async => onTime;
+  Future<void> stopRinging(List<String> keys) async {}
 
   @override
-  Future<void> allowRingOnTime() async => onTime = true;
+  Future<void> snooze(MedPayload payload, DateTime now) async {}
 }
 
 const _metformin = PrescriptionItem(
@@ -318,10 +316,13 @@ void main() {
       header: 'Thuốc của bạn · 07:00',
       html: '<b>Metformin 500mg:</b> 1 viên',
       ring: true,
+      lines: [ReminderLine('Metformin 500mg', '1 viên, sau ăn')],
     );
 
     test('rings on the alarm channel until answered', () {
-      expect(MedPayload.decode(dose.encode())!.ring, isTrue);
+      final decoded = MedPayload.decode(dose.encode())!;
+      expect(decoded.ring, isTrue);
+      expect(decoded.lines.single.text, '1 viên, sau ăn');
       final ring = medDetails(dose);
       expect(ring.channelId, 'med_alarms');
       expect(ring.audioAttributesUsage, AudioAttributesUsage.alarm);
@@ -468,7 +469,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final meds = FakeMedScheduler()..onTime = false;
+    final meds = FakeMedScheduler();
     final c = ProviderContainer(
       overrides: [
         bookingTodayProvider.overrideWithValue(DateTime(2026, 10, 14)),
@@ -518,9 +519,8 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Đã uống 0/3 liều'), findsOneWidget);
     expect(find.text('Thuốc của bạn'), findsOneWidget);
-    expect(find.text('Bật nhắc đúng giờ'), findsOneWidget);
+    expect(find.text('Lời nhắc có thể đến trễ vài phút'), findsNothing);
 
-    // Turning the alarm on asks for exact alarms, so the warning goes.
     expect(meds.rings.last, isFalse);
     await tester.tap(find.byKey(const Key('meds-alarm')));
     await tester.pumpAndSettle();
@@ -528,7 +528,6 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Đã bật chuông báo uống thuốc.'), findsOneWidget);
     expect(meds.rings.last, isTrue);
-    expect(find.text('Bật nhắc đúng giờ'), findsNothing);
 
     const mine = 'V1#1|2026-10-14|morning';
     await tester.tap(find.byKey(const Key('dose-take-$mine')));
@@ -560,6 +559,29 @@ void main() {
 
     final saved = c.read(mockAccountStoreProvider)[demoPhone]!.doseLog;
     expect(saved.single.key, mine);
+
+    // The ringing screen records the dose and goes to Thuốc hôm nay.
+    c
+        .read(appRouterProvider)
+        .go(
+          AppRoutes.medAlarm,
+          extra: MedPayload(
+            keys: [hers],
+            title: 'Mẹ Lan: đến giờ uống thuốc',
+            summary: 'Allopurinol',
+            header: 'Mẹ Lan · 07:00',
+            html: '',
+            ring: true,
+            lines: [ReminderLine('Allopurinol 300mg', '1 viên, sau ăn')],
+          ),
+        );
+    await tester.pumpAndSettle();
+    expect(find.text('Mẹ Lan: đến giờ uống thuốc'), findsOneWidget);
+    expect(find.text('Allopurinol 300mg'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('med-alarm-taken')));
+    await tester.pumpAndSettle();
+    expect(find.text('Đã ghi: uống thuốc lúc 07:00.'), findsOneWidget);
+    expect(c.read(doseLogProvider).keys, containsAll([mine, hers]));
   });
 }
 
