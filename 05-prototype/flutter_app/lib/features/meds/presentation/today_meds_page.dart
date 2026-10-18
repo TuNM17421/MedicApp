@@ -91,6 +91,7 @@ class _TodayMedsPageState extends ConsumerState<TodayMedsPage>
             )
           else ...[
             _DaySummary(doses: today, now: now),
+            const _AlarmCard(),
             if (ringOnTime == false)
               _RingOnTimeCard(
                 onAllow: () async {
@@ -178,6 +179,90 @@ class _DaySummary extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Turns alarm-style reminders on, after saying what the phone will ask.
+class _AlarmCard extends ConsumerWidget {
+  const _AlarmCard();
+
+  Future<void> _turnOn(BuildContext context, WidgetRef ref) async {
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Bật chuông báo uống thuốc?'),
+        content: const Text(
+          'Đến giờ uống, điện thoại đổ chuông như đồng hồ báo thức, kể cả '
+          'khi để im lặng, cho đến khi bạn bấm Đã uống hoặc Nhắc lại.\n\n'
+          'Điện thoại sẽ hỏi bạn cho phép "Báo thức và lời nhắc" và hiện '
+          'lời nhắc trên màn hình khóa.',
+          style: TextStyle(fontSize: 18),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Để sau'),
+          ),
+          FilledButton(
+            key: const Key('meds-alarm-confirm'),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Tiếp tục'),
+          ),
+        ],
+      ),
+    );
+    if (go != true || !context.mounted) return;
+    final access = await ref.read(medAlarmProvider.notifier).turnOn();
+    if (!context.mounted) return;
+    final message = !access.onTime
+        ? 'Chưa bật được chuông vì điện thoại chưa cho phép "Báo thức và '
+              'lời nhắc". Lời nhắc vẫn đến như thông báo thường.'
+        : access.fullScreen
+        ? 'Đã bật chuông báo uống thuốc.'
+        : 'Đã bật chuông. Khi khóa máy, lời nhắc hiện ở thanh thông báo '
+              'thay vì cả màn hình.';
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final on = ref.watch(medAlarmProvider);
+    final text = Theme.of(context).textTheme;
+    return AppSurface(
+      // Read out with its switch as one control.
+      child: MergeSemantics(
+        child: Row(
+          children: [
+            const AppIconTile(icon: AppIcons.alarm),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Chuông báo uống thuốc', style: text.titleMedium),
+                  const SizedBox(height: 4),
+                  Text(
+                    on
+                        ? 'Đang bật: đổ chuông như báo thức đến khi bạn trả lời.'
+                        : 'Đang tắt: chỉ hiện thông báo đến giờ uống.',
+                    style: text.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+            Switch(
+              key: const Key('meds-alarm'),
+              value: on,
+              onChanged: (value) => value
+                  ? _turnOn(context, ref)
+                  : ref.read(medAlarmProvider.notifier).turnOff(),
+            ),
+          ],
+        ),
       ),
     );
   }

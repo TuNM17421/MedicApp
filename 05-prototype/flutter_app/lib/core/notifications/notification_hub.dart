@@ -79,6 +79,12 @@ class NotificationHub {
   /// Opens the system page where the user allows exact alarms.
   Future<void> requestExact() async => _android?.requestExactAlarmsPermission();
 
+  /// Lets an alarm-style reminder cover the lock screen. Android 14 grants
+  /// it only to calling and alarm apps by default, so this may open the
+  /// system page for it. Returns whether it is allowed.
+  Future<bool> requestFullScreen() async =>
+      await _android?.requestFullScreenIntentPermission() ?? true;
+
   /// Cancels the scheduled and shown notifications whose id is in
   /// [start, end).
   Future<void> cancelRange(int start, int end) async {

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'dart:ui';
 
 import 'package:flutter/services.dart';
@@ -70,6 +71,49 @@ class MemoryPendingDoseStore implements PendingDoseStore {
   }
 }
 
+/// Whether the person turned on alarm-style medication reminders. A
+/// setting of this phone, not of the account: it depends on what the phone
+/// allowed.
+abstract interface class MedAlarmSetting {
+  Future<bool> read();
+  Future<void> write(bool on);
+}
+
+class SecureMedAlarmSetting implements MedAlarmSetting {
+  SecureMedAlarmSetting([FlutterSecureStorage? storage])
+    : _storage = storage ?? const FlutterSecureStorage();
+  final FlutterSecureStorage _storage;
+  static const _key = 'medicapp.med_alarm';
+
+  @override
+  Future<bool> read() async {
+    try {
+      return await _storage.read(key: _key) == 'on';
+    } on MissingPluginException {
+      return false;
+    }
+  }
+
+  @override
+  Future<void> write(bool on) async {
+    try {
+      await _storage.write(key: _key, value: on ? 'on' : 'off');
+    } on MissingPluginException {
+      return;
+    }
+  }
+}
+
+class MemoryMedAlarmSetting implements MedAlarmSetting {
+  bool on = false;
+
+  @override
+  Future<bool> read() async => on;
+
+  @override
+  Future<void> write(bool value) async => on = value;
+}
+
 /// What a medication notification carries, so its buttons can act without
 /// the app: the doses it is about, the follow-up to cancel once they are
 /// taken, and its own text to show again when snoozed.
@@ -82,6 +126,7 @@ class MedPayload {
     required this.html,
     this.followUpId,
     this.withActions = true,
+    this.ring = false,
   });
   final List<String> keys;
   final String title, summary, header, html;
@@ -89,6 +134,10 @@ class MedPayload {
 
   /// Low-stock alerts have nothing to mark taken.
   final bool withActions;
+
+  /// Rings like an alarm clock instead of a plain notification, and keeps
+  /// ringing when snoozed.
+  final bool ring;
 
   static const prefix = 'med:';
 
@@ -102,6 +151,7 @@ class MedPayload {
         'b': html,
         'f': followUpId,
         'a': withActions,
+        'r': ring,
       });
 
   static MedPayload? decode(String? payload) {
@@ -116,6 +166,7 @@ class MedPayload {
       html: json['b']! as String,
       followUpId: json['f'] as int?,
       withActions: json['a'] as bool? ?? true,
+      ring: json['r'] as bool? ?? false,
     );
   }
 }
@@ -127,14 +178,42 @@ abstract final class MedActions {
 
 const snoozeFor = Duration(minutes: 10);
 
+/// How long an alarm rings when nobody answers it. The follow-up 30 minutes
+/// after the dose asks again.
+const ringFor = Duration(minutes: 5);
+
+/// Android's FLAG_INSISTENT: the sound repeats until the notification is
+/// answered or dismissed.
+const _insistent = 4;
+
+/// Android fixes a channel's sound once it exists, so alarm-style reminders
+/// get their own channel with the alarm tone on the alarm volume, which
+/// plays in silent mode and through Do Not Disturb.
 AndroidNotificationDetails medDetails(MedPayload payload) =>
     AndroidNotificationDetails(
-      'med_reminders',
-      'Nhắc uống thuốc',
-      channelDescription: 'Nhắc giờ uống thuốc theo đơn và khi sắp hết thuốc',
-      importance: Importance.high,
-      priority: Priority.high,
-      category: AndroidNotificationCategory.reminder,
+      payload.ring ? 'med_alarms' : 'med_reminders',
+      payload.ring ? 'Chuông báo uống thuốc' : 'Nhắc uống thuốc',
+      channelDescription: payload.ring
+          ? 'Đổ chuông như đồng hồ báo thức đến giờ uống thuốc'
+          : 'Nhắc giờ uống thuốc theo đơn và khi sắp hết thuốc',
+      importance: payload.ring ? Importance.max : Importance.high,
+      priority: payload.ring ? Priority.max : Priority.high,
+      category: payload.ring
+          ? AndroidNotificationCategory.alarm
+          : AndroidNotificationCategory.reminder,
+      sound: payload.ring
+          ? const UriAndroidNotificationSound(
+              'content://settings/system/alarm_alert',
+            )
+          : null,
+      audioAttributesUsage: payload.ring
+          ? AudioAttributesUsage.alarm
+          : AudioAttributesUsage.notification,
+      additionalFlags: payload.ring ? Int32List.fromList([_insistent]) : null,
+      fullScreenIntent: payload.ring,
+      ongoing: payload.ring,
+      autoCancel: !payload.ring,
+      timeoutAfter: payload.ring ? ringFor.inMilliseconds : null,
       // Medicine names stay hidden on the lock screen until unlocked.
       visibility: NotificationVisibility.private,
       icon: 'ic_stat_medic',
@@ -174,7 +253,7 @@ Future<bool> handleMedAction(
       return true;
     case MedActions.snooze:
       final again = now.add(snoozeFor);
-      await plugin.zonedSchedule(
+      Future<void> schedule(AndroidScheduleMode mode) => plugin.zonedSchedule(
         id:
             NotificationIds.snoozeStart +
             payload.keys.join().hashCode.abs() %
@@ -186,6 +265,16 @@ Future<bool> handleMedAction(
         androidScheduleMode: mode,
         notificationDetails: NotificationDetails(android: medDetails(payload)),
       );
+      if (!payload.ring) {
+        await schedule(mode);
+      } else {
+        // Exact alarms can be taken back in the system settings meanwhile.
+        try {
+          await schedule(AndroidScheduleMode.alarmClock);
+        } on PlatformException {
+          await schedule(mode);
+        }
+      }
       return true;
   }
   return false;
@@ -216,10 +305,19 @@ Future<void> medBackgroundResponse(NotificationResponse response) async {
   );
 }
 
+/// What the phone allowed when alarm-style reminders were turned on.
+typedef AlarmAccess = ({bool onTime, bool fullScreen});
+
 abstract interface class MedReminderScheduler {
   /// Replaces every scheduled medication reminder. Returns false when the
-  /// user has not allowed notifications.
-  Future<bool> replaceAll(List<MedReminder> reminders);
+  /// user has not allowed notifications. With [ring], dose reminders ring
+  /// like an alarm clock; they stay plain notifications while exact alarms
+  /// are not allowed.
+  Future<bool> replaceAll(List<MedReminder> reminders, {bool ring = false});
+
+  /// Asks for what alarm-style reminders need: notifications, exact alarms
+  /// and, best effort, covering the lock screen.
+  Future<AlarmAccess> allowAlarm();
 
   /// Whether reminders ring on the minute (exact alarms allowed).
   Future<bool> canRingOnTime();
@@ -233,13 +331,17 @@ class LocalMedReminderScheduler implements MedReminderScheduler {
   final NotificationHub hub;
 
   @override
-  Future<bool> replaceAll(List<MedReminder> reminders) async {
+  Future<bool> replaceAll(
+    List<MedReminder> reminders, {
+    bool ring = false,
+  }) async {
     try {
       await hub.ready();
       var allowed = true;
       if (reminders.isNotEmpty) allowed = await hub.requestPermission();
       await hub.cancelRange(NotificationIds.medStart, NotificationIds.medEnd);
       final mode = await hub.scheduleMode();
+      final alarm = ring && mode == AndroidScheduleMode.exactAllowWhileIdle;
       final count = NotificationIds.medEnd - NotificationIds.medStart;
       final plan = reminders.take(count).toList();
       final ids = {
@@ -259,6 +361,7 @@ class LocalMedReminderScheduler implements MedReminderScheduler {
           html: reminder.html,
           followUpId: followUp,
           withActions: reminder.kind != MedReminderKind.lowStock,
+          ring: alarm && reminder.kind == MedReminderKind.dose,
         );
         await hub.plugin.zonedSchedule(
           id: ids[reminder.key]!,
@@ -266,7 +369,9 @@ class LocalMedReminderScheduler implements MedReminderScheduler {
           title: reminder.title,
           body: reminder.summary,
           payload: payload.encode(),
-          androidScheduleMode: mode,
+          androidScheduleMode: payload.ring
+              ? AndroidScheduleMode.alarmClock
+              : mode,
           notificationDetails: NotificationDetails(
             android: medDetails(payload),
           ),
@@ -284,6 +389,22 @@ class LocalMedReminderScheduler implements MedReminderScheduler {
       return await hub.canScheduleExact();
     } on MissingPluginException {
       return true;
+    }
+  }
+
+  @override
+  Future<AlarmAccess> allowAlarm() async {
+    try {
+      await hub.ready();
+      if (!await hub.requestPermission()) {
+        return (onTime: false, fullScreen: false);
+      }
+      if (!await hub.canScheduleExact()) await hub.requestExact();
+      final onTime = await hub.canScheduleExact();
+      if (!onTime) return (onTime: false, fullScreen: false);
+      return (onTime: true, fullScreen: await hub.requestFullScreen());
+    } on MissingPluginException {
+      return (onTime: true, fullScreen: true);
     }
   }
 

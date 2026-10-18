@@ -167,19 +167,66 @@ final medReminderSchedulerProvider = Provider<MedReminderScheduler>(
   (ref) => LocalMedReminderScheduler(ref.watch(notificationHubProvider)),
 );
 
-/// Keeps the phone's medication schedule equal to [medReminderPlanProvider].
+/// Keeps the phone's medication schedule equal to [medReminderPlanProvider],
+/// ringing like an alarm when [medAlarmProvider] is on.
 final medReminderSyncProvider = Provider<void>((ref) {
-  ref.listen(medReminderPlanProvider, (previous, next) async {
-    if (listEquals(previous, next)) return;
-    if (next.isEmpty && (previous == null || previous.isEmpty)) return;
+  Future<void> replace(List<MedReminder> plan) async {
     final allowed = await ref
         .read(medReminderSchedulerProvider)
-        .replaceAll(next);
+        .replaceAll(plan, ring: ref.read(medAlarmProvider));
     if (ref.mounted && !allowed) {
       ref.read(notificationsAllowedProvider.notifier).set(false);
     }
+  }
+
+  ref.listen(medReminderPlanProvider, (previous, next) async {
+    if (listEquals(previous, next)) return;
+    if (next.isEmpty && (previous == null || previous.isEmpty)) return;
+    await replace(next);
   }, fireImmediately: true);
+  ref.listen(medAlarmProvider, (previous, next) async {
+    if (previous == next) return;
+    final plan = ref.read(medReminderPlanProvider);
+    if (plan.isNotEmpty) await replace(plan);
+  });
 });
+
+final medAlarmSettingProvider = Provider<MedAlarmSetting>(
+  (ref) => SecureMedAlarmSetting(),
+);
+
+/// Whether dose reminders ring like an alarm clock. Off until the person
+/// turns it on and the phone allows exact alarms.
+final medAlarmProvider = NotifierProvider<MedAlarm, bool>(MedAlarm.new);
+
+class MedAlarm extends Notifier<bool> {
+  @override
+  bool build() {
+    ref.read(medAlarmSettingProvider).read().then((on) {
+      if (ref.mounted && on) state = true;
+    });
+    return false;
+  }
+
+  /// Asks the phone for what alarms need and turns them on when exact
+  /// alarms are allowed; otherwise reminders stay plain notifications.
+  Future<AlarmAccess> turnOn() async {
+    final access = await ref.read(medReminderSchedulerProvider).allowAlarm();
+    if (!ref.mounted) return access;
+    if (access.onTime) {
+      state = true;
+      await ref.read(medAlarmSettingProvider).write(true);
+    }
+    // The exact-alarm page may have been opened on the way.
+    if (ref.mounted) await ref.read(ringOnTimeProvider.notifier).check();
+    return access;
+  }
+
+  Future<void> turnOff() async {
+    state = false;
+    await ref.read(medAlarmSettingProvider).write(false);
+  }
+}
 
 /// Whether reminders ring on the minute; null until checked.
 final ringOnTimeProvider = NotifierProvider<RingOnTime, bool?>(RingOnTime.new);
