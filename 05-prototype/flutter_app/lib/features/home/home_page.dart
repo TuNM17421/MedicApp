@@ -12,6 +12,7 @@ import '../booking/presentation/booking_format.dart';
 import '../consent/health_consent_page.dart';
 import '../meds/presentation/today_meds_page.dart';
 import '../booking/domain/booking_models.dart';
+import '../visit_prep/visit_prep.dart';
 import '../visit_prep/visit_prep_widgets.dart';
 
 class HomePage extends ConsumerWidget {
@@ -19,11 +20,20 @@ class HomePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final records = ref
-        .watch(appointmentsProvider)
-        .records
-        .where((record) => record.receipt.status != PaymentStatus.failed)
-        .toList();
+    // Upcoming only: a visit from an earlier day (for example last month's
+    // synced clinic visit) belongs in Lịch hẹn, not under "sắp tới".
+    final today = ref.watch(bookingTodayProvider);
+    final records =
+        ref
+            .watch(appointmentsProvider)
+            .records
+            .where(
+              (record) =>
+                  record.receipt.status != PaymentStatus.failed &&
+                  !record.visit.date.isBefore(today),
+            )
+            .toList()
+          ..sort((a, b) => visitStart(a.visit).compareTo(visitStart(b.visit)));
     final account = ref.watch(profileCatalogProvider).first;
     return SingleChildScrollView(
       key: const PageStorageKey('home-scroll'),

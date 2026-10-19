@@ -8,12 +8,15 @@ import { clauses, findAll, phraseWords, sentences, tokens } from './text.js';
 
 export const redFlagList = JSON.parse(readFileSync(new URL('./red-flags.json', import.meta.url), 'utf8'));
 
-const SIGNS = redFlagList.signs.map((s) => ({
+/** A sign list (same shape as red-flags.json) ready for matching. */
+export const compileSigns = (list) => list.signs.map((s) => ({
   code: s.code,
   label: s.label,
   phrases: s.phrases.map(phraseWords),
   except: (s.except ?? []).map(phraseWords),
 }));
+
+const SIGNS = compileSigns(redFlagList);
 
 // Words that negate what follows in the clause. Plain (no-diacritic) forms
 // count only when typed without diacritics: "cha" (father) is not "chả".
@@ -47,10 +50,10 @@ function negated(toks, i) {
 }
 
 /** Signs (codes) stated, not denied, in one clause. */
-function signsInClause(clause) {
+function signsInClause(clause, signs = SIGNS) {
   const toks = tokens(clause);
   const found = new Set();
-  for (const sign of SIGNS) {
+  for (const sign of signs) {
     const excluded = new Set();
     for (const ex of sign.except) {
       for (const at of findAll(toks, ex)) for (let k = 0; k < ex.length; k++) excluded.add(at + k);
@@ -96,6 +99,10 @@ export function detectRedFlags(answers) {
   }
   return flags;
 }
+
+/** Codes of the [signs] (from compileSigns) stated, not denied, in free text. */
+export const findSigns = (signs, text) =>
+  [...new Set(sentences(text).flatMap((s) => clauses(s).flatMap((c) => [...signsInClause(c, signs)])))];
 
 /** Codes of the signs found in free text (eval and tests). */
 export const signCodes = (text) => [...new Set(detectRedFlags([{ id: 'x', answer: text }]).flatMap((f) => f.codes))];

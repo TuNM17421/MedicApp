@@ -200,3 +200,10 @@
 
 - Ngày: 2026-10-19. Công cụ: Claude Code.
 - Đầu ra: Gộp nội dung đã duyệt vào tài liệu nghiên cứu; thêm thử "Đặt lịch theo triệu chứng" của MyVinmec; kết quả kiểm thử AI thật và rủi ro R13; mục cấp cứu 115 theo cách hiểu đã thống nhất; coach plan nhịp 6 tuần; deck 10 slide xuất ra `slides.pdf`.
+
+## AI-027 — Kiểm thử lại toàn luồng và gợi ý gọi 115
+
+- Ngày: 2026-10-19. Công cụ: Claude Code.
+- Yêu cầu: "Test lại full flow và có sử dụng AI thật cho tôi. Xem có chỗ nào còn vấn đề không? … Và thử check cho tôi việc sử dụng Smart scheduling có hoạt động trong trường hợp khẩn cấp (Gợi ý gọi 115) nếu người dùng nói triệu chứng thuộc dấu hiệu quan trọng không? Nếu chưa có hãy Impl mock một trường hợp như vậy."
+- Đầu ra: Smart Scheduling luôn so mô tả với danh sách dấu hiệu cấp cứu tạm trong code trước khi gọi model, AI chỉ bổ sung; màn cấp cứu nêu dấu hiệu, có nút Gọi 115 (chỉ mở màn gọi điện) và nút xem cơ sở gần nhất. Sửa hai lỗi thấy khi chạy lại toàn luồng: lịch hẹn đã qua hiện ở "Lịch hẹn sắp tới", và câu báo hết giờ trống không hiện khi Smart Scheduling hỏi lại thời gian.
+- Giới hạn: Danh sách dấu hiệu chưa được chuyên môn duyệt.

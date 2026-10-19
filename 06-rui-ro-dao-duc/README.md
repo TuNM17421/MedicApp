@@ -25,7 +25,7 @@ Mức: C = cao, TB = trung bình, T = thấp (mức độ tác hại / khả nă
 ## Đường chuyển tuyến khẩn cấp
 
 - **Kích hoạt:** Khi dùng Smart Scheduling, mô tả của người bệnh có dấu hiệu nằm trong danh sách dấu hiệu cấp cứu, ví dụ khó thở, đau ngực dữ dội, ngất, yếu liệt. Danh sách chính thức sẽ do người có chuyên môn đề xuất và phân loại.
-- **Cách phát hiện (đã duyệt, Nguyễn Mạnh Tú, 19/10/2026):** App luôn kiểm tra mô tả theo danh sách do chuyên môn duyệt; khi bật AI thật, model chỉ bổ sung thêm dấu hiệu, không thay thế danh sách. Hiện code chưa làm đúng như vậy: bản AI thật để model tự đánh giá, bản giả lập dùng danh sách tạm `URGENT_HINTS`. Phần sửa code sẽ làm ở một thread riêng.
+- **Cách phát hiện (đã duyệt, Nguyễn Mạnh Tú, 19/10/2026):** App luôn kiểm tra mô tả theo danh sách do chuyên môn duyệt; khi bật AI thật, model chỉ bổ sung thêm dấu hiệu, không thay thế danh sách. Code đã làm theo cách này ở cả bản giả lập và bản AI thật, với danh sách tạm [urgent-signs.json](../05-prototype/backend/src/urgent-signs.json) chờ chuyên môn thay.
 - **Hệ thống làm gì:** Dừng luồng đặt lịch thường và gợi ý người dùng gọi 115 hoặc đến cơ sở y tế gần nhất ngay. Hệ thống chỉ gợi ý, không tự gọi; người dùng là người quyết định cuối cùng.
 - **Kênh:** 115, số cấp cứu y tế toàn quốc.
 - **Dự phòng:** Người dùng vẫn tự đặt lịch được theo luồng cơ bản; app không chặn họ.

@@ -7,6 +7,7 @@ import {
   facility,
 } from './catalog.js';
 import { ExtractorError, validateExtraction } from './extraction.js';
+import { urgentSigns } from './urgent.js';
 
 /**
  * Conversation orchestrator. The extractor (mock rules or the model) only
@@ -46,6 +47,9 @@ export function createSessionState({ id, today, profiles, known = {} }) {
     inflight: null,
     asked: {},
     urgent: false,
+    // Listed signs found by code, and who raised the alert ('list', 'model').
+    urgentSigns: [],
+    urgentBy: [],
     notice: null,
     modelCalls: [],
   };
@@ -257,6 +261,7 @@ export function reply(session, { mode, status: forced, error, notes = [], change
     error: error ? { code: error, message: ERROR_MESSAGES[error] ?? ERROR_MESSAGES.network } : null,
     changed,
     rejected,
+    urgent: session.urgent ? { signs: session.urgentSigns, by: session.urgentBy } : null,
     catalog_version: catalog.version,
   };
 }
@@ -304,6 +309,12 @@ export function parseUserValues(session, field, value) {
   return patch;
 }
 
+function markUrgent(session, by, signs = []) {
+  session.urgent = true;
+  if (!session.urgentBy.includes(by)) session.urgentBy.push(by);
+  for (const s of signs) if (!session.urgentSigns.includes(s)) session.urgentSigns.push(s);
+}
+
 function rateLimited(session, limit, now) {
   session.modelCalls = session.modelCalls.filter((t) => now - t < 60_000);
   if (session.modelCalls.length >= limit) return true;
@@ -318,7 +329,20 @@ function rateLimited(session, limit, now) {
  */
 export async function handleUtterance(session, text, { extractor, mode, limit, turnId, log = () => {}, now = Date.now }) {
   session.version += 1;
-  session.pending.push({ text: String(text).slice(0, 1000), version: session.version });
+  const utterance = String(text).slice(0, 1000);
+  // The fixed list runs first, in code, whatever the mode: a listed sign stops
+  // booking at once, without waiting for (or depending on) the model.
+  const listed = urgentSigns([utterance]);
+  if (listed.length) {
+    session.inflight?.abort();
+    session.runId += 1;
+    session.inflight = null;
+    session.pending = [];
+    markUrgent(session, 'list', listed);
+    log('urgent', { by: 'list' });
+    return reply(session, { mode, turnId });
+  }
+  session.pending.push({ text: utterance, version: session.version });
   if (session.pending.length > MAX_PENDING) session.pending.splice(0, session.pending.length - MAX_PENDING);
   if (rateLimited(session, limit, now())) {
     session.pending = [];
@@ -355,7 +379,10 @@ export async function handleUtterance(session, text, { extractor, mode, limit, t
     source: 'ai',
     sinceVersion: Math.max(...batch.map((b) => b.version)),
   });
-  if (result.urgent) session.urgent = true;
+  if (result.urgent) {
+    markUrgent(session, 'model');
+    log('urgent', { by: 'model' });
+  }
   if (result.outOfScope) notes.push('Ứng dụng không tư vấn chẩn đoán hay thuốc; mình chỉ giúp bạn đặt lịch khám.');
   if (result.rejected.includes('date')) notes.push('Ngày bạn nói không có lịch đặt trực tuyến (chỉ nhận 6 ngày tới, nghỉ Chủ nhật).');
   return reply(session, { mode, notes, changed, rejected: result.rejected, turnId });

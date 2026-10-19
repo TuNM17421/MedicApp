@@ -119,6 +119,41 @@ test('urgent signals stop the normal booking path (AC14)', async () => {
   assert.equal(r2.status, 'urgent');
 });
 
+test('listed urgent signs stop booking even when the model call fails (R02)', async () => {
+  const s = newSession();
+  let called = false;
+  const failing = async () => {
+    called = true;
+    throw new ExtractorError('network');
+  };
+  const r = await handleUtterance(s, 'Bố tôi vừa ngất xỉu, gọi không tỉnh', opts({ extractor: failing, mode: 'openai' }));
+  assert.equal(r.status, 'urgent');
+  assert.equal(called, false);
+  assert.deepEqual(r.urgent, { signs: ['ngất'], by: ['list'] });
+});
+
+test('the model only adds to the urgent list, never removes from it (R02)', async () => {
+  const quiet = async () => emptyExtraction();
+  const s = newSession();
+  const r = await handleUtterance(s, 'toi kho tho, tho khong noi', opts({ extractor: quiet, mode: 'openai' }));
+  assert.equal(r.status, 'urgent');
+  assert.deepEqual(r.urgent.signs, ['khó thở']);
+
+  const s2 = newSession();
+  const flagged = async () => ({ ...emptyExtraction(), urgent_signal: true });
+  const r2 = await handleUtterance(s2, 'người tôi lạnh toát, môi tái, lơ mơ', opts({ extractor: flagged, mode: 'openai' }));
+  assert.equal(r2.status, 'urgent');
+  assert.deepEqual(r2.urgent, { signs: [], by: ['model'] });
+});
+
+test('denied or non-urgent symptoms keep normal booking (R02)', async () => {
+  for (const text of ['Tôi không khó thở, không đau ngực, chỉ ho nhẹ', 'Tôi hơi tức ngực khi leo cầu thang', 'Mũi tôi bị ngạt mũi mấy hôm']) {
+    const r = await handleUtterance(newSession(), text, opts());
+    assert.notEqual(r.status, 'urgent', text);
+    assert.equal(r.urgent, null);
+  }
+});
+
 test('changing patient clears the previous health details (AC17)', async () => {
   const s = newSession({ type: 'service', facilityId: 'anbinh' });
   await handleUtterance(s, 'cho tôi, đau họng, khám sớm nhất', opts());

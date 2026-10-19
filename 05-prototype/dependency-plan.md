@@ -13,6 +13,7 @@ Ngày 2026-10-14. Chủ dự án yêu cầu cài toàn bộ các thư viện đ�
 | table_calendar | 3.3.0 | Lịch tháng bổ sung nếu cần; không thay thẻ chọn ngày mặc định |
 | go_router | 18.0.2 | Điều hướng các tab và luồng đặt khám riêng |
 | flutter_riverpod | 3.4.3 | Bản nháp đặt khám và trạng thái dữ liệu bất đồng bộ |
+| url_launcher | 6.3.3 | Nút Gọi 115 mở màn hình gọi điện với số điền sẵn; người dùng tự bấm gọi |
 
 ## Triển khai theo từng đợt
 

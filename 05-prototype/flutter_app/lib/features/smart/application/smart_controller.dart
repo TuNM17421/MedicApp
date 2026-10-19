@@ -396,11 +396,20 @@ class SmartController extends Notifier<SmartState> {
       }
       if (slot == null) {
         final today = ref.read(bookingTodayProvider);
+        const text =
+            'Không còn giờ trống phù hợp với thời gian bạn chọn. Bạn muốn khám khi nào?';
         state = state.copyWith(
           phase: SmartPhase.asking,
+          // Said in the conversation too: the options alone do not tell the
+          // user why the time they asked for was not proposed.
+          messages: [
+            ...state.messages,
+            if (state.messages.lastOrNull?.text != text)
+              const SmartMessage(fromUser: false, text: text),
+          ],
           slotQuestion: SmartQuestion(
             field: 'time',
-            text: 'Không còn giờ trống phù hợp với thời gian bạn chọn. Bạn muốn khám khi nào?',
+            text: text,
             options: [
               const SmartOption('earliest', 'Sớm nhất còn chỗ'),
               for (final date in BookingCatalog.dates(today))

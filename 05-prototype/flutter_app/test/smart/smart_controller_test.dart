@@ -186,6 +186,33 @@ void main() {
     },
   );
 
+  test(
+    'a full day is explained in the conversation, not only by options',
+    () async {
+      final full = BookingCatalog.dates(
+        today,
+      )[2].toIso8601String().substring(0, 10);
+      final gateway = FakeGateway(
+        (_, _, _) async => reply(
+          status: 'ready',
+          version: 2,
+          fields: {
+            ...readyFields,
+            'time': {'kind': 'date', 'date': full, 'period': 'morning'},
+          },
+        ),
+      );
+      final c = smartContainer(gateway);
+      final actions = await started(c);
+      await actions.sendText('Tôi đau khớp gối, khám sáng hôm đó ở An Bình');
+      final s = c.read(smartControllerProvider);
+      expect(s.phase, SmartPhase.asking);
+      expect(s.question!.field, 'time');
+      expect(s.messages.last.fromUser, isFalse);
+      expect(s.messages.last.text, startsWith('Không còn giờ trống'));
+    },
+  );
+
   test('urgent replies block the booking path (AC14)', () async {
     final gateway = FakeGateway(
       (_, _, _) async =>
