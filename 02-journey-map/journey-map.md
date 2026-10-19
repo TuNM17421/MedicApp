@@ -1,6 +1,6 @@
 # Journey map — Người lớn tuổi tự đặt một lượt khám ngoại trú
 
-**Trạng thái:** Đang chờ duyệt. Dựng từ log P1–P4 và ghi chép dùng thử MyVinmec; cảm xúc chỉ ghi khi có trích dẫn hoặc quan sát.
+**Trạng thái:** Đã duyệt (Nguyễn Mạnh Tú, 19/10/2026). Dựng từ log P1–P4 và ghi chép dùng thử MyVinmec; cảm xúc chỉ ghi khi có trích dẫn hoặc quan sát.
 
 - **Người dùng:** Người 50–60+ tự đặt khám, đại diện bởi P3 (71 tuổi); người chăm sóc đặt hộ, đại diện bởi P4.
 - **Mục tiêu:** Đặt được một lượt khám đúng chuyên khoa và biết rõ lịch của mình.

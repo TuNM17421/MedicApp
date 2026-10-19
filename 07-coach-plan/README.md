@@ -1,6 +1,6 @@
 # 07 — Mình sẽ coach một nhóm làm bài này thế nào
 
-**Trạng thái:** Đang chờ duyệt. Áp dụng cho nhóm 5–10 người, một nhịp 6 tuần.
+**Trạng thái:** Đã duyệt (Nguyễn Mạnh Tú, 19/10/2026). Áp dụng cho nhóm 5–10 người, một nhịp 6 tuần.
 
 ## Mục tiêu
 
