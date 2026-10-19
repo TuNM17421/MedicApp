@@ -2,7 +2,7 @@
 
 **PRD triển khai mới:** [Smart Scheduling — hội thoại streaming](prd-smart-scheduling-implementation.md), ngày 2026-10-15, bổ sung luồng đã thống nhất, model tiết kiệm và tiêu chí nghiệm thu để implement. Tài liệu dưới đây giữ bối cảnh/luồng cơ bản của vòng prototype ban đầu.
 
-**Phiên bản:** 0.1 · **Ngày:** 2026-10-14 · **Trạng thái:** Chờ duyệt luồng và prototype.
+**Phiên bản:** 0.1 · **Ngày:** 2026-10-14 · **Trạng thái:** Đã duyệt bố cục prototype; luồng cơ bản và Smart Scheduling đã triển khai trong app (xem [PRD triển khai](prd-smart-scheduling-implementation.md)). Nội dung dưới đây giữ nguyên bản 0.1 để truy xuất quyết định.
 
 **Đầu ra của giai đoạn này:** Prototype tương tác để duyệt trải nghiệm trước khi áp dụng vào Flutter. Không sửa code app, không tích hợp AI, dữ liệu bệnh viện hoặc thanh toán thật ở giai đoạn này.
 
