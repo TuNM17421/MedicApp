@@ -1,0 +1,416 @@
+{
+  "note": "DỮ LIỆU MẪU cho bản thử nghiệm: chưa phải danh mục thuốc của phòng khám, chưa được dược sĩ hay bác sĩ duyệt. Tên ICD-10 tiếng Việt rút gọn.",
+  "version": "2026-10-sample-1",
+  "drugs": [
+    {
+      "name": "Allopurinol",
+      "strength": "300mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Allopurinol",
+      "strength": "100mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Atorvastatin",
+      "strength": "10mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Atorvastatin",
+      "strength": "20mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Rosuvastatin",
+      "strength": "10mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Colchicin",
+      "strength": "1mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Meloxicam",
+      "strength": "7,5mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Celecoxib",
+      "strength": "200mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Paracetamol",
+      "strength": "500mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Ibuprofen",
+      "strength": "400mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Amlodipin",
+      "strength": "5mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Losartan",
+      "strength": "50mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Bisoprolol",
+      "strength": "2,5mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Perindopril",
+      "strength": "5mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Hydroclorothiazid",
+      "strength": "25mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Metformin",
+      "strength": "500mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Metformin",
+      "strength": "850mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Gliclazid",
+      "strength": "30mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Omeprazol",
+      "strength": "20mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Esomeprazol",
+      "strength": "20mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Pantoprazol",
+      "strength": "40mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Domperidon",
+      "strength": "10mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Nhôm hydroxyd + magnesi hydroxyd",
+      "strength": "",
+      "form": "gói",
+      "route": "Uống"
+    },
+    {
+      "name": "Glucosamin",
+      "strength": "500mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Diclofenac gel",
+      "strength": "1%",
+      "form": "tuýp",
+      "route": "Bôi"
+    },
+    {
+      "name": "Amoxicilin",
+      "strength": "500mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Cefuroxim",
+      "strength": "500mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Azithromycin",
+      "strength": "500mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Loratadin",
+      "strength": "10mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Cetirizin",
+      "strength": "10mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Salbutamol",
+      "strength": "2mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Acetylcystein",
+      "strength": "200mg",
+      "form": "gói",
+      "route": "Uống"
+    },
+    {
+      "name": "Clopidogrel",
+      "strength": "75mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Aspirin",
+      "strength": "81mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Vitamin B1 + B6 + B12",
+      "strength": "",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Calci carbonat + vitamin D3",
+      "strength": "",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Oresol",
+      "strength": "",
+      "form": "gói",
+      "route": "Uống"
+    },
+    {
+      "name": "Mebeverin",
+      "strength": "135mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Alverin",
+      "strength": "40mg",
+      "form": "viên",
+      "route": "Uống"
+    },
+    {
+      "name": "Betamethason kem",
+      "strength": "0,05%",
+      "form": "tuýp",
+      "route": "Bôi"
+    }
+  ],
+  "icd10": [
+    [
+      "M10",
+      "Gút"
+    ],
+    [
+      "E78",
+      "Rối loạn lipid máu"
+    ],
+    [
+      "M17",
+      "Thoái hóa khớp gối"
+    ],
+    [
+      "M25.5",
+      "Đau khớp"
+    ],
+    [
+      "I10",
+      "Tăng huyết áp vô căn"
+    ],
+    [
+      "E11",
+      "Đái tháo đường type 2"
+    ],
+    [
+      "K21",
+      "Bệnh trào ngược dạ dày thực quản"
+    ],
+    [
+      "K29",
+      "Viêm dạ dày và tá tràng"
+    ],
+    [
+      "R06.0",
+      "Khó thở"
+    ],
+    [
+      "R07.4",
+      "Đau ngực, không đặc hiệu"
+    ],
+    [
+      "R53",
+      "Mệt mỏi"
+    ],
+    [
+      "J00",
+      "Viêm mũi họng cấp (cảm thường)"
+    ],
+    [
+      "J02",
+      "Viêm họng cấp"
+    ],
+    [
+      "J03",
+      "Viêm amidan cấp"
+    ],
+    [
+      "J06",
+      "Nhiễm trùng hô hấp trên cấp"
+    ],
+    [
+      "J20",
+      "Viêm phế quản cấp"
+    ],
+    [
+      "J45",
+      "Hen phế quản"
+    ],
+    [
+      "J30",
+      "Viêm mũi dị ứng"
+    ],
+    [
+      "I20",
+      "Cơn đau thắt ngực"
+    ],
+    [
+      "I25",
+      "Bệnh tim thiếu máu cục bộ mạn"
+    ],
+    [
+      "I48",
+      "Rung nhĩ và cuồng nhĩ"
+    ],
+    [
+      "I50",
+      "Suy tim"
+    ],
+    [
+      "E03",
+      "Suy giáp khác"
+    ],
+    [
+      "E05",
+      "Cường giáp"
+    ],
+    [
+      "E66",
+      "Béo phì"
+    ],
+    [
+      "K30",
+      "Khó tiêu chức năng"
+    ],
+    [
+      "K58",
+      "Hội chứng ruột kích thích"
+    ],
+    [
+      "K59.0",
+      "Táo bón"
+    ],
+    [
+      "A09",
+      "Tiêu chảy và viêm dạ dày ruột do nhiễm trùng"
+    ],
+    [
+      "N39.0",
+      "Nhiễm khuẩn đường tiết niệu"
+    ],
+    [
+      "M54.5",
+      "Đau thắt lưng"
+    ],
+    [
+      "M79.1",
+      "Đau cơ"
+    ],
+    [
+      "M81",
+      "Loãng xương"
+    ],
+    [
+      "G43",
+      "Migraine"
+    ],
+    [
+      "G47.0",
+      "Mất ngủ"
+    ],
+    [
+      "R51",
+      "Đau đầu"
+    ],
+    [
+      "R50",
+      "Sốt không rõ nguyên nhân"
+    ],
+    [
+      "R10.1",
+      "Đau bụng vùng thượng vị"
+    ],
+    [
+      "L20",
+      "Viêm da cơ địa"
+    ],
+    [
+      "L50",
+      "Mày đay"
+    ],
+    [
+      "D50",
+      "Thiếu máu do thiếu sắt"
+    ],
+    [
+      "Z00.0",
+      "Khám sức khỏe tổng quát"
+    ]
+  ]
+}

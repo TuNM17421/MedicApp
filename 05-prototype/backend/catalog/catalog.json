@@ -1,0 +1,300 @@
+{
+  "version": "2026-10-15.1",
+  "notice": "Dữ liệu minh họa cho prototype. Không phải cơ sở, bác sĩ, giá hoặc lịch thật.",
+  "facilities": [
+    {
+      "id": "anbinh",
+      "name": "Phòng khám Đa khoa An Bình",
+      "address": "12 đường Hoa Sữa, phường An Phú",
+      "area": "Phường An Phú",
+      "fee": 250000,
+      "acceptsInsurance": true,
+      "payAtHospital": true,
+      "departments": [
+        "general",
+        "heart",
+        "bones",
+        "ent",
+        "eyes",
+        "children"
+      ]
+    },
+    {
+      "id": "songxanh",
+      "name": "Bệnh viện Sông Xanh",
+      "address": "88 đại lộ Sông Xanh, phường Tân Mỹ",
+      "area": "Phường Tân Mỹ",
+      "fee": 500000,
+      "acceptsInsurance": false,
+      "payAtHospital": false,
+      "departments": [
+        "general",
+        "heart",
+        "bones",
+        "eyes",
+        "endocrine"
+      ]
+    },
+    {
+      "id": "hoalac",
+      "name": "Trung tâm Y tế Hòa Lạc",
+      "address": "5 ngõ Cây Gạo, xã Hòa Lạc",
+      "area": "Xã Hòa Lạc",
+      "fee": 180000,
+      "acceptsInsurance": true,
+      "payAtHospital": true,
+      "departments": [
+        "general",
+        "bones",
+        "ent",
+        "children",
+        "endocrine"
+      ]
+    }
+  ],
+  "departments": [
+    {
+      "id": "general",
+      "name": "Nội tổng quát"
+    },
+    {
+      "id": "heart",
+      "name": "Tim mạch"
+    },
+    {
+      "id": "bones",
+      "name": "Cơ Xương Khớp"
+    },
+    {
+      "id": "ent",
+      "name": "Tai Mũi Họng"
+    },
+    {
+      "id": "eyes",
+      "name": "Mắt"
+    },
+    {
+      "id": "endocrine",
+      "name": "Nội tiết"
+    },
+    {
+      "id": "children",
+      "name": "Nhi khoa",
+      "maxAge": 15
+    }
+  ],
+  "doctors": [
+    {
+      "id": "anbinh-general-0",
+      "name": "BS. Nguyễn Thu Hà",
+      "facilityId": "anbinh",
+      "departmentId": "general"
+    },
+    {
+      "id": "anbinh-general-1",
+      "name": "BS. Trần Quốc Bảo",
+      "facilityId": "anbinh",
+      "departmentId": "general"
+    },
+    {
+      "id": "anbinh-heart-0",
+      "name": "BS. Lê Minh Châu",
+      "facilityId": "anbinh",
+      "departmentId": "heart"
+    },
+    {
+      "id": "anbinh-heart-1",
+      "name": "BS. Phạm Đức Long",
+      "facilityId": "anbinh",
+      "departmentId": "heart"
+    },
+    {
+      "id": "anbinh-bones-0",
+      "name": "BS. Võ Thanh Tâm",
+      "facilityId": "anbinh",
+      "departmentId": "bones"
+    },
+    {
+      "id": "anbinh-bones-1",
+      "name": "BS. Đỗ Ngọc Anh",
+      "facilityId": "anbinh",
+      "departmentId": "bones"
+    },
+    {
+      "id": "anbinh-ent-0",
+      "name": "BS. Hoàng Văn Sơn",
+      "facilityId": "anbinh",
+      "departmentId": "ent"
+    },
+    {
+      "id": "anbinh-ent-1",
+      "name": "BS. Bùi Thị Hạnh",
+      "facilityId": "anbinh",
+      "departmentId": "ent"
+    },
+    {
+      "id": "anbinh-eyes-0",
+      "name": "BS. Nguyễn Thu Hà",
+      "facilityId": "anbinh",
+      "departmentId": "eyes"
+    },
+    {
+      "id": "anbinh-eyes-1",
+      "name": "BS. Trần Quốc Bảo",
+      "facilityId": "anbinh",
+      "departmentId": "eyes"
+    },
+    {
+      "id": "anbinh-children-0",
+      "name": "BS. Võ Thanh Tâm",
+      "facilityId": "anbinh",
+      "departmentId": "children"
+    },
+    {
+      "id": "anbinh-children-1",
+      "name": "BS. Đỗ Ngọc Anh",
+      "facilityId": "anbinh",
+      "departmentId": "children"
+    },
+    {
+      "id": "songxanh-general-0",
+      "name": "BS. Phạm Đức Long",
+      "facilityId": "songxanh",
+      "departmentId": "general"
+    },
+    {
+      "id": "songxanh-general-1",
+      "name": "BS. Võ Thanh Tâm",
+      "facilityId": "songxanh",
+      "departmentId": "general"
+    },
+    {
+      "id": "songxanh-heart-0",
+      "name": "BS. Đỗ Ngọc Anh",
+      "facilityId": "songxanh",
+      "departmentId": "heart"
+    },
+    {
+      "id": "songxanh-heart-1",
+      "name": "BS. Hoàng Văn Sơn",
+      "facilityId": "songxanh",
+      "departmentId": "heart"
+    },
+    {
+      "id": "songxanh-bones-0",
+      "name": "BS. Bùi Thị Hạnh",
+      "facilityId": "songxanh",
+      "departmentId": "bones"
+    },
+    {
+      "id": "songxanh-bones-1",
+      "name": "BS. Nguyễn Thu Hà",
+      "facilityId": "songxanh",
+      "departmentId": "bones"
+    },
+    {
+      "id": "songxanh-eyes-0",
+      "name": "BS. Phạm Đức Long",
+      "facilityId": "songxanh",
+      "departmentId": "eyes"
+    },
+    {
+      "id": "songxanh-eyes-1",
+      "name": "BS. Võ Thanh Tâm",
+      "facilityId": "songxanh",
+      "departmentId": "eyes"
+    },
+    {
+      "id": "songxanh-endocrine-0",
+      "name": "BS. Đỗ Ngọc Anh",
+      "facilityId": "songxanh",
+      "departmentId": "endocrine"
+    },
+    {
+      "id": "songxanh-endocrine-1",
+      "name": "BS. Hoàng Văn Sơn",
+      "facilityId": "songxanh",
+      "departmentId": "endocrine"
+    },
+    {
+      "id": "hoalac-general-0",
+      "name": "BS. Hoàng Văn Sơn",
+      "facilityId": "hoalac",
+      "departmentId": "general"
+    },
+    {
+      "id": "hoalac-general-1",
+      "name": "BS. Bùi Thị Hạnh",
+      "facilityId": "hoalac",
+      "departmentId": "general"
+    },
+    {
+      "id": "hoalac-bones-0",
+      "name": "BS. Lê Minh Châu",
+      "facilityId": "hoalac",
+      "departmentId": "bones"
+    },
+    {
+      "id": "hoalac-bones-1",
+      "name": "BS. Phạm Đức Long",
+      "facilityId": "hoalac",
+      "departmentId": "bones"
+    },
+    {
+      "id": "hoalac-ent-0",
+      "name": "BS. Võ Thanh Tâm",
+      "facilityId": "hoalac",
+      "departmentId": "ent"
+    },
+    {
+      "id": "hoalac-ent-1",
+      "name": "BS. Đỗ Ngọc Anh",
+      "facilityId": "hoalac",
+      "departmentId": "ent"
+    },
+    {
+      "id": "hoalac-endocrine-0",
+      "name": "BS. Nguyễn Thu Hà",
+      "facilityId": "hoalac",
+      "departmentId": "endocrine"
+    },
+    {
+      "id": "hoalac-endocrine-1",
+      "name": "BS. Trần Quốc Bảo",
+      "facilityId": "hoalac",
+      "departmentId": "endocrine"
+    },
+    {
+      "id": "hoalac-children-0",
+      "name": "BS. Lê Minh Châu",
+      "facilityId": "hoalac",
+      "departmentId": "children"
+    },
+    {
+      "id": "hoalac-children-1",
+      "name": "BS. Phạm Đức Long",
+      "facilityId": "hoalac",
+      "departmentId": "children"
+    }
+  ],
+  "schedule": {
+    "daysAhead": 6,
+    "closedWeekday": 7,
+    "times": [
+      "07:30",
+      "08:00",
+      "08:30",
+      "09:00",
+      "09:30",
+      "10:00",
+      "10:30",
+      "13:30",
+      "14:00",
+      "14:30",
+      "15:00",
+      "15:30",
+      "16:00"
+    ],
+    "afternoonFrom": "12:00"
+  }
+}

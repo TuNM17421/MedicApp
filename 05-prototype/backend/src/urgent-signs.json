@@ -1,0 +1,48 @@
+{
+  "note": "DANH SÁCH TẠM (mock), chờ người có chuyên môn y tế đề xuất và phân loại trước khi dùng thật. Dùng trong Smart Scheduling: mô tả có dấu hiệu dưới đây thì dừng đặt lịch thường và gợi ý gọi 115. App luôn kiểm tra danh sách này; khi bật AI thật, model chỉ bổ sung, không thay thế. App không tự gọi, người dùng quyết định. So khớp không phân biệt dấu và bỏ qua câu phủ định ('không khó thở').",
+  "version": "2026-10-mock-1",
+  "reviewed": false,
+  "signs": [
+    {
+      "code": "dyspnea",
+      "label": "khó thở",
+      "phrases": ["khó thở", "thở không nổi", "thở không ra hơi", "ngạt thở", "ngộp thở", "thở rít", "tím tái"]
+    },
+    {
+      "code": "chest_pain_severe",
+      "label": "đau ngực dữ dội",
+      "phrases": ["đau ngực dữ dội", "đau ngực dữ lắm", "đau ngực dữ quá", "đau thắt ngực", "đau ngực lan ra tay", "đau ngực lan lên hàm", "đau ngực vã mồ hôi", "ngực đau như bị đè", "đau tim dữ dội"]
+    },
+    {
+      "code": "syncope",
+      "label": "ngất",
+      "phrases": ["ngất", "ngất xỉu", "xỉu", "bất tỉnh", "mất ý thức", "gọi không tỉnh", "lịm đi"],
+      "except": ["ngạt mũi", "ngạt thở", "thơm ngát", "ngát hương", "xanh ngắt", "lạnh ngắt", "tím ngắt", "ngắt lời", "ngắt quãng", "ngắt điện"]
+    },
+    {
+      "code": "stroke",
+      "label": "yếu liệt, méo miệng, nói khó đột ngột",
+      "phrases": ["yếu nửa người", "liệt nửa người", "yếu liệt nửa người", "yếu một bên", "liệt một bên", "tê nửa người", "méo miệng", "méo mặt", "nói ngọng", "nói líu lưỡi", "không nói được", "không nhấc được tay", "không nhấc nổi tay", "liệt tay", "liệt chân"]
+    },
+    {
+      "code": "seizure",
+      "label": "co giật",
+      "phrases": ["co giật", "lên cơn giật", "giật kinh phong"]
+    },
+    {
+      "code": "bleeding",
+      "label": "chảy máu nhiều, nôn hoặc ho ra máu",
+      "phrases": ["chảy máu nhiều", "chảy máu không cầm", "máu chảy không cầm", "nôn ra máu", "ói ra máu", "nôn máu", "ói máu", "ho ra máu", "ho máu"]
+    },
+    {
+      "code": "severe_headache",
+      "label": "đau đầu dữ dội đột ngột",
+      "phrases": ["đau đầu dữ dội", "đau đầu như búa bổ", "đau đầu như muốn nổ", "nhức đầu dữ dội"]
+    },
+    {
+      "code": "suicidal",
+      "label": "có ý định tự hại",
+      "phrases": ["tự tử", "tự sát", "muốn chết", "không muốn sống", "chẳng muốn sống", "tự làm hại", "tự hại bản thân"]
+    }
+  ]
+}

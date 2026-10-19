@@ -1,0 +1,22 @@
+{
+  "name": "medicapp-smart-backend",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local Smart Scheduling backend for the MedicApp prototype (USB dev only).",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test",
+    "seed": "node src/clinic/seed.js",
+    "backup": "node src/ops/backup.js",
+    "restore": "node src/ops/restore.js",
+    "eval:summary": "node eval/run-summary-eval.js"
+  },
+  "dependencies": {
+    "openai": "7.34.0",
+    "ws": "8.22.0"
+  }
+}

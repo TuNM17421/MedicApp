@@ -1,15 +1,39 @@
-# MedicApp — Flutter Android starter
+# MedicApp — Khung app Flutter Android
 
-App `medic_app` được khởi tạo bằng template chính thức của Flutter. Hiện là màn hình đếm mẫu để kiểm tra công cụ; chưa phải prototype MyVinmec, chưa có dữ liệu bệnh nhân hay kết nối backend.
+**Liên kết hai máy:** Liên kết hồ sơ của người thân với điện thoại của chính người đó bằng mã QR. Lịch hẹn hiện ở cả hai máy, chuông thuốc chỉ kêu ở máy người uống, và người chăm sóc nhận tin khi người thân lỡ liều. Cần backend local. Xem [Liên kết hai máy](LIEN-KET-HAI-MAY.md).
+
+**Bước 4:** Đã thêm chuyển động nhẹ, loading skeleton, giảm chuyển động và cải thiện cỡ chữ lớn cho luồng đặt lịch. Xem [chi tiết UI/UX](UI-UX.md).
+
+**Bước 9:** Có icon và màn mở app riêng, hình minh họa, lịch tháng ở trang Lịch hẹn và chuyển động nhẹ (tắt khi giảm chuyển động). Xem [bước 9](LAM-DEP-UI.md).
+
+**Bước 10:** Hồ sơ gia đình được lưu trên máy (mã hóa AES-256-GCM, khóa giữ trong Android Keystore) sau khi chủ tài khoản đồng ý ở màn hình "Lưu dữ liệu sức khỏe". Không đồng ý thì app chạy như cũ, dữ liệu mất khi đóng app. Rút lại đồng ý ở Tài khoản sẽ xóa dữ liệu khỏi máy. Xem [bước 10](LUU-TRU-DU-LIEU.md).
+
+**Bước 11:** Kết quả khám và đơn thuốc theo mẫu Bộ Y tế (Thông tư 18/2018/TT-BYT), do một web bác sĩ giả lập gửi về cho từng lượt khám. Xem dạng dễ đọc hoặc dạng giống tờ đơn giấy. Lịch hẹn và kết quả giờ được lưu theo từng tài khoản. Xem [bước 11](DON-THUOC.md).
+
+**Bước 12:** Nhắc uống thuốc theo đơn: thông báo đúng giờ có nút "Đã uống" và "Nhắc lại sau 10 phút", nhắc lại sau 30 phút nếu chưa ghi, báo sắp hết thuốc. Màn "Thuốc hôm nay" ghi đã uống hoặc bỏ liều kèm lý do, xem lịch sử 4 tuần cho từng người. Xem [bước 12](NHAC-THUOC.md).
+
+**Bước 13:** Bắt đầu web bác sĩ: tách đơn thuốc, nhật ký thuốc và cách tính tuân thủ ra package dùng chung `medic_core`; backend có cơ sở dữ liệu phòng khám. Xem [bước 13](WEB-BAC-SI-NEN.md).
+
+**Nhận kết quả bằng mã:** Ở lịch hẹn, nút "Nhập mã nhận kết quả" nhận kết quả khám bằng mã 10 ký tự in cuối đơn thuốc (dạng `XXXX-XXXX-XX`), lưu như kết quả cũ nên nhắc uống thuốc vẫn chạy. Chạy với `--dart-define=API_BASE_URL=http://localhost:8080` để gọi `GET /v1/results/claim/:code` của [backend](../backend/CLINIC-API.md); không có `API_BASE_URL` thì app dùng bản giả lập (mã nào đúng dạng cũng được). Mã demo cố định: chạy `SEED_CLAIM_CODE=K7MQ-4XR2-9D npm run seed` trong `backend`.
+
+**Bước 16:** Người bệnh đăng nhập bằng số điện thoại và mã 6 số do phòng khám gửi, xem lịch khám và kết quả của phòng khám ngay trong Lịch hẹn (không cần mã nhận kết quả), trả lời "Câu hỏi trước khám" và chọn "Chia sẻ với phòng khám" cho từng lượt khám: chọn từng mục (câu trả lời trước khám, 30 ngày uống thuốc, thuốc tự dùng), thấy rõ phòng khám nào và đến ngày nào, phải tự đánh dấu đồng ý, rút lại bất kỳ lúc nào. Dữ liệu chưa gửi được (mất mạng) được giữ lại và gửi lại khi mở app, quay lại app hoặc ghi liều thuốc mới. Cách chạy: trong `backend` đặt `DEMO_OTP=000000` trong `.env`, chạy `npm run seed` rồi `npm start`; chạy app với `--dart-define=API_BASE_URL=http://localhost:8080`, nhập số mẫu `0912000482` (Phạm Thị Lan) và mã `000000` (app cũng hiện "Mã thử"). Không có `API_BASE_URL` thì app vẫn đăng nhập bằng mật khẩu giả lập như cũ. Kiểm tra hợp đồng với backend thật: `PATIENT_CONTRACT=1 flutter test test/sharing/patient_contract_test.dart`. Xem [API người bệnh](../backend/CLINIC-API.md).
+
+**Bước 8:** App đặt thông báo nhắc khám trên điện thoại, chọn giờ theo thời gian phải kiêng và nội dung theo tuổi, giới của người khám. Xem [bước 8](THONG-BAO-NHAC-KHAM.md).
+
+**Bước 7:** Có lưu ý cá nhân hóa trước khi khám cho 5 bệnh, đọc từ hồ sơ và lịch hẹn. Xem [bước 7](LUU-Y-TRUOC-KHAM.md).
+
+**Bước 6:** Có đăng ký, đăng nhập (giả lập trong máy) và tạo hồ sơ nhanh bằng quét mã QR trên CCCD. Xem [bước 6](AUTH-CCCD.md).
+
+App `medic_app` mở màn **Chào mừng** khi chưa đăng nhập, sau đó vào **Trang chủ**, có shell bốn tab, nút Đặt lịch ở giữa và trạng thái hồ sơ/thông báo bằng Riverpod. Đã có luồng đặt lịch cơ bản và thanh toán giả lập, xem [bước 3](BOOKING.md). Có Đặt lịch thông minh bằng giọng nói hoặc nhập tay, cần chạy [backend local](../backend/README.md); xem [bước 5](SMART-SCHEDULING.md). Xem [khung điều hướng bước 2](NAVIGATION.md) và [nền giao diện bước 1](DESIGN-SYSTEM.md).
 
 - Nền tảng: Android.
 - Flutter 3.47.7 stable, Dart 3.13.5.
 - Java: Eclipse Temurin 21.0.12.1+1.
 - Application ID tạm: `com.example.medic_app`; cần đổi trước khi phát hành.
 - Entry point cục bộ: `lib/main.dart`.
-- Test mẫu cục bộ: `test/widget_test.dart`.
+- Tests: giao diện, điều hướng, trạng thái và luồng đặt lịch trong `test/`; ảnh chuẩn trong `test/goldens/`. Bộ kiểm tra hiện gồm 186 test (177 pass, 1 test hợp đồng bước 16 bỏ qua khi không bật); 8 test ảnh chuẩn cần cập nhật trên Windows (xem bước 5).
 
-Bản Git hiện tại chỉ bàn giao tài liệu; source Flutter và script môi trường chưa được đẩy. Các lệnh dưới đây dùng trên máy đã thiết lập môi trường, chưa phải hướng dẫn clone bản tài liệu và build ngay.
+Source Flutter, font, tests và script môi trường đã được đưa vào bản bàn giao này. Trên máy Windows mới cần Git và chạy `scripts/setup.ps1` từ gốc repo để tải bộ công cụ trước khi kích hoạt; SDK/cache không nằm trong Git.
 
 ## Chạy từ gốc repository
 
@@ -36,4 +60,4 @@ Lệnh trên chạy từ gốc repo và chỉ dùng khi khởi tạo. Xem [hư�
 
 ## AI disclosure
 
-Codex thực hiện thiết lập và chạy công cụ tạo project. Source và test ban đầu được sinh từ template Flutter, chưa có giao diện nghiệp vụ do AI thiết kế. Chi tiết yêu cầu được ghi trong [prompt log](../prompts/README.md).
+Codex thực hiện thiết lập project và triển khai bước 1–4 từ prototype đã duyệt bố cục. Code, dữ liệu giả định và test do AI viết; font Be Vietnam Pro và icon Lucide từ các nguồn được ghi trong tài liệu nền giao diện. Đã cài/mở app trên OPPO A77s; chủ dự án báo đã thử xong luồng đặt lịch, chưa có log chi tiết để suy ra chỉ số UX. Không thu tiền thật. Chi tiết yêu cầu được ghi trong [prompt log](../prompts/README.md).
