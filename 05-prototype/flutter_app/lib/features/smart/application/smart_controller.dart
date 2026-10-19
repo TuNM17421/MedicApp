@@ -382,6 +382,60 @@ class SmartController extends Notifier<SmartState> {
     return null;
   }
 
+  /// What to offer when [time] has no free slot: the other half of the same
+  /// day when it still has room, then only the days that still have room.
+  Future<SmartQuestion> _slotQuestion(BookingDraft base, SmartTime time) async {
+    final repository = ref.read(bookingRepositoryProvider);
+    final open = <DateTime, List<BookingSlot>>{};
+    for (final date in BookingCatalog.dates(ref.read(bookingTodayProvider))) {
+      final free = [
+        for (final slot in await repository.loadSlots(
+          base.copyWith(date: date),
+        ))
+          if (slot.available) slot,
+      ];
+      if (free.isNotEmpty) open[date] = free;
+    }
+    String iso(DateTime date) => date.toIso8601String().substring(0, 10);
+    bool afternoon(BookingSlot slot) =>
+        int.parse(slot.time.split(':').first) >= 12;
+    final asked = time.earliest ? null : time.date;
+    final options = <SmartOption>[];
+    String text;
+    if (asked != null && time.period != null && open[asked] != null) {
+      final other = time.period == 'morning' ? 'afternoon' : 'morning';
+      final (askedName, otherName) = time.period == 'morning'
+          ? ('sáng', 'chiều')
+          : ('chiều', 'sáng');
+      text =
+          'Buổi $askedName ${_dateLabel(asked)} đã kín. Buổi $otherName cùng ngày còn chỗ, hoặc bạn chọn ngày khác.';
+      if (open[asked]!.any((s) => afternoon(s) == (other == 'afternoon'))) {
+        options.add(
+          SmartOption(
+            'date:${iso(asked)}:$other',
+            '${otherName[0].toUpperCase()}${otherName.substring(1)} ${_dateLabel(asked)}',
+          ),
+        );
+      }
+    } else if (asked != null) {
+      text = '${_dateLabel(asked)} đã kín lịch. Bạn muốn khám khi nào?';
+    } else if (open.isEmpty) {
+      return const SmartQuestion(
+        field: 'time',
+        text: 'Không còn giờ trống trong 6 ngày tới. Bạn có thể đổi nơi khám, chuyên khoa hoặc bác sĩ.',
+        options: [],
+      );
+    } else {
+      text = 'Không còn giờ trống phù hợp với thời gian bạn chọn. Bạn muốn khám khi nào?';
+    }
+    options.addAll([
+      if (open.isNotEmpty) const SmartOption('earliest', 'Sớm nhất còn chỗ'),
+      for (final date in open.keys)
+        if (date != asked) SmartOption('date:${iso(date)}', _dateLabel(date)),
+    ]);
+    return SmartQuestion(field: 'time', text: text, options: options);
+  }
+
   Future<void> _buildProposal({String notice = ''}) async {
     final fields = state.reply?.fields;
     final base = fields == null ? null : _draftFromFields(fields);
@@ -395,30 +449,20 @@ class SmartController extends Notifier<SmartState> {
         return;
       }
       if (slot == null) {
-        final today = ref.read(bookingTodayProvider);
-        const text =
-            'Không còn giờ trống phù hợp với thời gian bạn chọn. Bạn muốn khám khi nào?';
+        final question = await _slotQuestion(base, fields.time!);
+        if (!ref.mounted || run != _proposalRun || version != state.version) {
+          return;
+        }
         state = state.copyWith(
           phase: SmartPhase.asking,
           // Said in the conversation too: the options alone do not tell the
           // user why the time they asked for was not proposed.
           messages: [
             ...state.messages,
-            if (state.messages.lastOrNull?.text != text)
-              const SmartMessage(fromUser: false, text: text),
+            if (state.messages.lastOrNull?.text != question.text)
+              SmartMessage(fromUser: false, text: question.text),
           ],
-          slotQuestion: SmartQuestion(
-            field: 'time',
-            text: text,
-            options: [
-              const SmartOption('earliest', 'Sớm nhất còn chỗ'),
-              for (final date in BookingCatalog.dates(today))
-                SmartOption(
-                  'date:${date.toIso8601String().substring(0, 10)}',
-                  _dateLabel(date),
-                ),
-            ],
-          ),
+          slotQuestion: question,
           notice: fields.doctorId == null
               ? notice
               : 'Bạn cũng có thể đổi sang bác sĩ khác còn lịch.',

@@ -154,6 +154,14 @@ test('denied or non-urgent symptoms keep normal booking (R02)', async () => {
   }
 });
 
+test('a single profile is picked without asking who the visit is for', async () => {
+  const s = createSessionState({ id: 's1', today: TODAY, profiles: [PROFILES[0]] });
+  const r = await handleUtterance(s, 'Tôi muốn khám dịch vụ ở An Bình, đau khớp gối, sớm nhất', opts());
+  assert.equal(r.fields.patient_id, PROFILES[0].id);
+  assert.equal(r.sources.patientId, 'context');
+  assert.notEqual(r.question?.field, 'patientId');
+});
+
 test('changing patient clears the previous health details (AC17)', async () => {
   const s = newSession({ type: 'service', facilityId: 'anbinh' });
   await handleUtterance(s, 'cho tôi, đau họng, khám sớm nhất', opts());

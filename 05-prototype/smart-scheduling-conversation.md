@@ -2,7 +2,9 @@
 
 **Cập nhật 2026-10-15:** [PRD triển khai](prd-smart-scheduling-implementation.md) là yêu cầu hiện hành. Model hỏi đáp đổi từ Sol sang `gpt-6-luna`, reasoning `low`, theo ngân sách test của chủ dự án. Phần chọn Sol bên dưới là lịch sử thiết kế; luồng streaming và STT giữ nguyên.
 
-Ngày 2026-10-14. Điều chỉnh theo phản hồi chủ dự án: bỏ bước duyệt transcript riêng và bỏ thao tác gửi phân tích sau mỗi lượt. Đây là đặc tả để triển khai, chưa có dịch vụ hay màn Flutter tương ứng.
+Ngày 2026-10-14. Điều chỉnh theo phản hồi chủ dự án: bỏ bước duyệt transcript riêng và bỏ thao tác gửi phân tích sau mỗi lượt. Lúc viết, đây là đặc tả để triển khai, chưa có dịch vụ hay màn Flutter tương ứng.
+
+**Trạng thái (19/10/2026):** Đã có backend và màn Flutter theo đặc tả này ([app](flutter_app/SMART-SCHEDULING.md)), đã chạy với OpenAI bằng key thật cho phần nhập tay ([kết quả kiểm thử](docs/kiem-thu-ai-that.md)). Chưa đo nhận giọng nói tiếng Việt với người dùng thật.
 
 ## Luồng chính
 
@@ -91,4 +93,4 @@ Vẫn có nhập tay, tự chọn theo luồng cơ bản và giữ dữ liệu h
 
 Kiểm tra trước triển khai thật: người lớn tuổi ngừng lấy hơi, sửa giữa câu/giữa lượt, phủ định, kết quả sai thứ tự, nói tiếp trong lúc model xử lý, sửa tay cùng lúc, từ chối quyền, vị trí không phải nơi muốn khám, hết slot lúc xác nhận, dữ liệu khẩn cấp và mất kết nối. Tiêu chí đầu tiên là không mất sửa đổi, không bỏ qua câu hỏi bắt buộc và không thanh toán/tạo lịch ngoài xác nhận người dùng.
 
-Chưa có thử nghiệm với audio/người dùng thật hoặc gọi API.
+Chưa có thử nghiệm với audio hoặc người dùng thật. Đã gọi API thật cho phần nhập tay (19/10/2026).

@@ -55,6 +55,9 @@ export function createSessionState({ id, today, profiles, known = {} }) {
   };
   const patch = {};
   if (profiles.some((p) => p.id === known.patientId)) patch.patientId = known.patientId;
+  // Only one profile on the account: there is nobody else to book for, so
+  // never ask "Bạn đặt lịch khám cho ai?".
+  else if (profiles.length === 1) patch.patientId = profiles[0].id;
   if (known.type === 'insurance' || known.type === 'service') patch.type = known.type;
   if (facility(known.facilityId)) patch.facilityId = known.facilityId;
   applyPatch(session, patch, { source: 'context' });

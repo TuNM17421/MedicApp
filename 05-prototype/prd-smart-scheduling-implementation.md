@@ -1,10 +1,10 @@
 # PRD triển khai Smart Scheduling — hội thoại streaming
 
-**Phiên bản:** 1.0 · **Ngày:** 2026-10-15 · **Trạng thái:** Đã triển khai bản đầu trên nhánh `claude/smart-scheduling` ([backend](backend/README.md), [app](flutter_app/SMART-SCHEDULING.md)); chưa thử trên điện thoại và chưa gọi OpenAI bằng key thật.
+**Phiên bản:** 1.0 · **Ngày:** 2026-10-15 · **Trạng thái (19/10/2026):** Đã triển khai trong app và backend ([backend](backend/README.md), [app](flutter_app/SMART-SCHEDULING.md)). Đã chạy với OpenAI bằng key thật cho phần nhập tay, gồm cả ca cần cấp cứu ([kết quả kiểm thử](docs/kiem-thu-ai-that.md)). Chưa đo nhận giọng nói tiếng Việt, độ trễ hay chi phí, và chưa có log thử với người dùng.
 
 Tài liệu này là đầu vào hiện hành cho việc implement Smart Scheduling. Thay thế các lựa chọn model và quy trình nhánh Smart trong [PRD ban đầu](prd-smart-scheduling.md), [nghiên cứu v1](smart-scheduling-research.md) và bổ sung tiêu chí thực thi cho [luồng hội thoại v2](smart-scheduling-conversation.md). Luồng đặt lịch cơ bản, footer chỉ icon và thanh toán giả lập hiện tại được giữ nguyên.
 
-**Baseline:** App Flutter bước 1–4 tại commit `a6e0e9a` đã được đẩy lên nhánh `codex/booking-ui-smart-scheduling-prd`. Analyze sạch và 52 test pass trước bàn giao. Đã cài/mở trên OPPO A77s; chủ dự án báo hoàn thành thử luồng đặt lịch, chưa có log chi tiết để suy ra chỉ số UX. Backend hiện chỉ có mẫu `.env`, chưa có dịch vụ AI hoạt động.
+**Baseline:** App Flutter bước 1–4 tại commit `a6e0e9a` đã được đẩy lên nhánh `codex/booking-ui-smart-scheduling-prd`. Analyze sạch và 52 test pass trước bàn giao. Đã cài/mở trên OPPO A77s; chủ dự án báo hoàn thành thử luồng đặt lịch, chưa có log chi tiết để suy ra chỉ số UX. Lúc viết PRD, backend chỉ có mẫu `.env`, chưa có dịch vụ AI hoạt động; trạng thái hiện tại ở dòng đầu.
 
 Các thông số thử nghiệm bên dưới là đề xuất để triển khai/đo kiểm, không phải kết quả benchmark hoặc quy tắc lâm sàng đã được phê duyệt.
 
