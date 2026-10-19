@@ -8,6 +8,7 @@ import 'app/router/app_router.dart';
 import 'app/theme/app_theme.dart';
 import 'core/storage/local_vault.dart';
 import 'features/consent/health_consent.dart';
+import 'features/family/application/family_providers.dart';
 import 'features/meds/application/meds_providers.dart';
 import 'features/sharing/application/sharing_providers.dart';
 import 'features/visit_prep/reminder_scheduler.dart';
@@ -50,6 +51,7 @@ class _MedicAppState extends ConsumerState<MedicApp>
       if (!mounted) return;
       ref.read(doseLogProvider.notifier).refresh();
       ref.read(serverAppointmentsProvider.notifier).sync();
+      ref.read(familyControllerProvider.notifier).sync();
     });
   }
 
@@ -64,6 +66,7 @@ class _MedicAppState extends ConsumerState<MedicApp>
     if (state == AppLifecycleState.resumed) {
       ref.read(doseLogProvider.notifier).refresh();
       ref.read(serverAppointmentsProvider.notifier).sync();
+      ref.read(familyControllerProvider.notifier).sync();
     }
   }
 
@@ -73,6 +76,7 @@ class _MedicAppState extends ConsumerState<MedicApp>
     ref.watch(medReminderSyncProvider);
     ref.watch(vaultSyncProvider);
     ref.watch(clinicSyncProvider);
+    ref.watch(familySyncProvider);
     return _app(ref);
   }
 

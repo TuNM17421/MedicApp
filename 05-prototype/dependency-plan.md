@@ -46,3 +46,7 @@ Thông tin package do nhà phát hành công bố tại pub.dev, đã tra cứu 
 ## Cập nhật bước 4
 
 Đã tích hợp flutter_animate cho hiệu ứng vào bước và skeletonizer cho tải giờ khám; cả hai tôn trọng chế độ giảm chuyển động. Bổ sung kiểm tra chữ lớn, semantics, bàn phím và phản hồi lỗi. Xem [UI/UX bước 4](flutter_app/UI-UX.md). Không thêm SVG khi chưa có nhu cầu nội dung hoặc asset được duyệt. Footer và phạm vi nghiệp vụ bước 3 giữ nguyên.
+
+## Cập nhật liên kết hai máy
+
+Thêm [qr_flutter](https://pub.dev/packages/qr_flutter) 4.1.0 để vẽ mã QR liên kết trên máy chủ hồ sơ. Máy nhận quét mã bằng máy quét có sẵn từ bước 6, nên không thêm thư viện quét. Xem [Liên kết hai máy](flutter_app/LIEN-KET-HAI-MAY.md).

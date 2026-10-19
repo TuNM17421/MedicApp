@@ -39,6 +39,7 @@ abstract final class AppIcons {
   static const edit = LucideIcons.pencil;
   static const prep = LucideIcons.clipboardList;
   static const pill = LucideIcons.pill;
+  static const alarm = LucideIcons.alarmClock;
   static const result = LucideIcons.fileHeart;
 }
 
