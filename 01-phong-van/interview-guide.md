@@ -1,6 +1,6 @@
 # Interview guide
 
-**Trạng thái:** Đã dùng khi phỏng vấn P1–P4. Bản nháp do AI tạo, chủ dự án đã sửa cách xưng hô và câu 2.
+**Trạng thái:** Đã dùng khi phỏng vấn P1–P4.
 
 ## Mở đầu
 

@@ -1,6 +1,6 @@
 # 03 — Need statement
 
-**Trạng thái:** Bản nháp do AI soạn từ insight đã có bằng chứng, chờ chủ dự án duyệt.
+**Trạng thái:** Đã duyệt (Nguyễn Mạnh Tú, 19/10/2026).
 
 ## Phát biểu nhu cầu
 
@@ -21,7 +21,7 @@
 
 **Ngoài phạm vi:** Chẩn đoán, phân luồng cấp cứu tự động, dự đoán thời gian chờ khi chưa có dữ liệu vận hành, kết nối hệ thống bệnh viện thật.
 
-**Tiêu chí quan sát được khi thử với 2–3 người 50–60+ (đề xuất, chờ duyệt):**
+**Tiêu chí quan sát được khi thử với 2–3 người 50–60+:**
 
 1. Tự đặt xong một lượt khám mà không cần người hỗ trợ can thiệp.
 2. Sau khi đặt, nói lại đúng lịch của ai, khoa nào, ở đâu, lúc nào.

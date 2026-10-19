@@ -9,7 +9,7 @@
 | P3 | Nữ, 71 tuổi, nội trợ, Hà Nội | [P3.md](P3.md) |
 | P4 | Nam, 49 tuổi, thợ thủ công, Hà Nội | [P4.md](P4.md) |
 
-## Quan sát chung (chủ dự án ghi)
+## Quan sát chung
 
 - **OBS-01:** Mỗi người dùng một app khác nhau; có app cho tạo nhiều hồ sơ, có app chỉ cho tạo hồ sơ bản thân.
 - **OBS-02:** Người lớn tuổi gặp nhiều khó khăn khi phải chọn lần lượt nơi khám, chuyên khoa, bác sĩ, giờ hẹn.

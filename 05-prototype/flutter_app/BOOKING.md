@@ -63,6 +63,4 @@ flutter build apk --debug --no-pub
 
 Test trạng thái bao phủ luồng dịch vụ/BHYT, sửa dữ liệu phụ thuộc, độ tuổi, slot mất, lỗi tải, phản hồi đến muộn, gửi lặp, thanh toán lỗi/chờ và giữ ledger khi mở đơn mới. Widget test thao tác luồng đầy đủ, thêm người khám, kiểm tra giao dịch và luồng BHYT ở chữ 200%. Golden ở `test/goldens/booking-*.png` ghi lại màn kiểm tra, thanh toán và kết quả. Các test dùng ngày cố định để tái lập. Chưa kiểm tra trực tiếp trên Android, TalkBack hoặc với người dùng thật.
 
-Code, dữ liệu giả định, tài liệu và test của bước này do AI tạo theo yêu cầu chủ dự án; không phải log thử người thật.
-
 Kết quả kiểm tra cục bộ ngày 2026-10-14: analyze không có vấn đề, toàn bộ 42 test pass, APK debug build thành công. Gradle daemon đã được dừng sau build.

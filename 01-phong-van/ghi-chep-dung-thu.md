@@ -1,8 +1,8 @@
 # Ghi chép dùng thử MyVinmec
 
-**Trạng thái:** Đã dùng thử. Ghi chép do chủ dự án thực hiện; AI dựng lại thành bảng, giữ nguyên nội dung quan sát.
+**Trạng thái:** Đã dùng thử và duyệt.
 
-- **Ngày:** 19/10/2026. **Người thực hiện:** chủ dự án.
+- **Ngày:** 19/10/2026. **Người thực hiện:** Nguyễn Mạnh Tú.
 - **Nền tảng:** App MyVinmec trên điện thoại Android và website Vinmec (form "Đặt lịch hẹn"). Phiên bản app: chưa ghi.
 - **Tình huống:** Đặt khám xương khớp cho bản thân.
 - **Điểm bắt đầu/kết thúc:** Từ tab Đặt lịch đến màn "Thông tin đặt hẹn" trước khi bấm "Xác nhận lịch hẹn". Không gửi lịch thật vì đây là hệ thống thật.
@@ -17,7 +17,8 @@
 | 3 | Chọn chuyên khoa và bác sĩ, rồi chọn ngày | Với 3 bác sĩ đầu, cả 3 ngày tới và một ngày cách 11 ngày đều báo "Bác sĩ không có lịch trống trong 3 ngày… Vui lòng chọn ngày khác" | Phải thử lần lượt từng bác sĩ, từng ngày; đến bác sĩ thứ 4 mới có lịch | DT-O03 |
 | 4 | Chờ kiểm tra lịch | Mỗi lần kiểm tra lịch bác sĩ mất hơn 4 giây | Thử nhiều lần nên tổng thời gian chờ dài | DT-O04 |
 | 5 | Xem "Thông tin đặt hẹn" | Hình thức, khách hàng, lý do khám, bác sĩ, thời gian, địa điểm, chuyên khoa, phí dự kiến 690.000đ | Chỉ có giờ bắt đầu, không có giờ kết thúc; không có chỗ gửi câu hỏi hay tình trạng bệnh cho bác sĩ trước khám | DT-O05 |
-| 6 | Đặt trên website | Form điền: nơi khám, chuyên khoa, bác sĩ, ngày, buổi, thông tin khách hàng; tổng đài viên gọi lại xác nhận | Không có gợi ý hay hướng dẫn chọn; phần lớn trang dẫn tới đường dây nóng | DT-O06 |
+| 6 | Đặt lịch theo triệu chứng | Danh sách triệu chứng soạn sẵn, có ô tìm kiếm theo từ khóa. Chọn xong các triệu chứng thì app giới thiệu các khoa liên quan | Danh sách cố định nên có thể không có triệu chứng người bệnh gặp; gõ sai chính tả hoặc diễn đạt khác thì không tìm thấy, vì tìm kiếm chỉ khớp từ khóa | DT-O13 |
+| 7 | Đặt trên website | Form điền: nơi khám, chuyên khoa, bác sĩ, ngày, buổi, thông tin khách hàng; tổng đài viên gọi lại xác nhận | Không có gợi ý hay hướng dẫn chọn; phần lớn trang dẫn tới đường dây nóng | DT-O06 |
 
 ## Các tính năng khác
 
@@ -30,16 +31,14 @@
 | Cộng đồng hỏi đáp bác sĩ | Danh sách câu hỏi thường gặp để đọc trước, có ô tìm kiếm | DT-O11 |
 | Chatbot "Trợ lý sức khỏe AI MIA" | Chỉ trả lời câu hỏi y tế; hỗ trợ kiểm tra triệu chứng, phân tích dinh dưỡng, đặt lịch khám, liên kết ứng dụng. Câu trả lời dài, trình bày khó nhìn | DT-O12 |
 
-## Suy luận của người dùng thử
+## Hướng cải thiện
 
-Đây là đề xuất của chủ dự án, không phải quan sát:
-
-- Nên có gợi ý chuyên khoa từ triệu chứng người bệnh nêu, rồi tìm bác sĩ còn lịch gần nhất với ngày người bệnh muốn, thay vì bắt thử từng bác sĩ (từ DT-O03, DT-O04).
-- Nên cho gửi câu hỏi hoặc mô tả tình trạng cho bác sĩ trước khi khám (từ DT-O05).
+- Gợi ý chuyên khoa từ mô tả triệu chứng bằng lời của người bệnh, không bắt chọn trong danh sách cố định (DT-O13), rồi tìm bác sĩ còn lịch gần nhất với ngày người bệnh muốn thay vì thử từng bác sĩ (DT-O03, DT-O04).
+- Cho gửi câu hỏi hoặc mô tả tình trạng cho bác sĩ trước khi khám (DT-O05).
 
 ## Ảnh chụp màn hình
 
-Ảnh do chủ dự án chụp, đã che thông tin cá nhân. Tên bác sĩ trong ảnh là thông tin Vinmec công khai.
+Ảnh do Nguyễn Mạnh Tú chụp, đã che thông tin cá nhân. Tên bác sĩ trong ảnh là thông tin Vinmec công khai.
 
 | Mã | Ảnh |
 | --- | --- |

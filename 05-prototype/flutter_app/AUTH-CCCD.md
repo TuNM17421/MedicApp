@@ -48,5 +48,3 @@ Package mới: `mobile_scanner` (nhận diện QR bằng ML Kit ngay trên máy,
 Kết quả 2026-10-15 trên Linux (Flutter 3.47.7): `flutter analyze` sạch; 85 test pass (thêm 17), 8 test ảnh chuẩn vẫn lệch như ghi chú ở bước 5 vì render font khác Windows. Test “app opens…” trong `widget_test.dart` nay kiểm tra màn Chào mừng.
 
 **Chưa kiểm chứng:** chưa build APK và chưa quét bằng camera thật (môi trường không có Android SDK hay camera); màn quét trong ảnh xem trước dùng khung giả thay camera. Cần thử trên OPPO A77s: quét thẻ thật trong phòng sáng/tối, chọn ảnh QR đã gửi, từ chối quyền camera. Chưa có quên mật khẩu, xác thực OTP hay lưu đăng nhập sau khi tắt app; các phần này cần backend thật.
-
-Code, test và tài liệu của bước này do AI tạo theo yêu cầu chủ dự án; không có log thử người dùng thật.

@@ -91,4 +91,4 @@ Vẫn có nhập tay, tự chọn theo luồng cơ bản và giữ dữ liệu h
 
 Kiểm tra trước triển khai thật: người lớn tuổi ngừng lấy hơi, sửa giữa câu/giữa lượt, phủ định, kết quả sai thứ tự, nói tiếp trong lúc model xử lý, sửa tay cùng lúc, từ chối quyền, vị trí không phải nơi muốn khám, hết slot lúc xác nhận, dữ liệu khẩn cấp và mất kết nối. Tiêu chí đầu tiên là không mất sửa đổi, không bỏ qua câu hỏi bắt buộc và không thanh toán/tạo lịch ngoài xác nhận người dùng.
 
-Tài liệu/đề xuất do AI tạo theo yêu cầu cập nhật của chủ dự án; chưa có thử nghiệm với audio/người dùng thật hoặc gọi API.
+Chưa có thử nghiệm với audio/người dùng thật hoặc gọi API.

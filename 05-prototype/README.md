@@ -1,6 +1,6 @@
 # 05 — Prototype Flutter
 
-**Trạng thái (19/10/2026):** Bố cục prototype đã được chủ dự án duyệt. Đã có app người bệnh Flutter Android, backend Node local và web bác sĩ Flutter Web, tất cả chạy với dữ liệu minh họa. App đã cài trên OPPO A77s; chủ dự án báo đã thử xong luồng đặt lịch cơ bản. Chưa gọi OpenAI bằng key thật, chưa có nhà cung cấp SMS, chưa chạy thử với phòng khám hay người dùng thật, và chưa có log thử trong [test-logs/](test-logs/).
+**Trạng thái (19/10/2026):** Bố cục prototype đã được chủ dự án duyệt. Đã có app người bệnh Flutter Android, backend Node local và web bác sĩ Flutter Web, tất cả chạy với dữ liệu minh họa. App đã cài trên OPPO A77s; chủ dự án báo đã thử xong luồng đặt lịch cơ bản. Đặt lịch thông minh và Tóm tắt trước khám đã chạy với AI thật ([kết quả kiểm thử](docs/kiem-thu-ai-that.md)). Chưa có nhà cung cấp SMS, chưa chạy thử với phòng khám hay người dùng thật, và chưa có log thử trong [test-logs/](test-logs/).
 
 ## Thành phần
 
@@ -10,7 +10,7 @@
 | [backend/](backend/README.md) | Server Node local: Smart Scheduling, API phòng khám ([CLINIC-API.md](backend/CLINIC-API.md)), API gia đình ([FAMILY-API.md](backend/FAMILY-API.md)) |
 | [doctor_web/](doctor_web/README.md) | Web bác sĩ: hàng chờ, tóm tắt trước khám, tuân thủ thuốc, kê đơn, gửi kết quả, quản trị |
 | [packages/medic_core/](packages/medic_core/README.md) | Package Dart dùng chung cho app và web: đơn thuốc, nhật ký liều, tuân thủ 30 ngày |
-| [docs/](docs/) | [Kế hoạch chạy thử](docs/ke-hoach-chay-thu.md) và [hồ sơ đánh giá tác động dữ liệu](docs/danh-gia-tac-dong-du-lieu.md), bản nháp |
+| [docs/](docs/) | [Kiểm thử AI với API thật](docs/kiem-thu-ai-that.md); [kế hoạch chạy thử](docs/ke-hoach-chay-thu.md) và [hồ sơ đánh giá tác động dữ liệu](docs/danh-gia-tac-dong-du-lieu.md), bản nháp |
 | [prompts/](prompts/README.md) | Prompt log AI-001 trở đi và [prompt dựng prototype vòng 1](prompts/prototype-agent-brief.md) |
 | [test-logs/](test-logs/) | Log thử với 2–3 người, đã ẩn danh. Chưa có |
 | [changes.md](changes.md) | Thay đổi sau thử nghiệm. Chưa có |

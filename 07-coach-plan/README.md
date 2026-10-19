@@ -1,6 +1,6 @@
 # 07 — Mình sẽ coach một nhóm làm bài này thế nào
 
-**Trạng thái:** Bản nháp theo cách dự án MedicApp đã diễn ra, cho nhóm 5–10 người trong 4 tuần. Chờ chủ dự án duyệt.
+**Trạng thái:** Đang chờ duyệt. Áp dụng cho nhóm 5–10 người, một nhịp 6 tuần.
 
 ## Mục tiêu
 
@@ -19,20 +19,22 @@ Với 5–10 người, chia thành 3 nhóm nhỏ có trưởng nhóm, và một 
 
 Nhóm 5 người: mỗi nhóm nhỏ 1–2 người, điều phối kiêm nghiên cứu. Nhóm 10 người: thêm người cho nghiên cứu để phỏng vấn được nhiều người 50–60+ hơn.
 
-## Nhịp 4 tuần
+## Nhịp 6 tuần
 
 | Tuần | Việc chính | Đầu ra cần có | Bài học từ MedicApp |
 | --- | --- | --- | --- |
-| 1 | Chốt khoảnh khắc; mỗi người dùng thử app thật; phỏng vấn | Ghi chép dùng thử, ít nhất 6–8 log ẩn danh, phần lớn trong nhóm mục tiêu | MedicApp chỉ có 1/4 người trên 60 tuổi; nhóm đông nên chia nhau tìm đúng người |
-| 2 | Tổng hợp insight cả nhóm, journey map, need statement, 3 best practice | Insight có mã bằng chứng, need statement chưa gắn giải pháp | Ghi log trước khi viết PRD để mọi quyết định truy được về trích dẫn |
-| 3 | Prototype nhỏ nhất kiểm tra được nhu cầu; nhóm nghiên cứu chuẩn bị buổi thử song song | Prototype bấm được, kịch bản thử, danh sách người thử | Duyệt bố cục bằng prototype tương tác trước khi code giúp sửa rẻ hơn |
-| 4 | Thử với 2–3 người, sửa, trình bày | Log thử, bảng thay đổi, deck tối đa 10 slide | Giữ thời gian cho vòng thử: nhiều tính năng mà chưa có log thử thì không chứng minh được nhu cầu |
+| 1 | Chốt khoảnh khắc, phân vai; mỗi người dùng thử app thật; viết interview guide | Ghi chép dùng thử, interview guide đã duyệt, danh sách người cần phỏng vấn | Dùng thử cả app lẫn website, thử mọi cách đặt (theo bác sĩ, chuyên khoa, triệu chứng) để thấy giới hạn thật |
+| 2 | Phỏng vấn và ẩn danh log | Ít nhất 6–8 log, phần lớn trong nhóm mục tiêu | MedicApp chỉ có 1/4 người trên 60 tuổi; nhóm đông nên chia nhau tìm đúng người |
+| 3 | Tổng hợp insight cả nhóm, journey map, need statement, 3 best practice | Insight có mã bằng chứng, need statement đã duyệt | Ghi log trước khi viết PRD để mọi quyết định truy được về trích dẫn |
+| 4 | PRD và prototype tương tác; duyệt bố cục | Prototype bấm được, dữ liệu giả lập rõ ràng | Duyệt bố cục bằng prototype tương tác trước khi code giúp sửa rẻ hơn |
+| 5 | Dựng bản chạy được; kiểm thử với AI thật nếu có; nhóm nghiên cứu chuẩn bị buổi thử | Bản chạy trên điện thoại, kịch bản thử, sổ rủi ro | Test với API thật sớm: MedicApp phát hiện AI tóm tắt sai nghĩa chỉ khi chạy thật |
+| 6 | Thử với 2–3 người, sửa, trình bày | Log thử, bảng thay đổi, deck tối đa 10 slide | Giữ đủ thời gian cho vòng thử: nhiều tính năng mà chưa có log thử thì không chứng minh được nhu cầu |
 
 ## Nhịp gặp
 
 - **Hằng ngày, 15 phút:** mỗi nhóm nhỏ báo việc đã xong, việc kế tiếp, chỗ bị chặn.
 - **Cuối mỗi tuần, 60 phút:** cả nhóm xem đầu ra của tuần; coach hỏi bằng chứng, nhóm tự chọn việc tuần sau.
-- **Giữa tuần 3:** duyệt prototype trước khi chốt kịch bản thử.
+- **Cuối tuần 3 và tuần 4:** hai mốc duyệt chính, need statement rồi đến prototype.
 
 ## Câu hỏi coach
 

@@ -195,3 +195,8 @@
 - Đầu ra: Danh sách tài liệu còn trống kèm câu hỏi cho chủ dự án; cập nhật README gốc, README 05-prototype, trạng thái PRD và prompt log AI-014–AI-025 từ mô tả các PR đã merge.
 - Đợt 2: Chủ dự án ghi câu trả lời và ảnh dùng thử trong thư mục trên máy. AI dựng ghi chép dùng thử, interview guide, log P1–P4, insight; soạn nháp journey map, need statement, sổ rủi ro, coach plan và dàn ý slide.
 - Giới hạn: Không tạo trích dẫn, người tham gia hay số liệu mới. Test-logs, changes.md và hai tài liệu chạy thử để lại vì chưa có thông tin. Ảnh dùng thử được thêm sau khi chủ dự án che tên trong ảnh xác nhận đặt hẹn và đồng ý đẩy lên repo.
+
+## AI-026 — Hoàn thiện tài liệu theo duyệt
+
+- Ngày: 2026-10-19. Công cụ: Claude Code.
+- Đầu ra: Gộp nội dung đã duyệt vào tài liệu nghiên cứu; thêm thử "Đặt lịch theo triệu chứng" của MyVinmec; kết quả kiểm thử AI thật và rủi ro R13; mục cấp cứu 115 theo cách hiểu đã thống nhất; coach plan nhịp 6 tuần; deck 10 slide xuất ra `slides.pdf`.
