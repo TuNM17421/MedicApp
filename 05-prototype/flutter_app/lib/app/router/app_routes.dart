@@ -16,6 +16,8 @@ abstract final class AppRoutes {
   static const smart = '/smart';
   static const smartFromBooking = '/smart?from=booking';
   static const bookingDemo = '/booking-demo';
+  static const facilityMap = '/facility-map';
+  static const facilityMapFromBooking = '/facility-map?from=booking';
   static String appointment(String id) =>
       '$appointments/${Uri.encodeComponent(id)}';
   static String visitResult(String id) => '${appointment(id)}/result';

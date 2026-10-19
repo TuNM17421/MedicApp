@@ -41,6 +41,9 @@ abstract final class AppIcons {
   static const pill = LucideIcons.pill;
   static const alarm = LucideIcons.alarmClock;
   static const result = LucideIcons.fileHeart;
+  static const map = LucideIcons.map;
+  static const location = LucideIcons.mapPin;
+  static const locate = LucideIcons.locateFixed;
 }
 
 class AppIcon extends StatelessWidget {

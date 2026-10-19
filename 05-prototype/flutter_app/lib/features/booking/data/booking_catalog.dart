@@ -1,3 +1,5 @@
+import 'package:latlong2/latlong.dart';
+
 import '../domain/booking_models.dart';
 
 abstract final class BookingCatalog {
@@ -10,6 +12,7 @@ abstract final class BookingCatalog {
       true,
       true,
       ['general', 'heart', 'bones', 'ent', 'eyes', 'children'],
+      location: LatLng(21.0245, 105.8412),
     ),
     Facility(
       'songxanh',
@@ -19,6 +22,7 @@ abstract final class BookingCatalog {
       false,
       false,
       ['general', 'heart', 'bones', 'eyes', 'endocrine'],
+      location: LatLng(21.0368, 105.7826),
     ),
     Facility(
       'hoalac',
@@ -28,6 +32,7 @@ abstract final class BookingCatalog {
       true,
       true,
       ['general', 'bones', 'ent', 'children', 'endocrine'],
+      location: LatLng(21.0137, 105.5262),
     ),
   ];
   static const departments = [
