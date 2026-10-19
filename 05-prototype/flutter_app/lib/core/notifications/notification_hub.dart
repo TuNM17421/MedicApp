@@ -9,6 +9,7 @@ abstract final class NotificationIds {
   static const visitStart = 0, visitEnd = 1000;
   static const medStart = 1000, medEnd = 9000;
   static const snoozeStart = 9000, snoozeEnd = 10000;
+  static const familyStart = 10000, familyEnd = 11000;
 }
 
 /// One plugin instance for the whole app. The plugin keeps a single tap

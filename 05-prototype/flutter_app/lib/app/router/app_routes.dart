@@ -45,6 +45,8 @@ abstract final class AppRoutes {
       '$profileFormPath${_for(self)}';
 
   static String profile(String id) => '$profiles/${Uri.encodeComponent(id)}';
+  static String familyInvite(String profileId) => '${profile(profileId)}/link';
+  static const familyJoin = '/account/link';
   static String notice(String id) =>
       '$notifications/${Uri.encodeComponent(id)}';
 

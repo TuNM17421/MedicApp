@@ -11,6 +11,9 @@ import '../../../app/state/app_state.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../core/widgets/app_widgets.dart';
 
+import '../../family/application/family_providers.dart';
+import '../../family/domain/family_models.dart';
+import '../../family/presentation/family_pages.dart';
 import '../../visit_prep/visit_prep.dart';
 import '../application/meds_providers.dart';
 import '../domain/med_reminder_planner.dart';
@@ -56,6 +59,10 @@ class _TodayMedsPageState extends ConsumerState<TodayMedsPage>
   Widget build(BuildContext context) {
     final now = ref.watch(prepClockProvider)();
     final courses = ref.watch(medicationCoursesProvider);
+    final away = [
+      for (final link in ref.watch(familyLinksProvider))
+        if (link.role == FamilyRole.owner && link.linked) link,
+    ];
     final log = ref.watch(doseLogProvider);
     final profiles = ref.watch(profileCatalogProvider);
     final today = dosesOn(now, courses, log, now);
@@ -75,12 +82,13 @@ class _TodayMedsPageState extends ConsumerState<TodayMedsPage>
         title: 'Thuốc hôm nay',
         onBack: () => AppRoutes.backOrHome(context),
         children: [
-          if (courses.isEmpty)
+          for (final link in away) AwayMedsCard(link: link),
+          if (courses.isEmpty && away.isEmpty)
             const AppEmptyState(
               title: 'Chưa có thuốc',
               message: 'Khi bác sĩ gửi đơn thuốc, lịch uống và lời nhắc sẽ hiện ở đây.',
             )
-          else ...[
+          else if (courses.isNotEmpty) ...[
             _DaySummary(doses: today, now: now),
             const _AlarmCard(),
             for (final course in low)

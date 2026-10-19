@@ -35,6 +35,11 @@ final notificationHubProvider = Provider<NotificationHub>((ref) {
         }
         return;
       }
+      // A linked person's missed dose: listed on Thuốc hôm nay.
+      if (response.payload?.startsWith('family:') ?? false) {
+        router.go(AppRoutes.meds);
+        return;
+      }
       final visitId = LocalReminderScheduler.visitIdOf(response.payload);
       if (visitId != null &&
           response.actionId != LocalReminderScheduler.dismissAction) {

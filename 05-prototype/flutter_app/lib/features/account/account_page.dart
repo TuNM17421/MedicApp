@@ -8,6 +8,7 @@ import '../../app/state/app_state.dart';
 import '../../core/widgets/app_widgets.dart';
 import '../auth/auth_controller.dart';
 import '../consent/health_consent.dart';
+import '../family/presentation/family_pages.dart';
 
 class AccountPage extends ConsumerWidget {
   const AccountPage({super.key});
@@ -28,6 +29,7 @@ class AccountPage extends ConsumerWidget {
           ],
         ),
         if (phone != null) const _HealthDataSection(),
+        if (phone != null && familyLinkingOn(ref)) const MemberLinksSection(),
         AppLinkCard(
           title: 'Trợ giúp',
           icon: AppIcons.help,
