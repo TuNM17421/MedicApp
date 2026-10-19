@@ -1,6 +1,6 @@
 # 01 — Phỏng vấn và dùng thử
 
-**Trạng thái:** Khung do AI tạo; chưa thu thập dữ liệu.
+**Trạng thái:** Đã dùng thử MyVinmec (19/10/2026) và phỏng vấn 4 người (P1–P4).
 
 1. [Ghi chép dùng thử MyVinmec](ghi-chep-dung-thu.md).
 2. [Interview guide](interview-guide.md).

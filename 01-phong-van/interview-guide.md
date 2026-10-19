@@ -1,23 +1,21 @@
 # Interview guide
 
-**Trạng thái:** Bản nháp do AI tạo — cần người thực hiện duyệt.
+**Trạng thái:** Đã dùng khi phỏng vấn P1–P4. Bản nháp do AI tạo, chủ dự án đã sửa cách xưng hô và câu 2.
 
 ## Mở đầu
 
-Giới thiệu mục tiêu nghiên cứu trải nghiệm; xin đồng ý tham gia và xin phép ghi chép/ghi âm riêng nếu cần. Người tham gia có thể bỏ qua câu hỏi hoặc dừng bất kỳ lúc nào. Không yêu cầu thông tin bệnh án hay thông tin định danh không cần thiết.
+Giới thiệu mục tiêu nghiên cứu trải nghiệm; xin đồng ý tham gia và xin phép ghi chép. Người tham gia có thể bỏ qua câu hỏi hoặc dừng bất kỳ lúc nào. Không hỏi bệnh án hay thông tin định danh không cần thiết.
 
-## Câu hỏi gợi mở
+## Câu hỏi đã dùng
 
-1. Bạn có thể kể về lần gần nhất cần sử dụng một ứng dụng bệnh viện?
-2. Khi đó bạn muốn hoàn thành việc gì, trong hoàn cảnh nào?
-3. Bạn đã thực hiện những bước nào? Bước nào khiến bạn dừng lại hoặc cần giúp đỡ?
-4. Bạn kỳ vọng nhìn thấy thông tin gì ở bước đó?
-5. Khi gặp khó khăn, bạn đã xử lý bằng cách nào?
-6. Điều gì giúp bạn biết công việc đã hoàn thành?
+1. Ông/Bà/Anh/Chị có thể kể về lần gần nhất cần sử dụng một ứng dụng bệnh viện?
+2. Ông/Bà/Anh/Chị sử dụng app đó cho mục đích gì, và trong trường hợp nào?
+3. Ông/Bà/Anh/Chị đã thực hiện những bước nào? Bước nào khiến Ông/Bà/Anh/Chị dừng lại hoặc cần giúp đỡ?
+4. Ông/Bà/Anh/Chị kỳ vọng nhìn thấy thông tin gì ở bước đó?
+5. Khi gặp khó khăn, Ông/Bà/Anh/Chị đã xử lý bằng cách nào?
+6. Điều gì giúp Ông/Bà/Anh/Chị biết công việc đã hoàn thành?
 
-## Quan sát tác vụ
-
-Chọn tác vụ sau khi xác định phạm vi. Đề nghị người tham gia diễn giải suy nghĩ; không gợi ý đáp án. Ghi hành vi, lời nói, điểm cần hỗ trợ và kết quả riêng biệt.
+Xưng hô chọn theo tuổi người tham gia.
 
 ## Kết thúc
 

@@ -193,4 +193,5 @@
 - Ngày: 2026-10-19. Công cụ: Claude Code.
 - Yêu cầu: "Kiểm tra xem còn những tài liệu nào cần phải hoàn thiện; tôi sẽ cung cấp thông tin để bạn hoàn thiện chúng."
 - Đầu ra: Danh sách tài liệu còn trống kèm câu hỏi cho chủ dự án; cập nhật README gốc, README 05-prototype, trạng thái PRD và prompt log AI-014–AI-025 từ mô tả các PR đã merge.
-- Giới hạn: Không tạo dữ liệu phỏng vấn, log thử hay số liệu. Các mục 01–03, test-logs, changes, 06, 07 và slides chờ thông tin từ chủ dự án.
+- Đợt 2: Chủ dự án ghi câu trả lời và ảnh dùng thử trong thư mục trên máy. AI dựng ghi chép dùng thử, interview guide, log P1–P4, insight; soạn nháp journey map, need statement, sổ rủi ro, coach plan và dàn ý slide.
+- Giới hạn: Không tạo trích dẫn, người tham gia hay số liệu mới. Test-logs, changes.md và hai tài liệu chạy thử để lại vì chưa có thông tin. Ảnh dùng thử chưa đưa vào repo, chờ kiểm tra đã che thông tin cá nhân.

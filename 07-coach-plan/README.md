@@ -1,19 +1,26 @@
 # 07 — Mình sẽ coach một nhóm làm bài này thế nào
 
-**Trạng thái:** Khung một trang do AI tạo — cần cá nhân hóa theo nhóm.
+**Trạng thái:** Bản nháp do AI soạn từ cách dự án MedicApp đã diễn ra, chờ chủ dự án duyệt và thêm kinh nghiệm riêng. Giả định nhóm 3–4 người trong 4 tuần; điều chỉnh khi biết quy mô và thời hạn thật.
 
 ## Mục tiêu
 
 Giúp nhóm đi từ quan sát có bằng chứng đến một nhu cầu rõ ràng, prototype có thể thử và bài trình bày trung thực về kết quả.
 
-## Nhịp làm việc
+## Nhịp 4 tuần
 
-1. **Chốt phạm vi:** Thống nhất một khoảnh khắc, vai trò trong nhóm, nguyên tắc đồng ý tham gia và bảo mật dữ liệu.
-2. **Thu thập:** Dùng thử MyVinmec; thử interview guide; phỏng vấn và rà soát bản ẩn danh trước khi đưa vào repo.
-3. **Tổng hợp:** Nhóm quan sát theo chủ đề, ghi bằng chứng trái chiều; vẽ journey và viết need statement có truy xuất nguồn.
-4. **Thiết kế:** So sánh ba best practice đã kiểm chứng; chọn luồng prototype nhỏ để kiểm tra nhu cầu ưu tiên.
-5. **Thử và sửa:** Quan sát 2–3 người sử dụng; ghi lỗi trước khi thảo luận giải pháp; sửa theo mức ảnh hưởng và kiểm tra lại.
-6. **Bàn giao:** Rà bằng chứng, rủi ro, nguồn và AI disclosure; xuất deck tối đa 10 slide và kiểm tra repo.
+| Tuần | Việc chính | Đầu ra cần có | Bài học từ MedicApp |
+| --- | --- | --- | --- |
+| 1 | Chốt khoảnh khắc; dùng thử app thật; phỏng vấn | Ghi chép dùng thử, 4–5 log ẩn danh | Phỏng vấn đúng nhóm mục tiêu ngay từ đầu: MedicApp chỉ có 1/4 người trên 60 tuổi |
+| 2 | Tổng hợp insight, journey map, need statement; chọn 3 best practice | Insight có mã bằng chứng, need statement chưa gắn giải pháp | Ghi log trước khi viết PRD, để mọi quyết định truy được về trích dẫn |
+| 3 | Prototype nhỏ nhất kiểm tra được nhu cầu | Prototype bấm được, dữ liệu giả lập rõ ràng | Duyệt bố cục bằng prototype tương tác trước khi code giúp sửa rẻ hơn |
+| 4 | Thử với 2–3 người, sửa, trình bày | Log thử, bảng thay đổi, deck tối đa 10 slide | Giữ thời gian cho vòng thử: tính năng nhiều mà chưa có log thử thì không chứng minh được nhu cầu |
+
+## Vai trò gợi ý
+
+- **Nghiên cứu:** phỏng vấn, ẩn danh log, giữ chuỗi bằng chứng.
+- **Thiết kế:** journey map, prototype, kịch bản thử.
+- **Kỹ thuật:** dựng prototype, kiểm soát dữ liệu giả lập và quyền riêng tư.
+- **Điều phối:** lịch, rủi ro, deck và AI disclosure.
 
 ## Câu hỏi coach
 
@@ -21,7 +28,8 @@ Giúp nhóm đi từ quan sát có bằng chứng đến một nhu cầu rõ rà
 - Đây là nhu cầu của người dùng hay giải pháp nhóm đã thích sẵn?
 - Người thử đã làm gì, thay vì chỉ nói gì?
 - Sau lần sửa, nhóm sẽ quan sát điều gì để biết có tiến bộ?
+- Tính năng này giải quyết điểm đau nào trong journey map?
 
 ## Nguyên tắc phản hồi
 
-Phản hồi vào hành vi và sản phẩm; để nhóm tự đề xuất bước tiếp theo. Ghi rõ điều chưa biết, không dùng AI để tạo bằng chứng giả. Điều chỉnh lịch và phân công sau khi biết quy mô nhóm, thời hạn và nguồn lực.
+Phản hồi vào hành vi và sản phẩm; để nhóm tự đề xuất bước tiếp theo. Ghi rõ điều chưa biết, không dùng AI để tạo bằng chứng giả. Khi dùng AI để viết code hoặc tài liệu, ghi lại prompt và người kiểm tra như [prompt log](../05-prototype/prompts/README.md).
