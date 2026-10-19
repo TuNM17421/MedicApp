@@ -27,10 +27,6 @@ Xem [PRD Smart Scheduling](05-prototype/prd-smart-scheduling.md) và [ba best pr
 | [07-coach-plan](07-coach-plan/) | Kế hoạch coach một trang |
 | [slides.pdf](slides.pdf) | Deck 10 slide |
 
-## Công cụ AI hỗ trợ
-
-Code, tài liệu kỹ thuật và tests được viết với Codex (bước 1–4) và Claude Code (Smart Scheduling và các bước sau). Từng lần sử dụng, prompt và cách kiểm tra được ghi trong [prompt log](05-prototype/prompts/README.md).
-
 ## Nguyên tắc lưu trữ
 
 - Chỉ commit dữ liệu đã ẩn danh (P1, P2, P3…). Không commit tên thật, liên hệ, hồ sơ sức khỏe, token hoặc khóa ký ứng dụng.

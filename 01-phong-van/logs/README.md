@@ -1,6 +1,6 @@
 # Log phỏng vấn ẩn danh
 
-**Trạng thái:** 4 người tham gia, P1–P4. Chưa ghi ngày phỏng vấn và trạng thái đồng ý của từng người.
+**Trạng thái:** 4 người tham gia, P1–P4. P3 và P4 phỏng vấn ngày 16/10/2026, P1 và P2 ngày 17/10/2026. Cả 4 người đều đồng ý cho ghi chép.
 
 | Mã | Bối cảnh | Log |
 | --- | --- | --- |
