@@ -7,6 +7,7 @@ import 'package:medic_core/medic_core.dart';
 import '../../../app/notifications.dart';
 import '../../../app/state/app_state.dart';
 import '../../auth/auth_controller.dart';
+import '../../family/application/family_providers.dart';
 import '../../records/application/records_providers.dart';
 import '../../sharing/application/sharing_providers.dart';
 
@@ -15,11 +16,15 @@ import '../../visit_prep/visit_prep.dart';
 import '../data/med_reminder_scheduler.dart';
 import '../domain/med_reminder_planner.dart';
 
-/// Every medicine from the signed-in account's prescriptions.
-final medicationCoursesProvider = Provider<List<MedicationCourse>>(
-  (ref) =>
-      List.unmodifiable(coursesFrom(ref.watch(visitResultsProvider).results)),
-);
+/// Every medicine from the signed-in account's prescriptions, except those
+/// of family profiles linked with their own phone: that phone reminds them.
+final medicationCoursesProvider = Provider<List<MedicationCourse>>((ref) {
+  final away = ref.watch(medsOnOtherPhoneProvider);
+  return List.unmodifiable([
+    for (final course in coursesFrom(ref.watch(visitResultsProvider).results))
+      if (!away.contains(course.profileId)) course,
+  ]);
+});
 
 final pendingDoseStoreProvider = Provider<PendingDoseStore>(
   (ref) => SecurePendingDoseStore(),
@@ -167,32 +172,60 @@ final medReminderSchedulerProvider = Provider<MedReminderScheduler>(
   (ref) => LocalMedReminderScheduler(ref.watch(notificationHubProvider)),
 );
 
-/// Keeps the phone's medication schedule equal to [medReminderPlanProvider].
+/// Keeps the phone's medication schedule equal to [medReminderPlanProvider],
+/// ringing like an alarm when [medAlarmProvider] is on.
 final medReminderSyncProvider = Provider<void>((ref) {
-  ref.listen(medReminderPlanProvider, (previous, next) async {
-    if (listEquals(previous, next)) return;
-    if (next.isEmpty && (previous == null || previous.isEmpty)) return;
+  Future<void> replace(List<MedReminder> plan) async {
     final allowed = await ref
         .read(medReminderSchedulerProvider)
-        .replaceAll(next);
+        .replaceAll(plan, ring: ref.read(medAlarmProvider));
     if (ref.mounted && !allowed) {
       ref.read(notificationsAllowedProvider.notifier).set(false);
     }
-  }, fireImmediately: true);
-});
-
-/// Whether reminders ring on the minute; null until checked.
-final ringOnTimeProvider = NotifierProvider<RingOnTime, bool?>(RingOnTime.new);
-
-class RingOnTime extends Notifier<bool?> {
-  @override
-  bool? build() => null;
-
-  Future<void> check() async {
-    final value = await ref.read(medReminderSchedulerProvider).canRingOnTime();
-    if (ref.mounted) state = value;
   }
 
-  Future<void> allow() =>
-      ref.read(medReminderSchedulerProvider).allowRingOnTime();
+  ref.listen(medReminderPlanProvider, (previous, next) async {
+    if (listEquals(previous, next)) return;
+    if (next.isEmpty && (previous == null || previous.isEmpty)) return;
+    await replace(next);
+  }, fireImmediately: true);
+  ref.listen(medAlarmProvider, (previous, next) async {
+    if (previous == next) return;
+    final plan = ref.read(medReminderPlanProvider);
+    if (plan.isNotEmpty) await replace(plan);
+  });
+});
+
+final medAlarmSettingProvider = Provider<MedAlarmSetting>(
+  (ref) => SecureMedAlarmSetting(),
+);
+
+/// Whether dose reminders ring like an alarm clock. Off until the person
+/// turns it on and the phone allows exact alarms.
+final medAlarmProvider = NotifierProvider<MedAlarm, bool>(MedAlarm.new);
+
+class MedAlarm extends Notifier<bool> {
+  @override
+  bool build() {
+    ref.read(medAlarmSettingProvider).read().then((on) {
+      if (ref.mounted && on) state = true;
+    });
+    return false;
+  }
+
+  /// Asks the phone for what alarms need and turns them on when exact
+  /// alarms are allowed; otherwise reminders stay plain notifications.
+  Future<AlarmAccess> turnOn() async {
+    final access = await ref.read(medReminderSchedulerProvider).allowAlarm();
+    if (ref.mounted && access.onTime) {
+      state = true;
+      await ref.read(medAlarmSettingProvider).write(true);
+    }
+    return access;
+  }
+
+  Future<void> turnOff() async {
+    state = false;
+    await ref.read(medAlarmSettingProvider).write(false);
+  }
 }

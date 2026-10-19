@@ -14,6 +14,7 @@ import { createAdminApi } from './admin.js';
 import { readFileSync } from 'node:fs';
 
 import { createSummaryWorker } from '../summary/worker.js';
+import { createFamilyApi } from '../family/api.js';
 import { createPatientApi } from './patient.js';
 
 import {
@@ -21,7 +22,7 @@ import {
 } from './prescription.js';
 import { addDays, ageOn, localIso, parseDay, today } from './time.js';
 
-export const CLINIC_PREFIXES = ['staff', 'clinic', 'appointments', 'summaries', 'patients', 'results', 'patient'];
+export const CLINIC_PREFIXES = ['staff', 'clinic', 'appointments', 'summaries', 'patients', 'results', 'patient', 'family'];
 export const CLAIM_DAYS = 30;
 export const CLAIM_PER_MINUTE = 10;
 
@@ -89,6 +90,7 @@ export function createClinicApi({ db, config, log, summary = {} }) {
   const store = createSessionStore();
   const summaries = createSummaryWorker({ db, config, log, ...summary });
   const patient = createPatientApi({ db, config, log, onIntake: (id) => summaries.schedule(id) });
+  const family = createFamilyApi({ db, log });
   const q = (sql) => db.prepare(sql);
 
   const stmt = {
@@ -630,6 +632,7 @@ export function createClinicApi({ db, config, log, summary = {} }) {
     const [, area, id, sub] = parts;
     const m = req.method;
     if (area === 'patient') return patient.handle(req, res, parts);
+    if (area === 'family') return family.handle(req, res, parts, url);
     if (area === 'staff' && parts.length === 3) {
       if (m === 'POST' && id === 'login') return login(req, res);
       if (m === 'POST' && id === 'logout') {
@@ -702,10 +705,12 @@ export function createClinicApi({ db, config, log, summary = {} }) {
     handle,
     sessions: store,
     patient,
+    family,
     summaries,
     close: () => {
       store.close();
       patient.close();
+      family.close();
       summaries.close();
       clearInterval(claimSweep);
     },

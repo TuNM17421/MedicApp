@@ -209,4 +209,54 @@ export const migrations = [
   CREATE INDEX audit_appointment ON audit_event (appointment_id, at);
   CREATE INDEX audit_action ON audit_event (action, at);
   `,
+  // Liên kết hai máy: one link joins a family profile on the caregiver's
+  // phone (owner) with that person's own phone (member). Each side holds its
+  // own random token; only hashes are stored. Events are a mailbox per link,
+  // read by the other side. family_dose is the member's dose schedule, kept
+  // only to tell the owner about missed doses (never the owner's medicines).
+  `
+  CREATE TABLE family_link (
+    id TEXT PRIMARY KEY,
+    owner_token_hash TEXT NOT NULL UNIQUE,
+    member_token_hash TEXT UNIQUE,
+    owner_name TEXT NOT NULL,
+    member_name TEXT,
+    profile TEXT NOT NULL,
+    share_missed INTEGER NOT NULL DEFAULT 1,
+    created_at TEXT NOT NULL,
+    claimed_at TEXT,
+    ended_at TEXT
+  );
+
+  CREATE TABLE family_invite (
+    code_hash TEXT PRIMARY KEY,
+    link_id TEXT NOT NULL REFERENCES family_link(id) ON DELETE CASCADE,
+    expires_at TEXT NOT NULL
+  );
+  CREATE INDEX family_invite_link ON family_invite (link_id);
+
+  CREATE TABLE family_event (
+    seq INTEGER PRIMARY KEY AUTOINCREMENT,
+    link_id TEXT NOT NULL REFERENCES family_link(id) ON DELETE CASCADE,
+    from_role TEXT NOT NULL CHECK (from_role IN ('owner', 'member')),
+    kind TEXT NOT NULL,
+    ref_id TEXT NOT NULL DEFAULT '',
+    body TEXT NOT NULL DEFAULT '{}',
+    at TEXT NOT NULL
+  );
+  CREATE INDEX family_event_link ON family_event (link_id, seq);
+
+  CREATE TABLE family_dose (
+    link_id TEXT NOT NULL REFERENCES family_link(id) ON DELETE CASCADE,
+    key TEXT NOT NULL,
+    at TEXT NOT NULL,
+    label TEXT NOT NULL,
+    meds TEXT NOT NULL DEFAULT '[]',
+    mark TEXT CHECK (mark IN ('taken', 'skipped')),
+    reason TEXT,
+    marked_at TEXT,
+    alerted INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (link_id, key)
+  );
+  `,
 ];

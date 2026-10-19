@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -12,28 +13,41 @@ import 'package:medic_app/features/meds/application/meds_providers.dart';
 import 'package:medic_app/features/meds/data/med_reminder_scheduler.dart';
 import 'package:medic_app/features/meds/domain/med_reminder_planner.dart';
 import 'package:medic_app/features/records/application/records_providers.dart';
+import 'package:medic_app/features/visit_prep/reminder_planner.dart'
+    show ReminderLine;
 import 'package:medic_app/features/visit_prep/reminder_scheduler.dart';
 import 'package:medic_app/features/visit_prep/visit_prep.dart';
 import 'package:medic_app/main.dart';
 import 'package:medic_core/medic_core.dart';
+import 'package:timezone/timezone.dart';
 
 import '../visit_prep/reminder_planner_test.dart' show FakeScheduler;
 
 class FakeMedScheduler implements MedReminderScheduler {
   final calls = <List<MedReminder>>[];
-  bool onTime = true;
+  final rings = <bool>[];
+
+  /// What the phone allows when the alarm is turned on.
+  AlarmAccess access = (onTime: true, fullScreen: true);
 
   @override
-  Future<bool> replaceAll(List<MedReminder> reminders) async {
+  Future<bool> replaceAll(
+    List<MedReminder> reminders, {
+    bool ring = false,
+  }) async {
     calls.add(reminders);
+    rings.add(ring);
     return true;
   }
 
   @override
-  Future<bool> canRingOnTime() async => onTime;
+  Future<AlarmAccess> allowAlarm() async => access;
 
   @override
-  Future<void> allowRingOnTime() async => onTime = true;
+  Future<void> stopRinging(List<String> keys) async {}
+
+  @override
+  Future<void> snooze(MedPayload payload, DateTime now) async {}
 }
 
 const _metformin = PrescriptionItem(
@@ -294,6 +308,94 @@ void main() {
     });
   });
 
+  group('alarm', () {
+    const dose = MedPayload(
+      keys: ['V1#1|2026-10-14|morning'],
+      title: 'Đến giờ uống thuốc',
+      summary: 'Metformin',
+      header: 'Thuốc của bạn · 07:00',
+      html: '<b>Metformin 500mg:</b> 1 viên',
+      ring: true,
+      lines: [ReminderLine('Metformin 500mg', '1 viên, sau ăn')],
+    );
+
+    test('rings on the alarm channel until answered', () {
+      final decoded = MedPayload.decode(dose.encode())!;
+      expect(decoded.ring, isTrue);
+      expect(decoded.lines.single.text, '1 viên, sau ăn');
+      final ring = medDetails(dose);
+      expect(ring.channelId, 'med_alarms');
+      expect(ring.audioAttributesUsage, AudioAttributesUsage.alarm);
+      expect(ring.category, AndroidNotificationCategory.alarm);
+      expect(ring.fullScreenIntent, isTrue);
+      expect(ring.additionalFlags, [4]);
+      expect(ring.actions, hasLength(2));
+
+      final plain = medDetails(
+        MedPayload.decode(dose.encode().replaceFirst('"r":true', '"r":false'))!,
+      );
+      expect(plain.channelId, 'med_reminders');
+      expect(plain.audioAttributesUsage, AudioAttributesUsage.notification);
+      expect(plain.fullScreenIntent, isFalse);
+      expect(plain.additionalFlags, isNull);
+    });
+
+    test('a snoozed alarm rings again, or notifies when exact alarms were '
+        'taken back', () async {
+      Future<_RecordingPlugin> snooze({required bool exact}) async {
+        final plugin = _RecordingPlugin()..exact = exact;
+        await handleMedAction(
+          NotificationResponse(
+            notificationResponseType:
+                NotificationResponseType.selectedNotificationAction,
+            actionId: MedActions.snooze,
+            payload: dose.encode(),
+          ),
+          plugin: plugin,
+          store: MemoryPendingDoseStore(),
+          now: DateTime(2026, 10, 14, 7, 2),
+        );
+        return plugin;
+      }
+
+      final allowed = await snooze(exact: true);
+      expect(allowed.modes, [AndroidScheduleMode.alarmClock]);
+      expect(allowed.channels, ['med_alarms']);
+      final revoked = await snooze(exact: false);
+      expect(revoked.modes, [
+        AndroidScheduleMode.alarmClock,
+        AndroidScheduleMode.inexactAllowWhileIdle,
+      ]);
+    });
+
+    test('turns on only when exact alarms are allowed', () async {
+      final meds = FakeMedScheduler()
+        ..access = (onTime: false, fullScreen: false);
+      final setting = MemoryMedAlarmSetting();
+      final c = ProviderContainer(
+        overrides: [
+          medReminderSchedulerProvider.overrideWithValue(meds),
+          medAlarmSettingProvider.overrideWithValue(setting),
+        ],
+      );
+      addTearDown(c.dispose);
+      final alarm = c.read(medAlarmProvider.notifier);
+
+      expect((await alarm.turnOn()).onTime, isFalse);
+      expect(c.read(medAlarmProvider), isFalse);
+      expect(setting.on, isFalse);
+
+      meds.access = (onTime: true, fullScreen: false);
+      expect((await alarm.turnOn()).fullScreen, isFalse);
+      expect(c.read(medAlarmProvider), isTrue);
+      expect(setting.on, isTrue);
+
+      await alarm.turnOff();
+      expect(c.read(medAlarmProvider), isFalse);
+      expect(setting.on, isFalse);
+    });
+  });
+
   group('dose log', () {
     ProviderContainer container(PendingDoseStore store) {
       final c = ProviderContainer(
@@ -367,7 +469,7 @@ void main() {
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
-    final meds = FakeMedScheduler()..onTime = false;
+    final meds = FakeMedScheduler();
     final c = ProviderContainer(
       overrides: [
         bookingTodayProvider.overrideWithValue(DateTime(2026, 10, 14)),
@@ -378,6 +480,7 @@ void main() {
         reminderSchedulerProvider.overrideWithValue(FakeScheduler()),
         medReminderSchedulerProvider.overrideWithValue(meds),
         pendingDoseStoreProvider.overrideWithValue(MemoryPendingDoseStore()),
+        medAlarmSettingProvider.overrideWithValue(MemoryMedAlarmSetting()),
       ],
     );
     addTearDown(() async {
@@ -416,7 +519,15 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Đã uống 0/3 liều'), findsOneWidget);
     expect(find.text('Thuốc của bạn'), findsOneWidget);
-    expect(find.text('Bật nhắc đúng giờ'), findsOneWidget);
+    expect(find.text('Lời nhắc có thể đến trễ vài phút'), findsNothing);
+
+    expect(meds.rings.last, isFalse);
+    await tester.tap(find.byKey(const Key('meds-alarm')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('meds-alarm-confirm')));
+    await tester.pumpAndSettle();
+    expect(find.text('Đã bật chuông báo uống thuốc.'), findsOneWidget);
+    expect(meds.rings.last, isTrue);
 
     const mine = 'V1#1|2026-10-14|morning';
     await tester.tap(find.byKey(const Key('dose-take-$mine')));
@@ -448,11 +559,57 @@ void main() {
 
     final saved = c.read(mockAccountStoreProvider)[demoPhone]!.doseLog;
     expect(saved.single.key, mine);
+
+    // The ringing screen records the dose and goes to Thuốc hôm nay.
+    c
+        .read(appRouterProvider)
+        .go(
+          AppRoutes.medAlarm,
+          extra: MedPayload(
+            keys: [hers],
+            title: 'Mẹ Lan: đến giờ uống thuốc',
+            summary: 'Allopurinol',
+            header: 'Mẹ Lan · 07:00',
+            html: '',
+            ring: true,
+            lines: [ReminderLine('Allopurinol 300mg', '1 viên, sau ăn')],
+          ),
+        );
+    await tester.pumpAndSettle();
+    expect(find.text('Mẹ Lan: đến giờ uống thuốc'), findsOneWidget);
+    expect(find.text('Allopurinol 300mg'), findsOneWidget);
+    await tester.tap(find.byKey(const Key('med-alarm-taken')));
+    await tester.pumpAndSettle();
+    expect(find.text('Đã ghi: uống thuốc lúc 07:00.'), findsOneWidget);
+    expect(c.read(doseLogProvider).keys, containsAll([mine, hers]));
   });
 }
 
 class _RecordingPlugin implements FlutterLocalNotificationsPlugin {
   final cancelled = <int>[];
+  final modes = <AndroidScheduleMode>[];
+  final channels = <String>[];
+
+  /// Whether exact alarms are allowed; alarm-clock schedules fail without.
+  bool exact = true;
+
+  @override
+  Future<void> zonedSchedule({
+    required int id,
+    required TZDateTime scheduledDate,
+    required NotificationDetails notificationDetails,
+    required AndroidScheduleMode androidScheduleMode,
+    String? title,
+    String? body,
+    String? payload,
+    DateTimeComponents? matchDateTimeComponents,
+  }) async {
+    modes.add(androidScheduleMode);
+    if (!exact && androidScheduleMode == AndroidScheduleMode.alarmClock) {
+      throw PlatformException(code: 'exact_alarms_not_permitted');
+    }
+    channels.add(notificationDetails.android!.channelId);
+  }
 
   @override
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);

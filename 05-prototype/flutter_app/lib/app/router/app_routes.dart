@@ -8,6 +8,10 @@ abstract final class AppRoutes {
   static const account = '/account';
   static const appointments = '/home/appointments';
   static const meds = '/home/meds';
+
+  /// Full-screen page of a ringing medication alarm; takes a MedPayload as
+  /// the route's extra.
+  static const medAlarm = '/med-alarm';
   static const booking = '/booking';
   static const smart = '/smart';
   static const smartFromBooking = '/smart?from=booking';
@@ -43,6 +47,8 @@ abstract final class AppRoutes {
       '$profileFormPath${_for(self)}';
 
   static String profile(String id) => '$profiles/${Uri.encodeComponent(id)}';
+  static String familyInvite(String profileId) => '${profile(profileId)}/link';
+  static const familyJoin = '/account/link';
   static String notice(String id) =>
       '$notifications/${Uri.encodeComponent(id)}';
 

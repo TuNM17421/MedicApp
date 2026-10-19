@@ -17,7 +17,7 @@ final notificationHubProvider = Provider<NotificationHub>((ref) {
     onBackgroundResponse: medBackgroundResponse,
     onResponse: (response) async {
       final router = ref.read(appRouterProvider);
-      if (MedPayload.decode(response.payload) != null) {
+      if (MedPayload.decode(response.payload) case final payload?) {
         final handled = await handleMedAction(
           response,
           plugin: hub.plugin,
@@ -27,9 +27,17 @@ final notificationHubProvider = Provider<NotificationHub>((ref) {
         );
         if (handled) {
           await ref.read(doseLogProvider.notifier).drainPending();
+        } else if (payload.ring) {
+          // Opened by the alarm itself: on the lock screen, or a tap on it.
+          router.go(AppRoutes.medAlarm, extra: payload);
         } else {
           router.go(AppRoutes.meds);
         }
+        return;
+      }
+      // A linked person's missed dose: listed on Thuốc hôm nay.
+      if (response.payload?.startsWith('family:') ?? false) {
+        router.go(AppRoutes.meds);
         return;
       }
       final visitId = LocalReminderScheduler.visitIdOf(response.payload);

@@ -12,7 +12,10 @@ import '../../features/booking/presentation/booking_demo_page.dart';
 import '../../features/design_preview/design_preview_page.dart';
 import '../../features/facilities/presentation/facility_map_page.dart';
 import '../../features/smart/presentation/smart_page.dart';
+import '../../features/family/presentation/family_pages.dart';
 import '../../features/home/home_page.dart';
+import '../../features/meds/data/med_reminder_scheduler.dart';
+import '../../features/meds/presentation/med_alarm_page.dart';
 import '../../features/meds/presentation/today_meds_page.dart';
 import '../../features/notifications/notification_pages.dart';
 import '../../features/profiles/add_profile_pages.dart';
@@ -148,6 +151,14 @@ GoRouter createAppRouter({
                     path: ':id',
                     builder: (_, state) =>
                         ProfileDetailPage(id: state.pathParameters['id']!),
+                    routes: [
+                      _route(
+                        path: 'link',
+                        builder: (_, state) => FamilyInvitePage(
+                          profileId: state.pathParameters['id']!,
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -173,10 +184,23 @@ GoRouter createAppRouter({
               _route(
                 path: AppRoutes.account,
                 builder: (_, _) => const AccountPage(),
+                routes: [
+                  _route(
+                    path: 'link',
+                    builder: (_, _) => const FamilyJoinPage(),
+                  ),
+                ],
               ),
             ],
           ),
         ],
+      ),
+      _route(
+        path: AppRoutes.medAlarm,
+        builder: (_, state) => switch (state.extra) {
+          final MedPayload payload => MedAlarmPage(payload: payload),
+          _ => const TodayMedsPage(),
+        },
       ),
       _route(path: AppRoutes.welcome, builder: (_, _) => const WelcomePage()),
       _route(path: AppRoutes.signIn, builder: (_, _) => const SignInPage()),

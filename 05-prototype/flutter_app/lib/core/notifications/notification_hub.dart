@@ -9,6 +9,7 @@ abstract final class NotificationIds {
   static const visitStart = 0, visitEnd = 1000;
   static const medStart = 1000, medEnd = 9000;
   static const snoozeStart = 9000, snoozeEnd = 10000;
+  static const familyStart = 10000, familyEnd = 11000;
 }
 
 /// One plugin instance for the whole app. The plugin keeps a single tap
@@ -78,6 +79,23 @@ class NotificationHub {
 
   /// Opens the system page where the user allows exact alarms.
   Future<void> requestExact() async => _android?.requestExactAlarmsPermission();
+
+  /// Lets an alarm-style reminder cover the lock screen. Android 14 grants
+  /// it only to calling and alarm apps by default, so this may open the
+  /// system page for it. Returns whether it is allowed.
+  Future<bool> requestFullScreen() async =>
+      await _android?.requestFullScreenIntentPermission() ?? true;
+
+  /// Removes the shown notifications whose payload passes [test], which
+  /// stops an alarm that is still ringing.
+  Future<void> cancelShown(bool Function(String? payload) test) async {
+    await ready();
+    for (final shown in await plugin.getActiveNotifications()) {
+      if (shown.id case final id? when test(shown.payload)) {
+        await plugin.cancel(id: id);
+      }
+    }
+  }
 
   /// Cancels the scheduled and shown notifications whose id is in
   /// [start, end).

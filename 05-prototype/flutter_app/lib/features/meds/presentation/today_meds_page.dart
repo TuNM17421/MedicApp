@@ -11,6 +11,9 @@ import '../../../app/state/app_state.dart';
 import '../../../app/theme/app_theme.dart';
 import '../../../core/widgets/app_widgets.dart';
 
+import '../../family/application/family_providers.dart';
+import '../../family/domain/family_models.dart';
+import '../../family/presentation/family_pages.dart';
 import '../../visit_prep/visit_prep.dart';
 import '../application/meds_providers.dart';
 import '../domain/med_reminder_planner.dart';
@@ -53,21 +56,16 @@ class TodayMedsPage extends ConsumerStatefulWidget {
 class _TodayMedsPageState extends ConsumerState<TodayMedsPage>
     with _MinuteTick {
   @override
-  void initState() {
-    super.initState();
-    Future.microtask(() {
-      if (mounted) ref.read(ringOnTimeProvider.notifier).check();
-    });
-  }
-
-  @override
   Widget build(BuildContext context) {
     final now = ref.watch(prepClockProvider)();
     final courses = ref.watch(medicationCoursesProvider);
+    final away = [
+      for (final link in ref.watch(familyLinksProvider))
+        if (link.role == FamilyRole.owner && link.linked) link,
+    ];
     final log = ref.watch(doseLogProvider);
     final profiles = ref.watch(profileCatalogProvider);
     final today = dosesOn(now, courses, log, now);
-    final ringOnTime = ref.watch(ringOnTimeProvider);
     PreviewProfile? profile(String id) =>
         profiles.where((p) => p.id == id).firstOrNull;
 
@@ -84,20 +82,15 @@ class _TodayMedsPageState extends ConsumerState<TodayMedsPage>
         title: 'Thuốc hôm nay',
         onBack: () => AppRoutes.backOrHome(context),
         children: [
-          if (courses.isEmpty)
+          for (final link in away) AwayMedsCard(link: link),
+          if (courses.isEmpty && away.isEmpty)
             const AppEmptyState(
               title: 'Chưa có thuốc',
               message: 'Khi bác sĩ gửi đơn thuốc, lịch uống và lời nhắc sẽ hiện ở đây.',
             )
-          else ...[
+          else if (courses.isNotEmpty) ...[
             _DaySummary(doses: today, now: now),
-            if (ringOnTime == false)
-              _RingOnTimeCard(
-                onAllow: () async {
-                  await ref.read(ringOnTimeProvider.notifier).allow();
-                  await ref.read(ringOnTimeProvider.notifier).check();
-                },
-              ),
+            const _AlarmCard(),
             for (final course in low)
               _LowStockCard(
                 course: course,
@@ -183,29 +176,80 @@ class _DaySummary extends StatelessWidget {
   }
 }
 
-class _RingOnTimeCard extends StatelessWidget {
-  const _RingOnTimeCard({required this.onAllow});
-  final VoidCallback onAllow;
+/// Turns alarm-style reminders on, after saying what the phone will ask.
+class _AlarmCard extends ConsumerWidget {
+  const _AlarmCard();
+
+  Future<void> _turnOn(BuildContext context, WidgetRef ref) async {
+    final go = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Bật chuông báo uống thuốc?'),
+        content: const Text(
+          'Đến giờ uống, điện thoại sẽ kêu như báo thức, kể cả khi để im '
+          'lặng. Hãy cho phép "Báo thức và lời nhắc" ở bước tiếp theo.',
+          style: TextStyle(fontSize: 18),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Để sau'),
+          ),
+          FilledButton(
+            key: const Key('meds-alarm-confirm'),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Tiếp tục'),
+          ),
+        ],
+      ),
+    );
+    if (go != true || !context.mounted) return;
+    final access = await ref.read(medAlarmProvider.notifier).turnOn();
+    if (!context.mounted) return;
+    final message = !access.onTime
+        ? 'Chưa bật được chuông. Lời nhắc vẫn hiện như thông báo.'
+        : 'Đã bật chuông báo uống thuốc.';
+    ScaffoldMessenger.of(context)
+      ..clearSnackBars()
+      ..showSnackBar(SnackBar(content: Text(message)));
+  }
 
   @override
-  Widget build(BuildContext context) => Column(
-    crossAxisAlignment: CrossAxisAlignment.stretch,
-    children: [
-      const AppStatusBanner(
-        status: AppStatus.warning,
-        title: 'Lời nhắc có thể đến trễ vài phút',
-        message:
-            'Điện thoại đang tiết kiệm pin nên có thể báo muộn. Cho phép '
-            '"Báo thức và lời nhắc" để nhắc đúng giờ.',
+  Widget build(BuildContext context, WidgetRef ref) {
+    final on = ref.watch(medAlarmProvider);
+    final text = Theme.of(context).textTheme;
+    return AppSurface(
+      // Read out with its switch as one control.
+      child: MergeSemantics(
+        child: Row(
+          children: [
+            const AppIconTile(icon: AppIcons.alarm),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Chuông báo uống thuốc', style: text.titleMedium),
+                  const SizedBox(height: 4),
+                  Text(
+                    on ? 'Kêu như báo thức' : 'Chỉ hiện thông báo',
+                    style: text.bodyMedium,
+                  ),
+                ],
+              ),
+            ),
+            Switch(
+              key: const Key('meds-alarm'),
+              value: on,
+              onChanged: (value) => value
+                  ? _turnOn(context, ref)
+                  : ref.read(medAlarmProvider.notifier).turnOff(),
+            ),
+          ],
+        ),
       ),
-      const SizedBox(height: 8),
-      OutlinedButton(
-        key: const Key('meds-ring-on-time'),
-        onPressed: onAllow,
-        child: const Text('Bật nhắc đúng giờ'),
-      ),
-    ],
-  );
+    );
+  }
 }
 
 class _LowStockCard extends StatelessWidget {

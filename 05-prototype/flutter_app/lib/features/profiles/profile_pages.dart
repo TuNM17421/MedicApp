@@ -6,6 +6,7 @@ import '../../app/router/app_routes.dart';
 import '../../app/state/app_state.dart';
 import '../../app/theme/app_theme.dart';
 import '../../core/widgets/app_widgets.dart';
+import '../family/presentation/family_pages.dart';
 import '../visit_prep/visit_prep_widgets.dart';
 import 'cccd_qr.dart';
 
@@ -107,6 +108,9 @@ class ProfileDetailPage extends ConsumerWidget {
                 (label: 'Địa chỉ', value: address),
             ],
           ),
+        if (matches.isNotEmpty &&
+            matches.first.relationship != selfRelationship)
+          FamilyLinkSection(profile: matches.first),
         if (matches.isNotEmpty)
           ProfileConditionsEditor(
             key: const Key('profile-conditions'),
