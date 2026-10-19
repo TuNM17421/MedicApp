@@ -39,4 +39,17 @@
 
 ## Ảnh chụp màn hình
 
-Chủ dự án đã chụp 13 ảnh tương ứng với các mã trên (`dat-lich-hen-1/2/3`, `xac-nhan-dat-lich-hen`, `dat-lich-hen-website`, `don-thuoc`, `nhac-lich-uong-thuoc`, `thong-tin-bac-si`, `thong-tin-bac-si-website`, `dich-vu-y-te`, `sang-loc-dot-quy`, `cong-dong-hoi-bac-si`, `hoi-dap-chat-bot`). Ảnh sẽ được thêm vào `anh/` sau khi kiểm tra đã che hết thông tin cá nhân.
+Ảnh do chủ dự án chụp, đã che thông tin cá nhân. Tên bác sĩ trong ảnh là thông tin Vinmec công khai.
+
+| Mã | Ảnh |
+| --- | --- |
+| DT-O01 | [dat-lich-hen-1.jpg](anh/dat-lich-hen-1.jpg) |
+| DT-O02, DT-O03 | [dat-lich-hen-2.jpg](anh/dat-lich-hen-2.jpg), [dat-lich-hen-3.jpg](anh/dat-lich-hen-3.jpg) |
+| DT-O05 | [xac-nhan-dat-lich-hen.jpg](anh/xac-nhan-dat-lich-hen.jpg) |
+| DT-O06 | [dat-lich-hen-website.png](anh/dat-lich-hen-website.png) |
+| DT-O07 | [don-thuoc.jpg](anh/don-thuoc.jpg), [nhac-lich-uong-thuoc.jpg](anh/nhac-lich-uong-thuoc.jpg) |
+| DT-O08 | [thong-tin-bac-si.jpg](anh/thong-tin-bac-si.jpg), [thong-tin-bac-si-website.png](anh/thong-tin-bac-si-website.png) |
+| DT-O09 | [dich-vu-y-te.jpg](anh/dich-vu-y-te.jpg) |
+| DT-O10 | [sang-loc-dot-quy.jpg](anh/sang-loc-dot-quy.jpg) |
+| DT-O11 | [cong-dong-hoi-bac-si.jpg](anh/cong-dong-hoi-bac-si.jpg) |
+| DT-O12 | [hoi-dap-chat-bot.jpg](anh/hoi-dap-chat-bot.jpg) |
