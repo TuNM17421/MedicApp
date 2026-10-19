@@ -1,6 +1,6 @@
 # Phân tích và tổng hợp insight
 
-**Trạng thái:** Đang chờ duyệt.
+**Trạng thái:** Đã duyệt (Nguyễn Mạnh Tú, 19/10/2026).
 
 | Mã | Chủ đề | Bằng chứng | Diễn giải | Bằng chứng trái chiều | Hạn chế |
 | --- | --- | --- | --- | --- | --- |

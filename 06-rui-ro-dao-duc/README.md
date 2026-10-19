@@ -1,6 +1,6 @@
 # 06 — Rủi ro an toàn và đạo đức
 
-**Trạng thái:** Đang chờ duyệt (19/10/2026). Mức độ là đánh giá định tính của nhóm, chưa có chuyên gia y tế hoặc pháp lý rà soát. Người phụ trách: Nguyễn Mạnh Tú cho đến khi phân công khác.
+**Trạng thái:** Đã duyệt (Nguyễn Mạnh Tú, 19/10/2026). Mức độ là đánh giá định tính của nhóm, chưa có chuyên gia y tế hoặc pháp lý rà soát. Người phụ trách: Nguyễn Mạnh Tú cho đến khi phân công khác.
 
 ## Sổ rủi ro
 
