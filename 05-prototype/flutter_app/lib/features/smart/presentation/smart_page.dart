@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../app/router/app_routes.dart';
 import '../../../app/state/app_state.dart';
@@ -224,7 +225,7 @@ class _SmartPageState extends ConsumerState<SmartPage>
         ..._question(context, s.question!, profiles),
       if (s.phase == SmartPhase.proposal && s.proposal != null)
         ..._proposal(context, s, profiles),
-      if (s.phase == SmartPhase.urgent) ..._urgent(context),
+      if (s.phase == SmartPhase.urgent) ..._urgent(context, s),
       if (s.phase == SmartPhase.error) ...[
         OutlinedButton(onPressed: _start, child: const Text('Thử lại')),
         if (s.reply?.fields.time != null &&
@@ -414,19 +415,60 @@ class _SmartPageState extends ConsumerState<SmartPage>
     ];
   }
 
-  List<Widget> _urgent(BuildContext context) => [
-    const AppStatusBanner(
-      key: Key('smart-urgent'),
-      status: AppStatus.error,
-      title: 'Bạn có thể cần hỗ trợ y tế ngay',
-      message: 'Mô tả có dấu hiệu có thể cần cấp cứu. Hãy gọi cấp cứu 115 hoặc đến cơ sở y tế gần nhất ngay. Ứng dụng không tiếp tục đặt lịch khám thường cho mô tả này.',
-      liveRegion: true,
-    ),
-    OutlinedButton(
-      onPressed: () => context.go(AppRoutes.home),
-      child: const Text('Về Trang chủ'),
-    ),
-  ];
+  // The app only suggests 115: the button opens the phone's dialer with the
+  // number filled in, and the user decides whether to press call.
+  List<Widget> _urgent(BuildContext context, SmartState s) {
+    final signs = s.reply?.urgentSigns ?? const <String>[];
+    return [
+      AppStatusBanner(
+        key: const Key('smart-urgent'),
+        status: AppStatus.error,
+        title: 'Bạn có thể cần hỗ trợ y tế ngay',
+        message: [
+          if (signs.isNotEmpty) 'Bạn có nhắc tới: ${signs.join(', ')}.',
+          'Đây có thể là dấu hiệu cần cấp cứu. Hãy gọi cấp cứu 115 hoặc đến cơ sở y tế gần nhất ngay. Ứng dụng không tiếp tục đặt lịch khám thường cho mô tả này.',
+        ].join(' '),
+        liveRegion: true,
+      ),
+      FilledButton.icon(
+        key: const Key('smart-call-115'),
+        style: FilledButton.styleFrom(
+          backgroundColor: Theme.of(context).colorScheme.error,
+          foregroundColor: Theme.of(context).colorScheme.onError,
+        ),
+        onPressed: () => _dial115(context),
+        icon: const AppIcon(AppIcons.phone),
+        label: const Text('Gọi 115'),
+      ),
+      Text(
+        'Ứng dụng chỉ mở màn hình gọi điện với số 115. Bạn tự quyết định có bấm gọi hay không.',
+        style: Theme.of(context).textTheme.bodyMedium,
+      ),
+      OutlinedButton.icon(
+        key: const Key('smart-urgent-map'),
+        onPressed: () => context.push(AppRoutes.facilityMap),
+        icon: const AppIcon(AppIcons.location),
+        label: const Text('Xem cơ sở y tế gần nhất'),
+      ),
+      TextButton(
+        onPressed: () => context.go(AppRoutes.home),
+        child: const Text('Về Trang chủ'),
+      ),
+    ];
+  }
+
+  Future<void> _dial115(BuildContext context) async {
+    final opened = await launchUrl(Uri(scheme: 'tel', path: '115'));
+    if (!opened && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Không mở được màn hình gọi. Hãy tự bấm số 115 trên điện thoại.',
+          ),
+        ),
+      );
+    }
+  }
 
   Widget? _bottom(BuildContext context, SmartState s) {
     if (s.phase == SmartPhase.urgent ||

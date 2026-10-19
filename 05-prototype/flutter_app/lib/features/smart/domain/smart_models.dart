@@ -131,6 +131,7 @@ class SmartReply {
     this.processing = false,
     this.changed = const [],
     this.turnId,
+    this.urgentSigns = const [],
   });
   factory SmartReply.fromJson(Map<String, dynamic> json) {
     final error = json['error'] as Map?;
@@ -157,6 +158,11 @@ class SmartReply {
       processing: json['processing'] == true,
       changed: [for (final f in (json['changed'] as List? ?? const [])) '$f'],
       turnId: json['turn_id'] as String?,
+      urgentSigns: [
+        for (final s
+            in ((json['urgent'] as Map?)?['signs'] as List? ?? const []))
+          '$s',
+      ],
     );
   }
   final SmartStatus status;
@@ -167,6 +173,10 @@ class SmartReply {
   final String? notice, errorCode, errorMessage, turnId;
   final bool processing;
   final List<String> changed;
+
+  /// Listed urgent signs the server found in what was said (empty when only
+  /// the model raised the alert).
+  final List<String> urgentSigns;
 }
 
 class SmartSessionInfo {

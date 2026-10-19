@@ -7,6 +7,7 @@ import {
   weekdayIndex,
 } from '../catalog.js';
 import { emptyExtraction } from '../extraction.js';
+import { urgentSigns } from '../urgent.js';
 
 /**
  * Deterministic "Mô phỏng AI" extractor used when no API key is configured
@@ -23,12 +24,6 @@ const DEPARTMENT_HINTS = {
   children: ['nhi khoa'],
   general: ['noi tong quat', 'kham tong quat', 'kham suc khoe', 'met moi', 'sot', 'dau bung', 'chong mat', 'dau dau'],
 };
-
-// Placeholder phrases only. Real urgent-care rules need clinical review (PRD §11).
-const URGENT_HINTS = [
-  'kho tho', 'dau nguc du doi', 'ngat xiu', 'bat tinh', 'co giat', 'liet nua nguoi', 'meo mieng',
-  'noi ngong', 'chay mau nhieu', 'non ra mau', 'dau dau du doi', 'muon tu tu', 'muon chet',
-];
 
 const OUT_OF_SCOPE_HINTS = ['ke don', 'thuoc gi', 'uong thuoc', 'chan doan', 'toi bi benh gi'];
 
@@ -127,7 +122,8 @@ export function extractMock({ utterances, profiles, today }) {
     ]);
     if (period) out.period = period;
 
-    if (URGENT_HINTS.some((h) => hits(t, [h], true).length)) out.urgent_signal = true;
+    // Same mock list the orchestrator checks first (urgent-signs.json, PRD §11).
+    if (urgentSigns([utterance]).length) out.urgent_signal = true;
     if (OUT_OF_SCOPE_HINTS.some((h) => hits(t, [h], true).length)) out.out_of_scope = true;
   }
   return out;

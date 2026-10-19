@@ -29,3 +29,17 @@ Trả lời 4 câu hỏi trước khám trong app, có nhắc "tức ngực khi 
 
 1. **Một câu tóm tắt sai nghĩa:** "huyết áp tuần trước chỉ khoảng 140, nặng hơn hiện tại". Người bệnh muốn nói hiện tại nặng hơn tuần trước, nên câu này dễ đọc ngược. Bộ kiểm tra hiện chỉ soát số và tên thuốc có trong câu gốc, nên không bắt được lỗi sai nghĩa. Ghi vào [sổ rủi ro R13](../../06-rui-ro-dao-duc/README.md).
 2. **Tóm tắt có chuyện đau gối:** lấy từ dữ liệu mẫu có sẵn của Phạm Thị Lan, không phải AI tự thêm.
+
+## Gợi ý gọi 115 trong Đặt lịch thông minh
+
+Kiểm thử lại ngày 19/10/2026 với `gpt-6-luna`, tài khoản mẫu Phạm Thị Lan.
+
+| Câu nhập | Kết quả |
+| --- | --- |
+| "Mẹ tôi tự nhiên méo miệng, nói ngọng, tay trái không nhấc lên được từ sáng nay" | Dừng đặt lịch, nêu dấu hiệu theo danh sách, hiện nút Gọi 115 |
+| "Bố tôi đau bụng dữ dội từ chiều, bụng cứng như gỗ, vã mồ hôi lạnh" (không có trong danh sách) | AI bổ sung, vẫn dừng đặt lịch và hiện nút Gọi 115 |
+| "Bố tôi vừa ngất xỉu ở nhà tắm, gọi không tỉnh", khi dịch vụ AI lỗi | Danh sách vẫn bắt được, hiện nút Gọi 115. Trước khi sửa, câu này chuyển sang đặt lịch từng bước |
+| "Tôi không khó thở, không đau ngực, chỉ ho nhẹ"; "Tôi hơi tức ngực khi leo cầu thang" | Tiếp tục đặt lịch thường |
+
+Danh sách dấu hiệu là bản tạm ([urgent-signs.json](../backend/src/urgent-signs.json)), chờ người có chuyên môn thay. Lần chạy này tóm tắt trước khám viết đúng chiều "mấy hôm nay lên 165, nặng hơn tuần trước"; một lần đúng chưa đủ để coi R13 đã hết.
+

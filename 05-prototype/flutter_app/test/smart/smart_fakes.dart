@@ -16,6 +16,7 @@ SmartReply reply({
   List<String> changed = const [],
   bool processing = false,
   Map<String, String>? error,
+  Map<String, dynamic>? urgent,
 }) => SmartReply.fromJson({
   'status': status,
   'draft_version': version,
@@ -36,6 +37,7 @@ SmartReply reply({
   'changed': changed,
   'processing': processing,
   'error': error,
+  'urgent': urgent,
 });
 
 const readyFields = {

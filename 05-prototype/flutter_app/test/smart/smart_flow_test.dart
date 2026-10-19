@@ -74,6 +74,43 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  testWidgets('urgent sign: names it, offers 115 and stops booking', (
+    tester,
+  ) async {
+    final gateway = FakeGateway(
+      (_, _, _) async => reply(
+        status: 'urgent',
+        version: 2,
+        urgent: const {
+          'signs': ['ngất'],
+          'by': ['list'],
+        },
+      ),
+    );
+    await openApp(
+      tester,
+      size: const Size(412, 915),
+      overrides: [
+        smartGatewayProvider.overrideWithValue(gateway),
+        voiceCaptureProvider.overrideWithValue(FakeCapture()),
+      ],
+    );
+    await tapKey(tester, 'home-smart');
+    await tester.enterText(
+      find.byKey(const Key('smart-input')),
+      'Bố tôi vừa ngất xỉu',
+    );
+    await tester.tap(find.byKey(const Key('smart-send')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('smart-urgent')), findsOneWidget);
+    expect(find.textContaining('Bạn có nhắc tới: ngất.'), findsOneWidget);
+    expect(find.byKey(const Key('smart-call-115')), findsOneWidget);
+    expect(find.byKey(const Key('smart-urgent-map')), findsOneWidget);
+    expect(find.byKey(const Key('smart-input')), findsNothing);
+    expect(find.byKey(const Key('smart-confirm')), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
   testWidgets('from the department step: context kept, back at payment', (
     tester,
   ) async {

@@ -186,6 +186,62 @@ void main() {
     },
   );
 
+  Future<SmartState> askFor(Map<String, dynamic> time) async {
+    final gateway = FakeGateway(
+      (_, _, _) async => reply(
+        status: 'ready',
+        version: 2,
+        fields: {...readyFields, 'time': time},
+      ),
+    );
+    final c = smartContainer(gateway);
+    final actions = await started(c);
+    await actions.sendText('Tôi đau khớp gối, khám hôm đó ở An Bình');
+    return c.read(smartControllerProvider);
+  }
+
+  String iso(DateTime d) => d.toIso8601String().substring(0, 10);
+
+  test('a full day is explained and left out of the other days', () async {
+    final full = BookingCatalog.dates(today)[2];
+    final s = await askFor({
+      'kind': 'date',
+      'date': iso(full),
+      'period': 'morning',
+    });
+    expect(s.phase, SmartPhase.asking);
+    expect(s.question!.field, 'time');
+    expect(s.messages.last.fromUser, isFalse);
+    expect(
+      s.messages.last.text,
+      'Thứ Bảy 17/10 đã kín lịch. Bạn muốn khám khi nào?',
+    );
+    final values = s.question!.options.map((o) => o.value);
+    expect(values.first, 'earliest');
+    expect(values, isNot(contains('date:${iso(full)}')));
+  });
+
+  test('a full morning offers the same afternoon first', () async {
+    // In the mock schedule, Cơ Xương Khớp at An Bình has only afternoon
+    // slots left on 21/10.
+    final s = await askFor({
+      'kind': 'date',
+      'date': '2026-10-21',
+      'period': 'morning',
+    });
+    expect(
+      s.messages.last.text,
+      'Buổi sáng Thứ Tư 21/10 đã kín. Buổi chiều cùng ngày còn chỗ, hoặc bạn chọn ngày khác.',
+    );
+    final first = s.question!.options.first;
+    expect(first.value, 'date:2026-10-21:afternoon');
+    expect(first.label, 'Chiều Thứ Tư 21/10');
+    expect(
+      s.question!.options.map((o) => o.value),
+      isNot(contains('date:${iso(BookingCatalog.dates(today)[2])}')),
+    );
+  });
+
   test('urgent replies block the booking path (AC14)', () async {
     final gateway = FakeGateway(
       (_, _, _) async =>

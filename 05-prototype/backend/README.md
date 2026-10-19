@@ -49,7 +49,7 @@ Quy tắc điều phối nằm trong `src/orchestrator.js`:
 - Kết quả model không ghi đè trường người dùng chọn hoặc sửa tay sau câu nói tương ứng.
 - Đổi người khám xóa mô tả sức khỏe và gợi ý khoa của người trước. Kiểm tra tuổi khoa Nhi và cơ sở nhận BHYT; không tự đổi hình thức khám.
 - Mỗi lượt hỏi một trường còn thiếu; sau hai lần hỏi cùng trường, app gợi ý đặt lịch từng bước.
-- Dấu hiệu cần cấp cứu (`urgent`) dừng nhánh đặt lịch thường. Danh sách cụm từ ở chế độ mock chỉ là mẫu, **chưa được chuyên môn duyệt**.
+- Dấu hiệu cần cấp cứu (`urgent`) dừng nhánh đặt lịch thường. Mỗi câu được so với danh sách [urgent-signs.json](src/urgent-signs.json) trong code trước khi gọi model, ở mọi chế độ: có dấu hiệu thì trả `urgent` ngay, không gọi model, nên vẫn chạy khi AI lỗi. Ở chế độ AI thật, `urgent_signal` của model chỉ bổ sung, không gỡ được kết quả của danh sách. Câu trả lời có `urgent: { signs, by }` (`signs`: tên dấu hiệu trong danh sách; `by`: `list` và/hoặc `model`). So khớp không phân biệt dấu và bỏ qua câu phủ định ("không khó thở"), dùng chung bộ so khớp với cờ đỏ của tóm tắt. Danh sách là bản tạm, **chưa được chuyên môn duyệt** (`reviewed: false`).
 
 Giờ khám, slot và phí vẫn do `BookingRepository` mô phỏng trong app kiểm tra (đóng vai hệ thống lịch bệnh viện). Catalog dùng chung được test Flutter đối chiếu với `BookingCatalog` để phát hiện lệch.
 
