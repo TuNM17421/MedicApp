@@ -23,3 +23,18 @@ PAIN-02 và PAIN-04 là hai điểm prototype xử lý trước (Smart Schedulin
 
 - Giọng nói giúp người lớn tuổi tự đặt được (P3-Q03 là mong muốn, chưa quan sát hành vi).
 - PAIN-03 chỉ có một người nêu.
+
+## Đối chiếu với prototype hiện tại (19/10/2026)
+
+"Đã giải quyết" nghĩa là prototype đã có tính năng cho điểm đau này với dữ liệu giả lập. Chưa điểm nào được kiểm chứng với người dùng 50–60+.
+
+| Điểm đau | Trạng thái | Prototype đã có | Còn thiếu |
+| --- | --- | --- | --- |
+| PAIN-01 Phụ thuộc người khác | Một phần | Trang chủ chỉ ưu tiên Đặt lịch và Xem lịch hẹn; Smart Scheduling hỏi từng câu; hồ sơ người thân từ QR CCCD; con đặt hộ được ([BOOKING](../05-prototype/flutter_app/BOOKING.md), [AUTH-CCCD](../05-prototype/flutter_app/AUTH-CCCD.md)) | Chưa có log thử chứng minh người 50–60+ tự đặt được |
+| PAIN-02 Không biết chọn chuyên khoa | Một phần | Nói hoặc gõ triệu chứng, đề xuất chuyên khoa kèm lý do, sửa và hoàn tác được ([SMART-SCHEDULING](../05-prototype/flutter_app/SMART-SCHEDULING.md)) | Chưa gọi AI bằng key thật, chưa đo chất lượng nhận giọng tiếng Việt; gợi ý khoa chưa có chuyên môn duyệt |
+| PAIN-03 Không gợi ý theo vị trí | Đã giải quyết | Bản đồ cơ sở, gợi ý cơ sở gần nhất phù hợp BHYT, từ chối quyền vị trí vẫn đặt được (PR #16) | Tọa độ cơ sở là dữ liệu minh họa |
+| PAIN-04 Thử từng bác sĩ để tìm lịch | Một phần | Smart Scheduling chọn giờ còn chỗ sớm nhất theo ngày/buổi mong muốn; luồng cơ bản có lựa chọn "bác sĩ còn lịch"; skeleton khi tải giờ; xử lý giờ vừa hết chỗ | Lịch là giả lập nên chưa giải quyết được độ trễ hơn 4 giây của hệ thống thật (DT-O04) |
+| PAIN-05 Không có giờ kết thúc, không gửi được tình trạng | Một phần | Câu hỏi trước khám gửi tới bác sĩ sau khi đồng ý chia sẻ; web bác sĩ có tóm tắt dẫn về câu gốc (bước 16–17) | Lịch hẹn vẫn chỉ có giờ bắt đầu, chưa có giờ kết thúc dự kiến |
+| PAIN-06 Quên thuốc, người thân không theo dõi được | Đã giải quyết | Nhắc thuốc theo đơn, chuông báo như báo thức, liên kết máy người thân và báo lỡ liều sau 60 phút ([NHAC-THUOC](../05-prototype/flutter_app/NHAC-THUOC.md), [LIEN-KET-HAI-MAY](../05-prototype/flutter_app/LIEN-KET-HAI-MAY.md)) | Chưa có thông báo đẩy: máy người thân chỉ biết lỡ liều khi app đang mở |
+
+**Ngoài journey map:** Lỗi kỹ thuật hiện ra cho người dùng (DT-O08) và chatbot trình bày khó nhìn (DT-O12) là vấn đề của MyVinmec, prototype không xử lý. Sàng lọc đột quỵ kết luận nguy cơ chỉ từ một câu Có (DT-O10); prototype chỉ có hướng dẫn gọi 115 khi phát hiện dấu hiệu cấp cứu trong Smart Scheduling.
