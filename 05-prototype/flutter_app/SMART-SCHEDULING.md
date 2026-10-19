@@ -35,6 +35,6 @@ Android: thêm quyền `RECORD_AUDIO` (chỉ xin khi bấm Nói) và `INTERNET`.
 
 Kết quả 2026-10-15 trên Linux (Flutter 3.47.7): `flutter analyze` sạch; bộ kiểm tra có 77 test (thêm 22 test Smart và 3 test sửa lỗi Quay lại); mọi test không phải ảnh chuẩn đều pass. 8 test ảnh chuẩn lệch 1–5% pixel do render font khác Windows nơi ảnh được tạo, riêng `shell-home-1x.png` còn đổi thật vì Trang chủ có thêm nút “Đặt lịch thông minh”. Cần chạy `flutter test --update-goldens` trên máy Windows để cập nhật và xem lại ảnh Trang chủ.
 
-**Chưa kiểm chứng:** chưa build APK (môi trường thực hiện không có Android SDK), chưa thử trên OPPO/TalkBack, chưa gọi OpenAI bằng key thật, chưa đo ngưỡng khoảng lặng với người nói chậm hoặc nơi ồn. Chưa làm “Dùng vị trí hiện tại” (PRD đợt 4): hiện người dùng chọn hoặc nói khu vực/cơ sở; catalog chưa có tọa độ kiểm chứng nên không có nhãn “gần nhất”.
+**Đã kiểm chứng (19/10/2026):** với AI thật, một câu nhập tay đủ ý cho ra đề xuất đầy đủ sau khoảng 4 giây và chuyển đúng sang bước thanh toán; xem [kết quả](../docs/kiem-thu-ai-that.md).
 
-Code, test và tài liệu của bước này do AI tạo theo yêu cầu chủ dự án; không có log thử người dùng thật.
+**Chưa kiểm chứng:** chưa build APK (môi trường thực hiện không có Android SDK), chưa thử trên OPPO/TalkBack, chưa đo ngưỡng khoảng lặng với người nói chậm hoặc nơi ồn. Chưa làm “Dùng vị trí hiện tại” (PRD đợt 4): hiện người dùng chọn hoặc nói khu vực/cơ sở; catalog chưa có tọa độ kiểm chứng nên không có nhãn “gần nhất”.

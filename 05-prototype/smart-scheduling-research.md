@@ -2,7 +2,7 @@
 
 **Cập nhật 2026-10-15:** Đọc [PRD triển khai](prd-smart-scheduling-implementation.md) cho lựa chọn hiện hành: hỏi đáp `gpt-6-luna` / `low`, STT `gpt-live-transcribe`. So sánh/giá và model Sol/file-transcription bên dưới là nghiên cứu lịch sử, không phải cấu hình mặc định để implement.
 
-Ngày tra cứu: 2026-10-14. AI tổng hợp từ tài liệu chính thức và PRD hiện có. Đây là đề xuất triển khai, chưa tích hợp OpenAI, chưa ghi âm hoặc gọi API. Chủ dự án đã báo hoàn thành thử luồng đặt lịch trên điện thoại; chưa có log chi tiết để suy ra tỷ lệ thành công.
+Ngày tra cứu: 2026-10-14. Đây là đề xuất triển khai, chưa tích hợp OpenAI, chưa ghi âm hoặc gọi API. Chủ dự án đã báo hoàn thành thử luồng đặt lịch trên điện thoại; chưa có log chi tiết để suy ra tỷ lệ thành công.
 
 **Cập nhật v2:** Luồng nhấn ghi/dừng, tải file và xác nhận transcript bên dưới đã được thay bằng [hội thoại streaming](smart-scheduling-conversation.md) theo phản hồi chủ dự án. Model STT hiện chọn `gpt-live-transcribe`; tự xử lý sau lượt nói, hỏi lại khi thiếu và duyệt một bản tổng quan trước thanh toán. Phần API key/USB và giới hạn dữ liệu vẫn áp dụng; phần upload-file và endpoint cũ chỉ giữ làm tham chiếu của nghiên cứu v1, không phải kế hoạch hiện hành.
 

@@ -1,16 +1,16 @@
 # MedicApp — Cải thiện trải nghiệm MyVinmec
 
+**Chủ dự án:** Nguyễn Mạnh Tú.
+
 Kho bài tập nghiên cứu trải nghiệm người dùng và prototype Flutter nhằm cải thiện một khoảnh khắc trong hành trình sử dụng MyVinmec.
 
-**Bước tiếp theo:** [PRD triển khai Smart Scheduling](05-prototype/prd-smart-scheduling-implementation.md) — hội thoại streaming, model tiết kiệm, duyệt đề xuất rồi chuyển thanh toán. Đây là yêu cầu triển khai, chưa phải tính năng đang chạy trong APK.
+**Trạng thái (19/10/2026):** Đã có app người bệnh Flutter Android (đặt lịch, Smart Scheduling, hồ sơ gia đình từ QR CCCD, nhắc khám, đơn thuốc, nhắc và chuông thuốc, bản đồ cơ sở, liên kết hai máy), backend Node local và web bác sĩ Flutter Web (bước 13–18). Tất cả chạy với dữ liệu minh họa. App đã cài trên OPPO A77s; chủ dự án báo đã thử xong luồng đặt lịch cơ bản. Đã dùng thử MyVinmec và phỏng vấn 4 người (P1–P4); phân tích insight, journey map, need statement, sổ rủi ro, coach plan và slide đã được chủ dự án duyệt. Đặt lịch thông minh và tóm tắt trước khám đã chạy với AI thật. Chưa có log thử prototype với người dùng. Xem [tổng quan prototype](05-prototype/README.md).
 
-**Trạng thái:** Đã triển khai Flutter Android: theme/font, shell điều hướng, luồng đặt lịch cơ bản và hoàn thiện UI/UX. App đã cài trên OPPO A77s; chủ dự án báo đã thử xong luồng đặt lịch. Chưa có log thử chi tiết hoặc phỏng vấn ẩn danh trong repo. Dữ liệu bệnh viện, lịch và thanh toán vẫn giả lập; Smart Scheduling mới có nghiên cứu/thiết kế, chưa triển khai.
-
-**Phạm vi bản bàn giao Git hiện tại:** Source Flutter Android, font có giấy phép, tests/ảnh chuẩn, tài liệu và script cài/kích hoạt/gỡ bộ công cụ portable. Không bao gồm SDK/cache, APK, API key hoặc dữ liệu sức khỏe thật. Xem [hướng dẫn chạy app](05-prototype/flutter_app/README.md).
+**Phạm vi bản bàn giao Git hiện tại:** Source app Flutter, web bác sĩ, backend, package `medic_core`, font có giấy phép, tests/ảnh chuẩn, tài liệu và script cài/kích hoạt/gỡ bộ công cụ portable. Không bao gồm SDK/cache, APK, API key hoặc dữ liệu sức khỏe thật. Xem [hướng dẫn chạy app](05-prototype/flutter_app/README.md) và [backend](05-prototype/backend/README.md).
 
 ## Khoảnh khắc đã chọn
 
-Khoảnh khắc ưu tiên do chủ dự án chọn: **người dùng, trọng tâm nhóm 50–60+, tự đặt một lượt khám ngoại trú và hiểu rõ kết quả đặt lịch**. Bối cảnh là khó khăn với nhiều bước và chọn chuyên khoa, theo tóm tắt phỏng vấn do chủ dự án cung cấp; cần bổ sung log ẩn danh để kiểm tra bằng chứng.
+Khoảnh khắc ưu tiên: **người dùng, trọng tâm nhóm 50–60+, tự đặt một lượt khám ngoại trú và hiểu rõ kết quả đặt lịch**. Bối cảnh là khó khăn với nhiều bước và chọn chuyên khoa, theo tóm tắt phỏng vấn do chủ dự án cung cấp; được củng cố bằng [log phỏng vấn P1–P4](01-phong-van/logs/README.md) và [ghi chép dùng thử MyVinmec](01-phong-van/ghi-chep-dung-thu.md).
 
 Xem [PRD Smart Scheduling](05-prototype/prd-smart-scheduling.md) và [ba best practice đề xuất](04-best-practice/README.md). Ưu tiên duyệt luồng đặt khám cơ bản trước; gợi ý khoa và giờ là nhánh hỗ trợ có fallback.
 
@@ -22,19 +22,10 @@ Xem [PRD Smart Scheduling](05-prototype/prd-smart-scheduling.md) và [ba best pr
 | [02-journey-map](02-journey-map/) | Journey map/workflow và điểm đau |
 | [03-need-statement](03-need-statement/) | Need statement và bằng chứng |
 | [04-best-practice](04-best-practice/) | Ba best practice, nguồn và bài học cho Vinmec |
-| [05-prototype](05-prototype/) | Source Flutter, prompt, log thử và lịch sử chỉnh sửa |
+| [05-prototype](05-prototype/) | App Flutter, backend, web bác sĩ, PRD, prompt log, log thử và lịch sử chỉnh sửa |
 | [06-rui-ro-dao-duc](06-rui-ro-dao-duc/) | Rủi ro, giảm thiểu và luồng chuyển tuyến khẩn cấp |
 | [07-coach-plan](07-coach-plan/) | Kế hoạch coach một trang |
-| slides.pdf | Deck tối đa 10 slide — chưa xuất; xem [dàn ý](slides-outline.md) |
-
-## Phần do AI tạo
-
-- AI đã tạo cấu trúc thư mục, README, biểu mẫu nghiên cứu, dàn ý slide và cấu hình bỏ qua file trong Git.
-- Các biểu mẫu là khung để điền, không phải kết quả nghiên cứu hoặc bằng chứng thực tế.
-- AI viết script cài/kích hoạt/gỡ môi trường, khởi tạo app và triển khai giao diện/điều hướng/luồng đặt lịch giả lập cùng tests. Xem tài liệu từng bước trong [Flutter app](05-prototype/flutter_app/).
-- AI tổng hợp nguồn công khai trong phần best practice và soạn PRD, bao gồm luồng, đề xuất thị giác, trạng thái lỗi và tiêu chí duyệt. Các đề xuất chưa phải kết quả kiểm thử người dùng hoặc xác nhận chuyên môn.
-- Chưa có log phỏng vấn hoặc kết quả dùng thử thực tế được đưa vào repo. Tóm tắt khó khăn do chủ dự án cung cấp được ghi riêng với nghiên cứu nguồn công khai.
-- Khi bổ sung nội dung, ghi tác giả/người kiểm tra và phần AI hỗ trợ trong từng tài liệu; lưu prompt tại [05-prototype/prompts](05-prototype/prompts/).
+| [slides.pdf](slides.pdf) | Deck 10 slide |
 
 ## Nguyên tắc lưu trữ
 

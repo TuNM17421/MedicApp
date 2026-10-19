@@ -28,6 +28,6 @@ Luồng dịch vụ chạy trọn vẹn ở 320×640 với chữ 250% và 800×3
 
 Các màn kiểm tra, thanh toán và kết quả bước 3 giữ nguyên ảnh chuẩn. Chưa thử trực tiếp Android/TalkBack hoặc với người dùng thật. Dữ liệu và thanh toán tiếp tục giả lập, lưu trong phiên.
 
-Code, test và tài liệu của bước này do AI tạo theo yêu cầu chủ dự án. Không có log thử người dùng thật được tạo trong bước này.
+Không có log thử người dùng thật được tạo trong bước này.
 
 Kết quả kiểm tra cục bộ 2026-10-14: analyze không có vấn đề, toàn bộ 52 test pass, APK debug build thành công. Đã dừng Gradle daemon sau build.

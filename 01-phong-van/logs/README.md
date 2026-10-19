@@ -1,14 +1,22 @@
 # Log phỏng vấn ẩn danh
 
-**Trạng thái:** Chưa có người tham gia hoặc log thực tế.
+**Trạng thái:** 4 người tham gia, P1–P4. P3 và P4 phỏng vấn ngày 16/10/2026, P1 và P2 ngày 17/10/2026. Cả 4 người đều đồng ý cho ghi chép.
 
-Tạo `P1.md`, `P2.md`, `P3.md`… khi đã thực hiện phỏng vấn. Không tạo danh tính hoặc câu trả lời giả.
+| Mã | Bối cảnh | Log |
+| --- | --- | --- |
+| P1 | Nam, 25 tuổi, công nhân viên chức, Hà Nội | [P1.md](P1.md) |
+| P2 | Nữ, 24 tuổi, công nhân viên chức, Hà Nội | [P2.md](P2.md) |
+| P3 | Nữ, 71 tuổi, nội trợ, Hà Nội | [P3.md](P3.md) |
+| P4 | Nam, 49 tuổi, thợ thủ công, Hà Nội | [P4.md](P4.md) |
 
-Mỗi log cần có:
+## Quan sát chung
 
-- Mã người tham gia, ngày và bối cảnh đã khái quát hóa.
-- Trạng thái đồng ý tham gia/ghi chép.
-- Tác vụ, diễn biến, kết quả và hỗ trợ đã cung cấp.
-- Trích dẫn nguyên văn đã ẩn danh, đánh mã `P1-Q01`…
-- Quan sát đánh mã `P1-O01`…; suy luận ghi riêng.
-- Người ghi chép, người rà soát ẩn danh và phần AI hỗ trợ.
+- **OBS-01:** Mỗi người dùng một app khác nhau; có app cho tạo nhiều hồ sơ, có app chỉ cho tạo hồ sơ bản thân.
+- **OBS-02:** Người lớn tuổi gặp nhiều khó khăn khi phải chọn lần lượt nơi khám, chuyên khoa, bác sĩ, giờ hẹn.
+- **OBS-03:** Khi không có bác sĩ rảnh hoặc gặp lỗi, họ mất thời gian tìm sai ở đâu, hoặc bỏ cuộc và không dùng app nữa.
+
+Quan sát là tổng hợp của người phỏng vấn, chưa gắn với một phiên thao tác cụ thể.
+
+## Quy ước
+
+Trích dẫn đánh mã `P1-Q01`…; quan sát chung `OBS-01`…; quan sát khi dùng thử MyVinmec `DT-O01`… (xem [ghi chép dùng thử](../ghi-chep-dung-thu.md)). Không lưu tên thật, liên hệ hay khóa đối chiếu danh tính trong repo.

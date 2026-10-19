@@ -1,29 +1,34 @@
 # 05 — Prototype Flutter
 
-- **[PRD triển khai Smart Scheduling](prd-smart-scheduling-implementation.md):** Tài liệu hiện hành để implement hội thoại streaming, hỏi bổ sung, sửa đề xuất và bàn giao thanh toán; model hỏi đáp tiết kiệm `gpt-6-luna`.
+**Trạng thái (19/10/2026):** Bố cục prototype đã được chủ dự án duyệt. Đã có app người bệnh Flutter Android, backend Node local và web bác sĩ Flutter Web, tất cả chạy với dữ liệu minh họa. App đã cài trên OPPO A77s; chủ dự án báo đã thử xong luồng đặt lịch cơ bản. Đặt lịch thông minh và Tóm tắt trước khám đã chạy với AI thật ([kết quả kiểm thử](docs/kiem-thu-ai-that.md)). Chưa có nhà cung cấp SMS, chưa chạy thử với phòng khám hay người dùng thật, và chưa có log thử trong [test-logs/](test-logs/).
 
-- [Nghiên cứu Smart Scheduling + STT](smart-scheduling-research.md): Chọn model, backend giữ key, test qua USB, giới hạn dữ liệu và kế hoạch triển khai. Đã triển khai theo PRD: [backend local](backend/README.md) và [màn Đặt lịch thông minh](flutter_app/SMART-SCHEDULING.md).
+## Thành phần
 
-- [Hoàn thiện UI/UX bước 4](flutter_app/UI-UX.md): Animation nhẹ, skeleton khi tải giờ, giảm chuyển động, cỡ chữ lớn và phản hồi dễ thấy. Footer giữ nguyên.
+| Thư mục | Nội dung |
+| --- | --- |
+| [flutter_app/](flutter_app/README.md) | App người bệnh: đặt lịch, Smart Scheduling, hồ sơ gia đình, nhắc khám, đơn thuốc, nhắc và chuông thuốc, bản đồ cơ sở, liên kết hai máy |
+| [backend/](backend/README.md) | Server Node local: Smart Scheduling, API phòng khám ([CLINIC-API.md](backend/CLINIC-API.md)), API gia đình ([FAMILY-API.md](backend/FAMILY-API.md)) |
+| [doctor_web/](doctor_web/README.md) | Web bác sĩ: hàng chờ, tóm tắt trước khám, tuân thủ thuốc, kê đơn, gửi kết quả, quản trị |
+| [packages/medic_core/](packages/medic_core/README.md) | Package Dart dùng chung cho app và web: đơn thuốc, nhật ký liều, tuân thủ 30 ngày |
+| [docs/](docs/) | [Kiểm thử AI với API thật](docs/kiem-thu-ai-that.md); [kế hoạch chạy thử](docs/ke-hoach-chay-thu.md) và [hồ sơ đánh giá tác động dữ liệu](docs/danh-gia-tac-dong-du-lieu.md), bản nháp |
+| [prompts/](prompts/README.md) | Prompt log AI-001 trở đi và [prompt dựng prototype vòng 1](prompts/prototype-agent-brief.md) |
+| [test-logs/](test-logs/) | Log thử với 2–3 người, đã ẩn danh. Chưa có |
+| [changes.md](changes.md) | Thay đổi sau thử nghiệm. Chưa có |
 
-**Trạng thái:** Bố cục prototype đã được chủ dự án duyệt. Đã có nền giao diện, shell điều hướng và luồng đặt lịch cơ bản bước 3 với thanh toán giả lập, và Smart Scheduling bước 5 (backend Node local, chế độ mô phỏng khi không có key). Smart Scheduling chưa thử trên điện thoại và chưa gọi OpenAI bằng key thật.
+## Tài liệu theo tính năng
 
-- [Thư viện và thứ tự triển khai](dependency-plan.md): Đã cài 9 package UI/UX; tích hợp dần theo từng đợt.
-- [Nền giao diện bước 1](flutter_app/DESIGN-SYSTEM.md): Theme, font offline, icon, widget và kết quả kiểm tra.
-- [Khung app bước 2](flutter_app/NAVIGATION.md): go_router, các tab, Back và Riverpod cho hồ sơ/thông báo.
-- [prd-smart-scheduling.md](prd-smart-scheduling.md): PRD đặt khám cơ bản và Smart Scheduling, chờ duyệt prototype; không sửa code Flutter ở bước này.
-- [Prompt dựng prototype vòng 1](prompts/prototype-agent-brief.md): Có thể sao chép sang agent khác; ưu tiên luồng cơ bản P0, hoãn nhánh AI, giữ nguyên Flutter.
-- [flutter_app/](flutter_app/): Tài liệu app mẫu; source Android và test sinh bởi `flutter create` đang có cục bộ, chưa được đẩy cùng bản tài liệu.
-- [prompts/](prompts/): Prompt và thông tin kiểm tra đầu ra AI.
-- [test-logs/](test-logs/): Log thử với 2–3 người, đã ẩn danh.
-- [changes.md](changes.md): Những thay đổi sau thử nghiệm.
+| Tính năng | Tài liệu |
+| --- | --- |
+| Nền giao diện, điều hướng, UI/UX (bước 1, 2, 4) | [DESIGN-SYSTEM](flutter_app/DESIGN-SYSTEM.md), [NAVIGATION](flutter_app/NAVIGATION.md), [UI-UX](flutter_app/UI-UX.md), [LAM-DEP-UI](flutter_app/LAM-DEP-UI.md), [thư viện](dependency-plan.md) |
+| Đặt lịch cơ bản (bước 3) | [BOOKING](flutter_app/BOOKING.md) |
+| Smart Scheduling | [PRD gốc](prd-smart-scheduling.md), [nghiên cứu](smart-scheduling-research.md), [hội thoại v2](smart-scheduling-conversation.md), [PRD triển khai](prd-smart-scheduling-implementation.md), [màn trong app](flutter_app/SMART-SCHEDULING.md) |
+| Đăng ký và hồ sơ từ QR CCCD | [AUTH-CCCD](flutter_app/AUTH-CCCD.md) |
+| Lưu ý trước khám, nhắc khám | [LUU-Y-TRUOC-KHAM](flutter_app/LUU-Y-TRUOC-KHAM.md), [THONG-BAO-NHAC-KHAM](flutter_app/THONG-BAO-NHAC-KHAM.md) |
+| Lưu dữ liệu trên máy | [LUU-TRU-DU-LIEU](flutter_app/LUU-TRU-DU-LIEU.md) |
+| Kết quả khám, đơn thuốc, nhắc thuốc | [DON-THUOC](flutter_app/DON-THUOC.md), [NHAC-THUOC](flutter_app/NHAC-THUOC.md) |
+| Liên kết hai máy | [LIEN-KET-HAI-MAY](flutter_app/LIEN-KET-HAI-MAY.md) |
+| Web bác sĩ (bước 13–18) | [WEB-BAC-SI-NEN](flutter_app/WEB-BAC-SI-NEN.md), [doctor_web](doctor_web/README.md), [backend](backend/README.md#web-bác-sĩ) |
 
-Trình tự hiện tại: đã triển khai nền giao diện và khung điều hướng/trạng thái; luồng đặt khám cơ bản đã chạy bằng dữ liệu giả định. Need statement chính thức cần được đối chiếu bằng chứng nghiên cứu. Dùng dữ liệu giả lập cho prototype; ghi rõ các thao tác chưa kết nối hệ thống bệnh viện.
+## Nguyên tắc
 
-Xem [hướng dẫn chạy app](flutter_app/README.md) và [cài/gỡ môi trường](../scripts/README.md). Commit `pubspec.lock` của ứng dụng; không commit SDK, file build hoặc bí mật.
-
-- [Web bác sĩ bước 14](doctor_web/README.md): Hàng chờ, tóm tắt trước khám, tuân thủ thuốc 30 ngày, lịch sử khám; chạy cùng [backend](backend/README.md#web-bác-sĩ). Package dùng chung: [medic_core](packages/medic_core/README.md).
-
-- [Luồng đặt lịch bước 3](flutter_app/BOOKING.md): Chọn thông tin, sửa lựa chọn, thanh toán giả lập và lịch hẹn.
-
-- [Smart Scheduling hội thoại streaming v2](smart-scheduling-conversation.md): Luồng Smart hiện hành, thay cho bước xác nhận transcript riêng của nghiên cứu v1.
+Dữ liệu bệnh viện, lịch, thanh toán và người bệnh đều là dữ liệu minh họa; ghi rõ thao tác nào chưa kết nối hệ thống thật. Need statement chính thức cần được đối chiếu bằng chứng nghiên cứu trong [01-phong-van](../01-phong-van/). Xem [hướng dẫn chạy app](flutter_app/README.md) và [cài/gỡ môi trường](../scripts/README.md). Commit `pubspec.lock`; không commit SDK, file build, `.env` hoặc bí mật.

@@ -2,13 +2,13 @@
 
 **PRD triển khai mới:** [Smart Scheduling — hội thoại streaming](prd-smart-scheduling-implementation.md), ngày 2026-10-15, bổ sung luồng đã thống nhất, model tiết kiệm và tiêu chí nghiệm thu để implement. Tài liệu dưới đây giữ bối cảnh/luồng cơ bản của vòng prototype ban đầu.
 
-**Phiên bản:** 0.1 · **Ngày:** 2026-10-14 · **Trạng thái:** Chờ duyệt luồng và prototype.
+**Phiên bản:** 0.1 · **Ngày:** 2026-10-14 · **Trạng thái:** Đã duyệt bố cục prototype; luồng cơ bản và Smart Scheduling đã triển khai trong app (xem [PRD triển khai](prd-smart-scheduling-implementation.md)). Nội dung dưới đây giữ nguyên bản 0.1 để truy xuất quyết định.
 
 **Đầu ra của giai đoạn này:** Prototype tương tác để duyệt trải nghiệm trước khi áp dụng vào Flutter. Không sửa code app, không tích hợp AI, dữ liệu bệnh viện hoặc thanh toán thật ở giai đoạn này.
 
 **Cập nhật sau luồng cơ bản:** Chủ dự án đã yêu cầu nhánh Smart Scheduling dạng [hội thoại streaming v2](smart-scheduling-conversation.md). Với nhánh này, yêu cầu mới thay thế phần 7.1 bên dưới: không duyệt transcript riêng, tự xử lý hết lượt nói, hỏi lại đến khi đủ dữ liệu, duyệt một bản tổng quan khoa/bác sĩ/giờ rồi chuyển sang Thanh toán. Luồng cơ bản giữ nguyên. Các mô tả prototype cũ còn lại là tài liệu của vòng ban đầu.
 
-AI soạn PRD từ yêu cầu chủ dự án và nguồn công khai. Những yêu cầu chưa được bệnh viện xác nhận là giả định thiết kế, được đánh dấu bên dưới.
+Những yêu cầu chưa được bệnh viện xác nhận là giả định thiết kế, được đánh dấu bên dưới.
 
 ## 1. Vấn đề, bằng chứng và mục tiêu
 

@@ -1,10 +1,10 @@
 # 04 — Ba best practice
 
-**Trạng thái:** Nghiên cứu tài liệu công khai và đề xuất áp dụng, ngày 2026-10-14. Chưa kiểm thử trực tiếp các app hoặc chứng minh hiệu quả với nhóm người dùng mục tiêu. AI tổng hợp nguồn và viết phần suy luận; người phụ trách nghiên cứu cần duyệt.
+**Trạng thái:** Nghiên cứu tài liệu công khai và đề xuất áp dụng, ngày 2026-10-14. Chưa kiểm thử trực tiếp các app hoặc chứng minh hiệu quả với nhóm người dùng mục tiêu.
 
 ## Bối cảnh từ người dùng cung cấp
 
-Theo tóm tắt phỏng vấn do chủ dự án cung cấp: người trên 50–60 tuổi gặp khó khăn với việc đặt khám nhiều bước, thường nhờ con cái hoặc nhân viên bệnh viện thao tác hộ. Đây là thông tin đầu vào, chưa có log ẩn danh, số người tham gia hoặc trích dẫn để kiểm tra; không trình bày như kết quả do AI tự thu thập.
+Người trên 50–60 tuổi gặp khó khăn với việc đặt khám nhiều bước, thường nhờ con cái hoặc nhân viên bệnh viện thao tác hộ. Bằng chứng: [log phỏng vấn P1–P4](../01-phong-van/logs/README.md) và [ghi chép dùng thử MyVinmec](../01-phong-van/ghi-chep-dung-thu.md).
 
 ## Ba best practice đề xuất
 

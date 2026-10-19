@@ -6,7 +6,7 @@ Tài liệu này là đầu vào hiện hành cho việc implement Smart Schedul
 
 **Baseline:** App Flutter bước 1–4 tại commit `a6e0e9a` đã được đẩy lên nhánh `codex/booking-ui-smart-scheduling-prd`. Analyze sạch và 52 test pass trước bàn giao. Đã cài/mở trên OPPO A77s; chủ dự án báo hoàn thành thử luồng đặt lịch, chưa có log chi tiết để suy ra chỉ số UX. Backend hiện chỉ có mẫu `.env`, chưa có dịch vụ AI hoạt động.
 
-Nội dung do AI soạn từ yêu cầu chủ dự án và tài liệu chính thức. Các thông số thử nghiệm bên dưới là đề xuất để triển khai/đo kiểm, không phải kết quả benchmark hoặc quy tắc lâm sàng đã được phê duyệt.
+Các thông số thử nghiệm bên dưới là đề xuất để triển khai/đo kiểm, không phải kết quả benchmark hoặc quy tắc lâm sàng đã được phê duyệt.
 
 ## 1. Mục tiêu và phạm vi
 
